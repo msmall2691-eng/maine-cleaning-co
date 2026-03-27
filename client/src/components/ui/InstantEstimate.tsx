@@ -763,54 +763,6 @@ export function InstantEstimate() {
                 </div>
               )}
 
-              {portalCreated && (
-                <div
-                  role="button"
-                  tabIndex={0}
-                  onClick={() => navigate("/portal")}
-                  onKeyDown={(e) => { if (e.key === "Enter" || e.key === " ") navigate("/portal"); }}
-                  className="rounded-xl bg-gradient-to-r from-primary to-primary/80 p-4 text-white cursor-pointer hover:shadow-lg transition-shadow"
-                  data-testid="link-portal-cta"
-                >
-                  <div className="flex items-center justify-between">
-                    <div className="flex items-center gap-3">
-                      <div className="w-10 h-10 rounded-full bg-white/20 flex items-center justify-center">
-                        <User className="w-5 h-5" />
-                      </div>
-                      <div>
-                        <h4 className="text-sm font-bold">Your Client Portal is Ready</h4>
-                        <p className="text-xs text-white/70 mt-0.5">Track your quote, complete onboarding & more</p>
-                      </div>
-                    </div>
-                    <ArrowRight className="w-5 h-5 text-white/70" />
-                  </div>
-                </div>
-              )}
-
-              {existingAccount && !portalCreated && (
-                <div
-                  role="button"
-                  tabIndex={0}
-                  onClick={() => navigate("/portal/login")}
-                  onKeyDown={(e) => { if (e.key === "Enter" || e.key === " ") navigate("/portal/login"); }}
-                  className="rounded-xl bg-muted/60 border border-border/50 p-4 cursor-pointer hover:bg-muted/80 transition-colors"
-                  data-testid="link-portal-login"
-                >
-                  <div className="flex items-center justify-between">
-                    <div className="flex items-center gap-3">
-                      <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center">
-                        <User className="w-5 h-5 text-primary" />
-                      </div>
-                      <div>
-                        <h4 className="text-sm font-bold text-foreground">Log in to Your Portal</h4>
-                        <p className="text-xs text-muted-foreground mt-0.5">View this quote and manage your account</p>
-                      </div>
-                    </div>
-                    <ArrowRight className="w-5 h-5 text-muted-foreground" />
-                  </div>
-                </div>
-              )}
-
               <div className="rounded-xl bg-muted/40 p-4 space-y-4">
                 <h4 className="text-sm font-bold text-foreground flex items-center gap-2">
                   <ClipboardCheck className="w-4 h-4 text-primary" /> What happens next

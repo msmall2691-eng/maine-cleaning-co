@@ -47,10 +47,10 @@ const totalCities = 49;
 const maxVisits = Math.max(...customerCities.map(c => c.visits));
 
 const kpiCards = [
-  { icon: TrendingUp, label: "Total Visits", value: "4,715+", sub: "since 2018", color: "text-blue-600" },
-  { icon: Users, label: "Recurring Clients", value: "93%", sub: "4,422 visits", color: "text-emerald-600" },
-  { icon: RefreshCw, label: "One-Time Cleans", value: "7%", sub: "294 visits", color: "text-amber-600" },
-  { icon: MapPin, label: "Communities", value: "49", sub: "Southern Maine", color: "text-purple-600" },
+  { icon: TrendingUp, label: "Total Visits", value: "4,715+", sub: "since 2018", color: "text-blue-600", barColor: "", barPct: 0 },
+  { icon: Users, label: "Recurring Clients", value: "93%", sub: "4,422 visits", color: "text-emerald-600", barColor: "bg-emerald-500", barPct: 93 },
+  { icon: RefreshCw, label: "One-Time Cleans", value: "7%", sub: "294 visits", color: "text-amber-600", barColor: "bg-amber-500", barPct: 7 },
+  { icon: MapPin, label: "Communities", value: "49", sub: "Southern Maine", color: "text-purple-600", barColor: "", barPct: 0 },
 ];
 
 type CityNode = {
@@ -474,6 +474,17 @@ export function ServiceAreaMap() {
               <Icon className={`w-4 h-4 sm:w-5 sm:h-5 ${kpi.color} mx-auto mb-1.5`} />
               <p className="text-lg sm:text-xl font-bold text-foreground leading-tight">{kpi.value}</p>
               <p className="text-[10px] sm:text-[11px] text-muted-foreground font-medium mt-0.5">{kpi.sub}</p>
+              {kpi.barPct > 0 && (
+                <div className="h-1.5 bg-secondary rounded-full overflow-hidden mt-2 mx-2">
+                  <motion.div
+                    initial={{ width: 0 }}
+                    whileInView={{ width: `${kpi.barPct}%` }}
+                    viewport={{ once: true }}
+                    transition={{ delay: i * 0.08 + 0.3, duration: 0.8, ease: [0.22, 1, 0.36, 1] }}
+                    className={`h-full ${kpi.barColor} rounded-full`}
+                  />
+                </div>
+              )}
             </motion.div>
           );
         })}
