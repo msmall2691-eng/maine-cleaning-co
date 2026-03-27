@@ -72,6 +72,119 @@ app.use((req, res, next) => {
 });
 
 (async () => {
+  // Auto-create database tables on startup if DATABASE_URL is set
+  if (process.env.DATABASE_URL) {
+    try {
+      const { pool } = await import("./db");
+      await pool.query(`
+        CREATE TABLE IF NOT EXISTS users (
+          id VARCHAR PRIMARY KEY DEFAULT gen_random_uuid(),
+          username TEXT NOT NULL UNIQUE,
+          password TEXT NOT NULL,
+          email TEXT,
+          name TEXT,
+          phone TEXT,
+          role TEXT NOT NULL DEFAULT 'client',
+          reset_token TEXT,
+          reset_token_expiry TIMESTAMP
+        );
+        CREATE TABLE IF NOT EXISTS quote_leads (
+          id SERIAL PRIMARY KEY,
+          sqft INTEGER NOT NULL,
+          service_type TEXT NOT NULL,
+          frequency TEXT NOT NULL,
+          pet_hair TEXT NOT NULL,
+          condition TEXT NOT NULL,
+          bathrooms INTEGER NOT NULL,
+          estimate_min INTEGER NOT NULL,
+          estimate_max INTEGER NOT NULL,
+          name TEXT,
+          email TEXT,
+          phone TEXT,
+          notes TEXT,
+          zip TEXT,
+          address TEXT,
+          photos JSON,
+          source TEXT DEFAULT 'website',
+          status TEXT NOT NULL DEFAULT 'New',
+          archived BOOLEAN NOT NULL DEFAULT false,
+          client_id VARCHAR,
+          created_at TIMESTAMP NOT NULL DEFAULT now(),
+          updated_at TIMESTAMP NOT NULL DEFAULT now()
+        );
+        CREATE TABLE IF NOT EXISTS onboarding_checklists (
+          id SERIAL PRIMARY KEY,
+          client_id VARCHAR NOT NULL,
+          quote_id INTEGER NOT NULL,
+          service_type TEXT NOT NULL,
+          form_responses JSON NOT NULL DEFAULT '{}'::json,
+          created_at TIMESTAMP NOT NULL DEFAULT now(),
+          updated_at TIMESTAMP NOT NULL DEFAULT now()
+        );
+        CREATE TABLE IF NOT EXISTS contracts (
+          id SERIAL PRIMARY KEY,
+          client_id VARCHAR NOT NULL,
+          quote_id INTEGER NOT NULL,
+          service_type TEXT NOT NULL,
+          frequency TEXT NOT NULL,
+          price INTEGER NOT NULL,
+          address TEXT,
+          terms TEXT NOT NULL,
+          signed_name TEXT,
+          signed_at TIMESTAMP,
+          status TEXT NOT NULL DEFAULT 'pending',
+          created_at TIMESTAMP NOT NULL DEFAULT now()
+        );
+        CREATE TABLE IF NOT EXISTS scheduled_cleanings (
+          id SERIAL PRIMARY KEY,
+          client_id VARCHAR NOT NULL,
+          quote_id INTEGER,
+          service_type TEXT NOT NULL,
+          scheduled_date TIMESTAMP NOT NULL,
+          status TEXT NOT NULL DEFAULT 'upcoming',
+          notes TEXT,
+          created_at TIMESTAMP NOT NULL DEFAULT now()
+        );
+        CREATE TABLE IF NOT EXISTS payments (
+          id SERIAL PRIMARY KEY,
+          client_id VARCHAR NOT NULL,
+          cleaning_id INTEGER,
+          amount INTEGER NOT NULL,
+          status TEXT NOT NULL DEFAULT 'pending',
+          stripe_session_id TEXT,
+          paid_at TIMESTAMP,
+          created_at TIMESTAMP NOT NULL DEFAULT now()
+        );
+        CREATE TABLE IF NOT EXISTS intake_submissions (
+          id SERIAL PRIMARY KEY,
+          source TEXT NOT NULL DEFAULT 'website_form',
+          raw_payload JSON NOT NULL,
+          normalized_payload JSON NOT NULL,
+          status TEXT NOT NULL DEFAULT 'new',
+          email_notification_status TEXT NOT NULL DEFAULT 'pending',
+          processing_status TEXT NOT NULL DEFAULT 'captured',
+          quote_lead_id INTEGER,
+          created_at TIMESTAMP NOT NULL DEFAULT now()
+        );
+        CREATE TABLE IF NOT EXISTS conversations (
+          id SERIAL PRIMARY KEY,
+          title TEXT NOT NULL,
+          created_at TIMESTAMP NOT NULL DEFAULT now()
+        );
+        CREATE TABLE IF NOT EXISTS messages (
+          id SERIAL PRIMARY KEY,
+          conversation_id INTEGER NOT NULL,
+          role TEXT NOT NULL,
+          content TEXT NOT NULL,
+          created_at TIMESTAMP NOT NULL DEFAULT now()
+        );
+      `);
+      log("Database tables verified/created");
+    } catch (err) {
+      console.error("Failed to create database tables:", err);
+    }
+  }
+
   await registerRoutes(httpServer, app);
 
   app.use((err: any, _req: Request, res: Response, next: NextFunction) => {
