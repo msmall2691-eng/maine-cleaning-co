@@ -435,7 +435,7 @@ export default function Home() {
       <FadeSection className="py-20 sm:py-28 section-white" id="services">
         <div className="container mx-auto px-4 sm:px-6">
           <div className="text-center max-w-md mx-auto mb-12 sm:mb-16">
-            <h2 className="text-[1.75rem] sm:text-4xl md:text-[2.5rem] font-serif font-bold text-foreground tracking-[-0.01em] mb-5 section-heading-accent">Our Services</h2>
+            <h2 className="text-[1.75rem] sm:text-4xl md:text-[2.5rem] font-serif font-bold text-foreground tracking-[-0.01em] mb-5 section-heading-accent">What We Do</h2>
             <p className="text-muted-foreground text-[15px] leading-relaxed">Tailored cleaning for homes, rentals, and businesses across Southern Maine.</p>
           </div>
 
