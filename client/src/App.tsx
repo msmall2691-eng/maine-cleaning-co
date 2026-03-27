@@ -19,6 +19,8 @@ import Portal from "@/pages/Portal";
 import PortalLogin from "@/pages/PortalLogin";
 import ResetPassword from "@/pages/ResetPassword";
 import ShortTermRentals from "@/pages/ShortTermRentals";
+import Privacy from "@/pages/Privacy";
+import Terms from "@/pages/Terms";
 import NotFound from "@/pages/not-found";
 import { StickyMobileBar } from "@/components/ui/StickyMobileBar";
 import { AIChatWidget } from "@/components/ui/AIChatWidget";
@@ -39,6 +41,8 @@ function Router() {
       <Route path="/portal" component={Portal} />
       <Route path="/portal/login" component={PortalLogin} />
       <Route path="/portal/reset-password" component={ResetPassword} />
+      <Route path="/privacy" component={Privacy} />
+      <Route path="/terms" component={Terms} />
       <Route component={NotFound} />
     </Switch>
   );

@@ -20,8 +20,8 @@ export default function Footer() {
         {/* ── CTA banner ── */}
         <div className="bg-primary/10 border border-primary/20 rounded-2xl px-6 py-6 mb-14 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
           <div>
-            <p className="font-semibold text-foreground">Ready for a cleaner space?</p>
-            <p className="text-sm text-muted-foreground mt-0.5">Get an instant estimate — no commitment required.</p>
+            <p className="font-semibold text-foreground">Let's get your home sparkling.</p>
+            <p className="text-sm text-muted-foreground mt-0.5">Free estimate in under 60 seconds — no commitment required.</p>
           </div>
           <a href="/#get-estimate" onClick={scrollToEstimate} data-testid="link-footer-cta-estimate">
             <Button size="sm" className="rounded-full h-9 px-5 text-sm gap-1.5 flex-shrink-0">
@@ -99,8 +99,8 @@ export default function Footer() {
         <div className="border-t border-border/40 pt-6 text-xs text-muted-foreground flex flex-col sm:flex-row justify-between items-center gap-3">
           <p>&copy; {new Date().getFullYear()} The Maine Cleaning Co. All rights reserved.</p>
           <div className="flex items-center gap-5">
-            <a href="#" className="hover:text-foreground transition-colors">Privacy Policy</a>
-            <a href="#" className="hover:text-foreground transition-colors">Terms of Service</a>
+            <Link href="/privacy" className="hover:text-foreground transition-colors">Privacy Policy</Link>
+            <Link href="/terms" className="hover:text-foreground transition-colors">Terms of Service</Link>
             <span className="text-muted-foreground/40">·</span>
             <a href="https://msmall.org" target="_blank" rel="noopener noreferrer" className="text-muted-foreground/40 hover:text-muted-foreground transition-colors" data-testid="link-msmall-credit">Built by msmall.org</a>
           </div>
