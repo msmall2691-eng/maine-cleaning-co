@@ -295,10 +295,10 @@ export default function About() {
         </div>
       </section>
 
-      {/* ── Instagram CTA ── */}
+      {/* ── Instagram Gallery ── */}
       <section className="py-16 sm:py-24" style={{ background: "hsl(222 20% 13%)" }}>
-        <div className="container mx-auto px-4 sm:px-6 max-w-3xl text-center">
-          <div className="card-glass rounded-3xl px-8 py-12 sm:py-14 border border-pink-500/10">
+        <div className="container mx-auto px-4 sm:px-6 max-w-4xl">
+          <div className="text-center mb-10">
             <div className="inline-flex items-center justify-center w-16 h-16 rounded-2xl bg-gradient-to-br from-pink-500/20 to-orange-500/20 border border-pink-500/20 mb-6">
               <Instagram className="w-7 h-7 text-pink-400" />
             </div>
@@ -306,22 +306,53 @@ export default function About() {
             <h2 className="text-[1.75rem] sm:text-3xl font-serif font-bold text-foreground tracking-[-0.01em] mb-4">
               See Our Work on Instagram
             </h2>
-            <p className="text-muted-foreground text-[15px] leading-relaxed mb-8 max-w-md mx-auto">
+            <p className="text-muted-foreground text-[15px] leading-relaxed max-w-md mx-auto">
               Before & afters, behind-the-scenes cleaning tips, and real homes across Southern Maine. 1,900+ followers and growing.
             </p>
-            <div className="flex flex-col sm:flex-row gap-3 justify-center">
-              <a href={companyInfo.socials.instagram} target="_blank" rel="noopener noreferrer" data-testid="link-instagram-follow">
-                <Button className="rounded-full h-12 px-8 font-semibold gap-2 bg-gradient-to-r from-pink-500 to-orange-400 border-0 text-white hover:opacity-90">
-                  <Instagram className="w-4 h-4" /> Follow on Instagram
-                  <ExternalLink className="w-3.5 h-3.5 opacity-70" />
-                </Button>
+          </div>
+
+          <div className="grid grid-cols-2 sm:grid-cols-3 gap-2 sm:gap-3 mb-8">
+            {[
+              { src: "/images/vacation-rental-bathroom-clean.jpeg", alt: "Guest-ready vacation rental bathroom" },
+              { src: "/images/commercial-floor-cleaning.jpeg", alt: "Commercial floor cleaning" },
+              { src: "/images/prolux-hepa-vacuum-fleet.jpeg", alt: "Professional vacuum equipment" },
+              { src: "/images/ecosense-cleaning-products.jpeg", alt: "Eco-friendly cleaning products" },
+              { src: "/images/before-after-deep-clean.jpeg", alt: "Before and after deep clean" },
+              { src: "/images/cleaning-toolkit-supplies.jpeg", alt: "Cleaning toolkit and supplies" },
+            ].map((img, i) => (
+              <a
+                key={i}
+                href={companyInfo.socials.instagram}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="group relative aspect-square rounded-xl overflow-hidden border border-white/5"
+                data-testid={`ig-gallery-${i}`}
+              >
+                <img
+                  src={img.src}
+                  alt={img.alt}
+                  className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
+                  loading="lazy"
+                />
+                <div className="absolute inset-0 bg-black/0 group-hover:bg-black/30 transition-colors duration-300 flex items-center justify-center">
+                  <Instagram className="w-6 h-6 text-white opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
+                </div>
               </a>
-              <a href={companyInfo.socials.facebook} target="_blank" rel="noopener noreferrer" data-testid="link-facebook-follow">
-                <Button variant="outline" className="rounded-full h-12 px-8 font-semibold gap-2 border-border">
-                  Facebook Page
-                </Button>
-              </a>
-            </div>
+            ))}
+          </div>
+
+          <div className="flex flex-col sm:flex-row gap-3 justify-center">
+            <a href={companyInfo.socials.instagram} target="_blank" rel="noopener noreferrer" data-testid="link-instagram-follow">
+              <Button className="rounded-full h-12 px-8 font-semibold gap-2 bg-gradient-to-r from-pink-500 to-orange-400 border-0 text-white hover:opacity-90">
+                <Instagram className="w-4 h-4" /> Follow on Instagram
+                <ExternalLink className="w-3.5 h-3.5 opacity-70" />
+              </Button>
+            </a>
+            <a href={companyInfo.socials.facebook} target="_blank" rel="noopener noreferrer" data-testid="link-facebook-follow">
+              <Button variant="outline" className="rounded-full h-12 px-8 font-semibold gap-2 border-border">
+                Facebook Page
+              </Button>
+            </a>
           </div>
         </div>
       </section>
