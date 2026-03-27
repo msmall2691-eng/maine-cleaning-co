@@ -155,6 +155,7 @@ export default function Home() {
     location: string;
   };
   const [weather, setWeather] = useState<WeatherData | null>(null);
+  const [weatherFailed, setWeatherFailed] = useState(false);
   const [scrollProgress, setScrollProgress] = useState(0);
   const [activeReviewIndex, setActiveReviewIndex] = useState(0);
 
@@ -162,7 +163,7 @@ export default function Home() {
     fetch("/api/weather")
       .then((r) => (r.ok ? r.json() : Promise.reject()))
       .then(setWeather)
-      .catch(() => {});
+      .catch(() => setWeatherFailed(true));
   }, []);
 
   useEffect(() => {
@@ -290,7 +291,18 @@ export default function Home() {
           </motion.div>
 
           {/* 5-Day Weather Forecast */}
-          {!weather && (
+          {!weather && weatherFailed && (
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              className="flex justify-center mt-6"
+            >
+              <div className="bg-card/60 backdrop-blur-sm rounded-2xl px-4 py-3 shadow-[0_1px_6px_rgba(0,0,0,0.15)] border border-border/50 max-w-sm w-full sm:max-w-md text-center">
+                <p className="text-xs text-muted-foreground">Southern Maine · Weather temporarily unavailable</p>
+              </div>
+            </motion.div>
+          )}
+          {!weather && !weatherFailed && (
             <motion.div
               initial={{ opacity: 0, y: 8 }}
               animate={{ opacity: 1, y: 0 }}
