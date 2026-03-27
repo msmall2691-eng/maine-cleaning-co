@@ -28,6 +28,13 @@ app.get("/api/health", (_req, res) => {
   res.json({ status: "ok" });
 });
 
+app.get("/api/config/features", (_req, res) => {
+  res.json({
+    aiChat: !!process.env.OPENAI_API_KEY,
+    email: !!(process.env.SMTP_USER && process.env.SMTP_PASS),
+  });
+});
+
 export function log(message: string, source = "express") {
   const formattedTime = new Date().toLocaleTimeString("en-US", {
     hour: "numeric",

@@ -503,12 +503,16 @@ export async function registerRoutes(
         }
       }
 
-      sendLeadNotification(lead).catch((err) => console.error("[email] lead notification error:", err));
-      sendCustomerConfirmation(lead, tempPassword).catch((err) => console.error("[email] customer confirmation error:", err));
-      log("INFO", "quotes", "Customer confirmation dispatched", {
+      const emailConfigured = !!(process.env.SMTP_USER && process.env.SMTP_PASS);
+      if (emailConfigured) {
+        sendLeadNotification(lead).catch((err) => console.error("[email] lead notification error:", err));
+        sendCustomerConfirmation(lead, tempPassword).catch((err) => console.error("[email] customer confirmation error:", err));
+      }
+      log("INFO", "quotes", "Quote created", {
         to: lead.email,
         newAccount: !!tempPassword,
         leadId: lead.id,
+        emailSent: emailConfigured,
       });
 
       const webhookUrl = process.env.WEBHOOK_URL;
@@ -613,6 +617,7 @@ export async function registerRoutes(
         portalAccountCreated,
         portalLoggedIn,
         existingAccount,
+        emailSent: emailConfigured,
       });
     } catch (error) {
       if (error instanceof z.ZodError) {

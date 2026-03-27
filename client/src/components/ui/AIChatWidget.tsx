@@ -13,13 +13,23 @@ export function AIChatWidget() {
   const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [input, setInput] = useState("");
   const [loading, setLoading] = useState(false);
+  const [available, setAvailable] = useState(false);
   const scrollRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    fetch("/api/config/features")
+      .then(r => r.json())
+      .then(data => setAvailable(data.aiChat === true))
+      .catch(() => {});
+  }, []);
 
   useEffect(() => {
     if (scrollRef.current) {
       scrollRef.current.scrollTop = scrollRef.current.scrollHeight;
     }
   }, [messages, loading]);
+
+  if (!available) return null;
 
   const sendMessage = async () => {
     const text = input.trim();

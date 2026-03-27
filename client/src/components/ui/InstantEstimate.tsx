@@ -215,6 +215,7 @@ export function InstantEstimate() {
   const [portalCreated, setPortalCreated] = useState(false);
   const [portalLoggedIn, setPortalLoggedIn] = useState(false);
   const [existingAccount, setExistingAccount] = useState(false);
+  const [emailSent, setEmailSent] = useState(true);
   const { toast } = useToast();
   const { refresh } = useAuth();
 
@@ -335,6 +336,7 @@ export function InstantEstimate() {
       setStep(3);
       if (data?.portalCreated) setPortalCreated(true);
       if (data?.existingAccount) setExistingAccount(true);
+      if (data?.emailSent === false) setEmailSent(false);
       toast({ title: "Request sent!", description: "We'll be in touch soon." });
     },
     onError: () => { toast({ title: "Something went wrong", description: "Please try again or call us directly.", variant: "destructive" }); },
@@ -345,6 +347,7 @@ export function InstantEstimate() {
     setPortalCreated(false);
     setPortalLoggedIn(false);
     setExistingAccount(false);
+    setEmailSent(true);
     setContactName("");
     setContactEmail("");
     setContactPhone("");
@@ -729,9 +732,13 @@ export function InstantEstimate() {
                     Estimate range: <span className="font-semibold text-foreground">{fmt(engine.min)} – {fmt(engine.max)}</span>
                   </p>
                 )}
-                {contactEmail ? (
+                {contactEmail && emailSent ? (
                   <p className="text-muted-foreground text-xs mt-1.5">
                     Confirmation sent to <span className="font-medium text-foreground">{contactEmail}</span>
+                  </p>
+                ) : contactEmail && !emailSent ? (
+                  <p className="text-muted-foreground text-xs mt-1.5">
+                    We'll reach out to <span className="font-medium text-foreground">{contactEmail}</span> within 1 business day.
                   </p>
                 ) : contactPhone ? (
                   <p className="text-muted-foreground text-xs mt-1.5">
