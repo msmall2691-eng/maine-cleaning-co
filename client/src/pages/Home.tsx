@@ -1,4 +1,5 @@
 import { useRef, useEffect, useState, useCallback } from "react";
+import { useSEO } from "@/hooks/use-seo";
 import { motion, useInView } from "framer-motion";
 import { Link } from "wouter";
 import {
@@ -145,6 +146,7 @@ function WaveDividerCream({ flip = false }: { flip?: boolean }) {
 }
 
 export default function Home() {
+  useSEO({ title: "Airbnb Cleaning & STR Management — Southern Maine", description: "Southern Maine's premier cleaning & short-term rental management. Same-day Airbnb turnovers, residential cleaning, and commercial janitorial across York & Cumberland County." });
   const carouselRef = useRef<HTMLDivElement>(null);
   type ForecastDay = { date: string; high: number; low: number; label: string; icon: string };
   type WeatherData = {
@@ -615,7 +617,7 @@ export default function Home() {
       {/* ── Final CTA ── */}
       <section className="py-20 sm:py-28 bg-primary text-primary-foreground">
         <div className="container mx-auto px-4 sm:px-6 text-center max-w-lg">
-          <h2 className="text-[1.75rem] sm:text-4xl md:text-[2.5rem] font-serif font-bold mb-5 tracking-[-0.01em]">Ready for a cleaner space?</h2>
+          <h2 className="text-[1.75rem] sm:text-4xl md:text-[2.5rem] font-serif font-bold mb-5 tracking-[-0.01em]">The Maine choice for a clean space.</h2>
           <p className="text-base opacity-85 mb-10 leading-relaxed">
             Let us handle the cleaning so you can enjoy what matters most.
           </p>

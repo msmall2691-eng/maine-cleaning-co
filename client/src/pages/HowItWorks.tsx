@@ -1,5 +1,7 @@
+import { useEffect } from "react";
 import { motion } from "framer-motion";
 import { Link } from "wouter";
+import { useSEO } from "@/hooks/use-seo";
 import {
   ArrowRight, Phone, RefreshCw, Zap, Home as HomeIcon, Star, Shield,
   CheckCircle2, ClipboardList, CalendarCheck, Sparkles, MessageSquare,
@@ -62,6 +64,25 @@ const faqs = [
 ];
 
 export default function HowItWorks() {
+  useSEO({ title: "How It Works", description: "Get a cleaning estimate in under 2 minutes. See our simple 5-step process from instant quote to sparkling clean — serving Southern Maine homes, rentals, and businesses." });
+
+  useEffect(() => {
+    const schema = {
+      "@context": "https://schema.org",
+      "@type": "FAQPage",
+      "mainEntity": faqs.map(faq => ({
+        "@type": "Question",
+        "name": faq.q,
+        "acceptedAnswer": { "@type": "Answer", "text": faq.a },
+      })),
+    };
+    const script = document.createElement("script");
+    script.type = "application/ld+json";
+    script.text = JSON.stringify(schema);
+    document.head.appendChild(script);
+    return () => { document.head.removeChild(script); };
+  }, []);
+
   return (
     <div className="w-full overflow-x-hidden">
       {/* ── Page Hero ── */}
@@ -261,10 +282,10 @@ export default function HowItWorks() {
       <section className="py-16 sm:py-24 bg-primary text-primary-foreground">
         <div className="container mx-auto px-4 sm:px-6 text-center max-w-lg">
           <h2 className="text-[1.75rem] sm:text-4xl font-serif font-bold mb-5 tracking-[-0.01em]">
-            Ready to get started?
+            Simple as that.
           </h2>
           <p className="text-base opacity-85 mb-10 leading-relaxed">
-            It takes less than 2 minutes to get your instant estimate.
+            It takes less than 2 minutes to get your instant estimate — try it now.
           </p>
           <div className="flex flex-col sm:flex-row justify-center gap-3">
             <Link href="/#get-estimate">

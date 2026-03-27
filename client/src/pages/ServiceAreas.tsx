@@ -1,6 +1,7 @@
 import { motion } from "framer-motion";
 import { Link } from "wouter";
 import { MapPin, ArrowRight, Phone, RefreshCw, Sparkles, Building2, Calendar } from "lucide-react";
+import { useSEO } from "@/hooks/use-seo";
 import { Button } from "@/components/ui/button";
 import { ServiceAreaMap } from "@/components/ui/ServiceAreaMap";
 import { companyInfo } from "@/lib/company-info";
@@ -77,6 +78,7 @@ const regions = [
 ];
 
 export default function ServiceAreas() {
+  useSEO({ title: "Service Areas", description: "The Maine Cleaning Co. serves 49+ communities across York & Cumberland County. Portland, Kennebunkport, Old Orchard Beach, Scarborough, and more." });
   return (
     <div className="w-full overflow-x-hidden">
       {/* ── Page Hero ── */}
