@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef, useCallback } from "react";
 import { motion } from "framer-motion";
-import { TrendingUp, Users, MapPin, RefreshCw } from "lucide-react";
+import { TrendingUp, Heart, MapPin, Sparkles } from "lucide-react";
 
 type ServiceType = "residential" | "commercial" | "janitorial" | "vacation" | "moveinout";
 
@@ -47,10 +47,10 @@ const totalCities = 49;
 const maxVisits = Math.max(...customerCities.map(c => c.visits));
 
 const kpiCards = [
-  { icon: TrendingUp, label: "Total Visits", value: "4,715+", sub: "since 2018", color: "text-blue-600", barColor: "", barPct: 0 },
-  { icon: Users, label: "Recurring Clients", value: "93%", sub: "4,422 visits", color: "text-emerald-600", barColor: "bg-emerald-500", barPct: 93 },
-  { icon: RefreshCw, label: "One-Time Cleans", value: "7%", sub: "294 visits", color: "text-amber-600", barColor: "bg-amber-500", barPct: 7 },
-  { icon: MapPin, label: "Communities", value: "49", sub: "Southern Maine", color: "text-purple-600", barColor: "", barPct: 0 },
+  { icon: TrendingUp, label: "Total Visits", value: "4,715+", sub: "Cleans completed since 2018", color: "text-blue-600", barColor: "", barPct: 0 },
+  { icon: Heart, label: "93% Recurring", value: "93%", sub: "Most clients stay with us", color: "text-emerald-600", barColor: "bg-emerald-500", barPct: 93 },
+  { icon: Sparkles, label: "7% One-Time", value: "7%", sub: "Deep cleans & move-outs", color: "text-amber-600", barColor: "bg-amber-500", barPct: 7 },
+  { icon: MapPin, label: "Communities", value: "49", sub: "York & Cumberland County", color: "text-purple-600", barColor: "", barPct: 0 },
 ];
 
 type CityNode = {
@@ -472,8 +472,9 @@ export function ServiceAreaMap() {
               data-testid={`kpi-${kpi.label.toLowerCase().replace(/\s+/g, '-')}`}
             >
               <Icon className={`w-4 h-4 sm:w-5 sm:h-5 ${kpi.color} mx-auto mb-1.5`} />
+              <p className="text-[10px] sm:text-[11px] font-semibold text-muted-foreground uppercase tracking-wider mb-0.5">{kpi.label}</p>
               <p className="text-lg sm:text-xl font-bold text-foreground leading-tight">{kpi.value}</p>
-              <p className="text-[10px] sm:text-[11px] text-muted-foreground font-medium mt-0.5">{kpi.sub}</p>
+              <p className="text-[10px] sm:text-[11px] text-muted-foreground/70 font-medium mt-0.5">{kpi.sub}</p>
               {kpi.barPct > 0 && (
                 <div className="h-1.5 bg-secondary rounded-full overflow-hidden mt-2 mx-2">
                   <motion.div
