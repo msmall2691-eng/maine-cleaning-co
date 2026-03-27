@@ -5,7 +5,7 @@ import { Input } from "@/components/ui/input";
 import { motion, AnimatePresence } from "framer-motion";
 import { useMutation } from "@tanstack/react-query";
 import { useToast } from "@/hooks/use-toast";
-import { useAuth } from "@/lib/auth";
+
 import { Link, useLocation } from "wouter";
 import {
   CheckCircle2,
@@ -217,7 +217,6 @@ export function InstantEstimate() {
   const [existingAccount, setExistingAccount] = useState(false);
   const [emailSent, setEmailSent] = useState(true);
   const { toast } = useToast();
-  const { refresh } = useAuth();
 
   const isCustomQuote = category === "str" || category === "commercial";
   const cleanType = category === "deep-clean" ? "deep" : "standard";
