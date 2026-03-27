@@ -1,5 +1,6 @@
 import { useParams, Link } from "wouter";
 import { getBlogPostById } from "@/lib/blog-data";
+import { useSEO } from "@/hooks/use-seo";
 import { Button } from "@/components/ui/button";
 import { ArrowLeft, Calendar, Clock, Facebook, Twitter, Linkedin } from "lucide-react";
 import ReactMarkdown from "react-markdown";
@@ -7,6 +8,7 @@ import ReactMarkdown from "react-markdown";
 export default function BlogPost() {
   const params = useParams<{ slug: string }>();
   const post = getBlogPostById(params.slug || "");
+  useSEO({ title: post?.title || "Blog Post", description: post?.excerpt || "Read cleaning tips and insights from The Maine Cleaning Co." });
 
   const shareUrl = typeof window !== "undefined" ? window.location.href : "";
   const shareTitle = post?.title || "";
@@ -114,8 +116,8 @@ export default function BlogPost() {
           <p className="text-muted-foreground mb-6 sm:mb-8 max-w-md mx-auto text-sm sm:text-base">
             Let the experts at The Maine Cleaning Co. handle the dirty work so you can enjoy your free time.
           </p>
-          <Link href="/">
-            <Button size="lg" className="rounded-full px-8 shadow-sm" data-testid="button-get-quote">Get an Instant Quote</Button>
+          <Link href="/#get-estimate">
+            <Button size="lg" className="rounded-full px-8 shadow-sm" data-testid="button-get-quote">Get a Free Estimate</Button>
           </Link>
         </div>
       </div>

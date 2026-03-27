@@ -1,5 +1,6 @@
 import { useEffect } from "react";
 import { CheckCircle2, ArrowRight, Leaf } from "lucide-react";
+import { useSEO } from "@/hooks/use-seo";
 import { Link } from "wouter";
 import { getServicesList } from "@/lib/services-data";
 import { motion } from "framer-motion";
@@ -7,6 +8,7 @@ import { CleaningQuiz } from "@/components/ui/CleaningQuiz";
 import { InstantEstimate } from "@/components/ui/InstantEstimate";
 
 export default function Services() {
+  useSEO({ title: "Cleaning Services", description: "Residential, deep cleaning, Airbnb turnovers, commercial janitorial, and move-in/move-out cleaning across Southern Maine. Eco-friendly products, transparent pricing." });
   const services = getServicesList();
 
   useEffect(() => {

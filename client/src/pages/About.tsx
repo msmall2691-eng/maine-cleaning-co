@@ -1,5 +1,6 @@
 import { motion } from "framer-motion";
 import { Link } from "wouter";
+import { useSEO } from "@/hooks/use-seo";
 import {
   Calendar, Leaf, CheckCircle2, MessageCircle, Shield, Users, ArrowRight,
   Instagram, Phone, Star, MapPin, RefreshCw, Quote, ExternalLink,
@@ -40,6 +41,7 @@ const testimonials = [
 ];
 
 export default function About() {
+  useSEO({ title: "About Us", description: "Meet The Maine Cleaning Co. — Southern Maine's trusted cleaning team since 2018. Eco-friendly products, bonded & insured crews, and a commitment to consistent results." });
   return (
     <div className="w-full overflow-x-hidden">
       {/* ── Page Hero ── */}
@@ -327,9 +329,9 @@ export default function About() {
       {/* ── CTA ── */}
       <section className="py-16 sm:py-24 bg-primary text-primary-foreground">
         <div className="container mx-auto px-4 sm:px-6 text-center max-w-lg">
-          <h2 className="text-[1.75rem] sm:text-4xl font-serif font-bold mb-5 tracking-[-0.01em]">Ready to get started?</h2>
+          <h2 className="text-[1.75rem] sm:text-4xl font-serif font-bold mb-5 tracking-[-0.01em]">Experience the difference.</h2>
           <p className="text-base opacity-85 mb-10 leading-relaxed">
-            Get a free instant estimate — no commitment, no hidden fees.
+            See why Southern Maine trusts us with their spaces — get a free estimate today.
           </p>
           <div className="flex flex-col sm:flex-row justify-center gap-3">
             <Link href="/#get-estimate">

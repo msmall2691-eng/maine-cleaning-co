@@ -20,7 +20,7 @@ export default function Footer() {
         {/* ── CTA banner ── */}
         <div className="bg-primary/10 border border-primary/20 rounded-2xl px-6 py-6 mb-14 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
           <div>
-            <p className="font-semibold text-foreground">Let's get your home sparkling.</p>
+            <p className="font-semibold text-foreground">Let's get your space sparkling.</p>
             <p className="text-sm text-muted-foreground mt-0.5">Free estimate in under 60 seconds — no commitment required.</p>
           </div>
           <a href="/#get-estimate" onClick={scrollToEstimate} data-testid="link-footer-cta-estimate">

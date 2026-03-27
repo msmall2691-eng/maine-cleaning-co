@@ -7,6 +7,7 @@ import { motion } from "framer-motion";
 import { InstantEstimate } from "@/components/ui/InstantEstimate";
 import { CleaningChecklist } from "@/components/ui/CleaningChecklist";
 import { companyInfo } from "@/lib/company-info";
+import { useSEO } from "@/hooks/use-seo";
 
 export default function ServiceDetail() {
   const params = useParams<{ slug: string }>();
@@ -15,6 +16,7 @@ export default function ServiceDetail() {
     window.scrollTo(0, 0);
   }, [params.slug]);
   const service = servicesData[params.slug as keyof typeof servicesData];
+  useSEO({ title: service?.title || "Service Details", description: service?.description || "Professional cleaning services in Southern Maine from The Maine Cleaning Co." });
 
   if (!service) {
     return (
