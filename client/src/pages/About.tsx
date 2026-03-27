@@ -16,15 +16,6 @@ const fadeUp = {
   visible: (i: number) => ({ opacity: 1, y: 0, transition: { delay: i * 0.07, duration: 0.6, ease: [0.22, 1, 0.36, 1] as const } }),
 };
 
-const values = [
-  { icon: Calendar, title: "Reliable Scheduling", desc: "Consistent, on-time service you can depend on — same team, same day, every time.", color: "text-blue-400", bg: "bg-blue-500/10" },
-  { icon: Leaf, title: "Eco-Conscious Products", desc: "Melaleuca EcoSense® — professionally effective, safe for kids, pets, and the planet.", color: "text-emerald-400", bg: "bg-emerald-500/10" },
-  { icon: CheckCircle2, title: "All Property Types", desc: "Homes, vacation rentals, offices — one trusted team for every need.", color: "text-primary", bg: "bg-primary/10" },
-  { icon: MessageCircle, title: "Clear Communication", desc: "Transparent pricing, responsive support, and zero surprises on your bill.", color: "text-violet-400", bg: "bg-violet-500/10" },
-  { icon: Shield, title: "Fully Insured", desc: "Bonded and covered with comprehensive liability insurance — always.", color: "text-orange-400", bg: "bg-orange-500/10" },
-  { icon: Users, title: "Local Maine Team", desc: "Rooted in Southern Maine since 2018 — we know our communities.", color: "text-rose-400", bg: "bg-rose-500/10" },
-];
-
 const achievements = [
   { icon: Calendar, value: "Est. 2018", label: "Founded in Maine", color: "text-primary", bg: "bg-primary/10" },
   { icon: TrendingUp, value: "5,000+", label: "Cleans Completed", color: "text-emerald-400", bg: "bg-emerald-500/10" },
@@ -71,7 +62,7 @@ export default function About() {
             transition={{ duration: 0.6, delay: 0.15 }}
             className="text-[15px] sm:text-lg text-muted-foreground leading-relaxed max-w-lg mx-auto mb-8"
           >
-            A team that genuinely cares — about your home, your family, and the environment.
+            A team that genuinely cares — about your space, your family, and the environment.
           </motion.p>
           <motion.div
             initial={{ opacity: 0, y: 10 }}
@@ -93,7 +84,7 @@ export default function About() {
         </div>
       </section>
 
-      {/* ── Story + Achievement Stats ── */}
+      {/* ── Our Story + Stats + What Sets Us Apart ── */}
       <section className="py-16 sm:py-24">
         <div className="container mx-auto px-4 sm:px-6 max-w-5xl">
           <div className="grid lg:grid-cols-2 gap-12 lg:gap-16 items-start">
@@ -110,12 +101,31 @@ export default function About() {
               <p className="text-muted-foreground text-[15px] leading-relaxed mb-4">
                 The Maine Cleaning Co. was founded in 2018 with one belief: cleaning should feel effortless for clients and meaningful for the people doing it. We've grown from a small residential team into Southern Maine's most trusted cleaning service — serving homes, vacation rentals, and commercial spaces across York and Cumberland counties.
               </p>
-              <p className="text-muted-foreground text-[15px] leading-relaxed mb-4">
-                Every cleaner on our team is trained, background-checked, and genuinely invested in delivering results that go beyond the surface. We don't cut corners because your space deserves better.
+              <p className="text-muted-foreground text-[15px] leading-relaxed mb-6">
+                Every cleaner on our team is trained, background-checked, and genuinely invested in delivering results that go beyond the surface. With 30+ years of combined experience and over 5,000 completed cleans, we've earned a 93% client retention rate.
               </p>
-              <p className="text-muted-foreground text-[15px] leading-relaxed mb-7">
-                With 30+ years of combined experience across our team and over 5,000 completed cleans, we've earned a 93% client retention rate — because we show up, do the work right, and make it easy to trust us with your home.
-              </p>
+
+              {/* What sets us apart — integrated values */}
+              <h3 className="text-sm font-bold text-foreground uppercase tracking-wider mb-4">What sets us apart</h3>
+              <div className="space-y-3 mb-7">
+                {[
+                  { icon: Calendar, text: "Reliable scheduling — same team, same day, every time" },
+                  { icon: Leaf, text: "Eco-friendly Melaleuca EcoSense® products, safe for kids & pets" },
+                  { icon: CheckCircle2, text: "Homes, vacation rentals, and offices — one trusted team" },
+                  { icon: MessageCircle, text: "Transparent pricing and responsive communication" },
+                  { icon: Shield, text: "Fully bonded and insured with comprehensive liability coverage" },
+                  { icon: Users, text: "100% local Southern Maine team since 2018" },
+                ].map((item, i) => {
+                  const Icon = item.icon;
+                  return (
+                    <div key={i} className="flex items-start gap-3 text-sm text-muted-foreground">
+                      <Icon className="w-4 h-4 text-primary mt-0.5 flex-shrink-0" />
+                      <span>{item.text}</span>
+                    </div>
+                  );
+                })}
+              </div>
+
               <div className="flex flex-wrap gap-3">
                 <Link href="/how-it-works">
                   <Button className="rounded-full px-7 h-11 font-semibold gap-2" data-testid="button-about-howitworks">
@@ -155,46 +165,10 @@ export default function About() {
         </div>
       </section>
 
-      {/* ── Values Grid ── */}
-      <section className="py-16 sm:py-24" style={{ background: "hsl(222 20% 13%)" }}>
-        <div className="container mx-auto px-4 sm:px-6">
-          <div className="text-center max-w-md mx-auto mb-12">
-            <h2 className="text-[1.75rem] sm:text-4xl font-serif font-bold text-foreground tracking-[-0.01em] mb-4 section-heading-accent">
-              Why Maine Cleaning Co.
-            </h2>
-            <p className="text-muted-foreground text-[15px] leading-relaxed">What our clients count on, every single visit.</p>
-          </div>
-          <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-5 max-w-5xl mx-auto">
-            {values.map((item, i) => {
-              const Icon = item.icon;
-              return (
-                <motion.div
-                  key={i}
-                  variants={fadeUp}
-                  initial="hidden"
-                  whileInView="visible"
-                  viewport={{ once: true }}
-                  custom={i}
-                  className="card-glass p-5 sm:p-6 flex flex-col"
-                  data-testid={`card-value-${i}`}
-                >
-                  <div className={`w-10 h-10 rounded-xl ${item.bg} flex items-center justify-center mb-4`}>
-                    <Icon className={`w-4.5 h-4.5 ${item.color}`} />
-                  </div>
-                  <h3 className="font-bold text-foreground text-sm mb-1.5">{item.title}</h3>
-                  <p className="text-sm text-muted-foreground leading-relaxed">{item.desc}</p>
-                </motion.div>
-              );
-            })}
-          </div>
-        </div>
-      </section>
-
       {/* ── Eco Products ── */}
-      <section className="py-16 sm:py-24">
+      <section className="py-16 sm:py-24" style={{ background: "hsl(222 20% 13%)" }}>
         <div className="container mx-auto px-4 sm:px-6 max-w-5xl">
           <div className="grid lg:grid-cols-2 gap-10 lg:gap-16 items-center">
-            {/* Product visual — no photo, icon card */}
             <motion.div
               initial={{ opacity: 0, x: -20 }}
               whileInView={{ opacity: 1, x: 0 }}
@@ -236,7 +210,7 @@ export default function About() {
       </section>
 
       {/* ── Client Voices ── */}
-      <section className="py-16 sm:py-24" style={{ background: "hsl(222 20% 13%)" }}>
+      <section className="py-16 sm:py-24">
         <div className="container mx-auto px-4 sm:px-6 max-w-5xl">
           <div className="text-center max-w-md mx-auto mb-12">
             <h2 className="text-[1.75rem] sm:text-4xl font-serif font-bold text-foreground tracking-[-0.01em] mb-4 section-heading-accent">
@@ -281,7 +255,7 @@ export default function About() {
       </section>
 
       {/* ── Certifications ── */}
-      <section className="py-16 sm:py-24">
+      <section className="py-16 sm:py-24" style={{ background: "hsl(222 20% 13%)" }}>
         <div className="container mx-auto px-4 sm:px-6">
           <div className="text-center max-w-md mx-auto mb-10 sm:mb-14">
             <h2 className="text-[1.75rem] sm:text-4xl font-serif font-bold text-foreground tracking-[-0.01em] mb-4 section-heading-accent">
@@ -296,7 +270,7 @@ export default function About() {
       </section>
 
       {/* ── Instagram Gallery ── */}
-      <section className="py-16 sm:py-24" style={{ background: "hsl(222 20% 13%)" }}>
+      <section className="py-16 sm:py-24">
         <div className="container mx-auto px-4 sm:px-6 max-w-4xl">
           <div className="text-center mb-10">
             <div className="inline-flex items-center justify-center w-16 h-16 rounded-2xl bg-gradient-to-br from-pink-500/20 to-orange-500/20 border border-pink-500/20 mb-6">
