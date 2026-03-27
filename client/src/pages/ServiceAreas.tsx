@@ -108,7 +108,7 @@ export default function ServiceAreas() {
             transition={{ duration: 0.6, delay: 0.15 }}
             className="text-[15px] sm:text-lg text-muted-foreground leading-relaxed max-w-lg mx-auto mb-8"
           >
-            Serving 49+ communities across Southern Maine — with 93% of clients returning regularly. If your town isn't listed, reach out — we may still be able to help.
+            Trusted by homeowners and hosts across York & Cumberland County — with 93% of clients returning regularly. If your town isn't listed, reach out — we may still be able to help.
           </motion.p>
           <motion.div
             initial={{ opacity: 0, y: 10 }}
