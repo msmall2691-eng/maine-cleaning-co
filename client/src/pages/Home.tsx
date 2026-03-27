@@ -390,13 +390,22 @@ export default function Home() {
                 <div className="text-[11px] text-muted-foreground truncate">{companyInfo.contact.phoneDisplay}</div>
               </div>
             </a>
-            <a href={companyInfo.contact.smsHref} data-testid="quick-action-text" className="group flex items-center gap-3 p-3 sm:p-3.5 rounded-xl hover:bg-secondary/60 active:bg-secondary/80 transition-all border border-transparent hover:border-border/60">
+            <a href={companyInfo.contact.smsHref} data-testid="quick-action-text" className="sm:hidden group flex items-center gap-3 p-3 sm:p-3.5 rounded-xl hover:bg-secondary/60 active:bg-secondary/80 transition-all border border-transparent hover:border-border/60">
               <div className="w-9 h-9 rounded-lg bg-emerald-500/10 flex items-center justify-center flex-shrink-0 group-hover:bg-emerald-500/20 transition-colors">
                 <MessageSquare className="w-4 h-4 text-emerald-400" />
               </div>
               <div className="min-w-0">
                 <div className="text-[13px] font-semibold text-foreground group-hover:text-emerald-400 transition-colors truncate">Text Us</div>
                 <div className="text-[11px] text-muted-foreground truncate">Quick reply</div>
+              </div>
+            </a>
+            <a href={companyInfo.contact.phoneHref} data-testid="quick-action-text-desktop" className="hidden sm:flex group items-center gap-3 p-3 sm:p-3.5 rounded-xl hover:bg-secondary/60 active:bg-secondary/80 transition-all border border-transparent hover:border-border/60">
+              <div className="w-9 h-9 rounded-lg bg-emerald-500/10 flex items-center justify-center flex-shrink-0 group-hover:bg-emerald-500/20 transition-colors">
+                <MessageSquare className="w-4 h-4 text-emerald-400" />
+              </div>
+              <div className="min-w-0">
+                <div className="text-[13px] font-semibold text-foreground group-hover:text-emerald-400 transition-colors truncate">Call or Text</div>
+                <div className="text-[11px] text-muted-foreground truncate">{companyInfo.contact.phoneDisplay}</div>
               </div>
             </a>
             <button onClick={scrollToEstimate} data-testid="quick-action-estimate" className="group flex items-center gap-3 p-3 sm:p-3.5 rounded-xl hover:bg-secondary/60 active:bg-secondary/80 transition-all border border-transparent hover:border-border/60 text-left w-full">
