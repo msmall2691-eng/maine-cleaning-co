@@ -20,7 +20,7 @@ export default function Services() {
       <section className="relative bg-background border-b border-border pt-20 sm:pt-28 pb-12 sm:pb-16 overflow-hidden">
         <div className="absolute inset-0 z-0">
           <img
-            src="/images/aec03ff4-98a7-11f0-b6e5-0242ac110002-jpg-hero_image.jpeg"
+            src="/images/services-hero-clean-home.jpeg"
             alt="Professional cleaning services"
             className="w-full h-full object-cover opacity-[0.07]"
           />

@@ -13,7 +13,7 @@ export default function Blog() {
       <div className="relative bg-secondary/50 pt-24 sm:pt-32 pb-12 sm:pb-20 border-b border-border overflow-hidden">
         <div className="absolute inset-0 z-0">
           <img
-            src="/images/addae519-98a7-11f0-bbb5-0242ac110002-jpg-hero_image.jpeg"
+            src="/images/blog-hero-cleaning-tips.jpeg"
             alt="Clean home interior"
             className="w-full h-full object-cover opacity-[0.05]"
           />

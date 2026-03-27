@@ -48,8 +48,11 @@ export default function Footer() {
               <a href={companyInfo.contact.phoneHref} className="inline-flex items-center gap-2.5 text-foreground hover:text-primary transition-colors" data-testid="link-footer-call">
                 <Phone className="w-4 h-4 text-primary flex-shrink-0" /> {companyInfo.contact.phoneDisplay}
               </a>
-              <a href={companyInfo.contact.smsHref} className="inline-flex items-center gap-2.5 text-foreground hover:text-primary transition-colors" data-testid="link-footer-text">
+              <a href={companyInfo.contact.smsHref} className="inline-flex sm:hidden items-center gap-2.5 text-foreground hover:text-primary transition-colors" data-testid="link-footer-text">
                 <MessageSquare className="w-4 h-4 text-primary flex-shrink-0" /> Text Us
+              </a>
+              <a href={companyInfo.contact.phoneHref} className="hidden sm:inline-flex items-center gap-2.5 text-foreground hover:text-primary transition-colors" data-testid="link-footer-text-desktop">
+                <MessageSquare className="w-4 h-4 text-primary flex-shrink-0" /> Call or Text {companyInfo.contact.phoneDisplay}
               </a>
               <a href={companyInfo.contact.emailHref} className="inline-flex items-center gap-2.5 text-foreground hover:text-primary transition-colors" data-testid="link-footer-email">
                 <Mail className="w-4 h-4 text-primary flex-shrink-0" /> {companyInfo.contact.email}
