@@ -1,0 +1,3 @@
+# The Maine Cleaning Co.
+
+Initializing repository...
