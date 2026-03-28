@@ -408,15 +408,6 @@ export default function Home() {
                 <div className="text-[11px] text-muted-foreground truncate">{companyInfo.contact.phoneDisplay}</div>
               </div>
             </a>
-            <button onClick={scrollToEstimate} data-testid="quick-action-estimate" className="group flex items-center gap-3 p-3 sm:p-3.5 rounded-xl hover:bg-secondary/60 active:bg-secondary/80 transition-all border border-transparent hover:border-border/60 text-left w-full">
-              <div className="w-9 h-9 rounded-lg bg-primary/10 flex items-center justify-center flex-shrink-0 group-hover:bg-primary/20 transition-colors">
-                <Sparkles className="w-4 h-4 text-primary" />
-              </div>
-              <div className="min-w-0">
-                <div className="text-[13px] font-semibold text-foreground group-hover:text-primary transition-colors truncate">Get Estimate</div>
-                <div className="text-[11px] text-muted-foreground truncate">Instant pricing</div>
-              </div>
-            </button>
             <Link href="/service-areas" data-testid="quick-action-areas" className="group flex items-center gap-3 p-3 sm:p-3.5 rounded-xl hover:bg-secondary/60 active:bg-secondary/80 transition-all border border-transparent hover:border-border/60">
               <div className="w-9 h-9 rounded-lg bg-orange-500/10 flex items-center justify-center flex-shrink-0 group-hover:bg-orange-500/20 transition-colors">
                 <MapPin className="w-4 h-4 text-orange-400" />

@@ -51,6 +51,9 @@ const whatToExpect = [
 ];
 
 const faqs = [
+  { q: "Are your cleaners background-checked?", a: "Yes. Every cleaner is vetted, trained, and covered by our comprehensive liability insurance. We take the safety of your home seriously." },
+  { q: "Will I get the same team each visit?", a: "For recurring clients, absolutely. We assign a consistent team who learns your home, your preferences, and your standards." },
+  { q: "What if I'm not satisfied with a clean?", a: "We offer a satisfaction guarantee. If anything isn't right, we come back and fix it — no questions asked." },
   { q: "What areas do you serve?", a: "We serve York County and Cumberland County in Southern Maine — including Portland, South Portland, Scarborough, Cape Elizabeth, Falmouth, Yarmouth, Old Orchard Beach, Kennebunkport, and 40+ more communities." },
   { q: "What cleaning products do you use?", a: "We exclusively use Melaleuca EcoSense and Sal Suds — eco-friendly, safe for children and pets, and highly effective. No harsh chemicals, ever." },
   { q: "Do I need to be home during the cleaning?", a: "No. Many clients provide a spare key or entry code. We always ensure your home is secure when we leave." },
@@ -168,91 +171,22 @@ export default function HowItWorks() {
         </div>
       </section>
 
-      {/* ── What to Expect ── */}
-      <section className="py-16 sm:py-24 bg-card/30">
-        <div className="container mx-auto px-4 sm:px-6">
-          <div className="text-center max-w-md mx-auto mb-12">
-            <h2 className="text-[1.75rem] sm:text-4xl font-serif font-bold text-foreground tracking-[-0.01em] mb-4 section-heading-accent">
-              What to Expect
-            </h2>
-            <p className="text-muted-foreground text-[15px] leading-relaxed">
-              Standards we hold ourselves to on every visit.
-            </p>
-          </div>
-          <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-5 max-w-4xl mx-auto">
-            {whatToExpect.map((item, i) => (
-              <motion.div
-                key={i}
-                variants={fadeUp}
-                initial="hidden"
-                whileInView="visible"
-                viewport={{ once: true }}
-                custom={i}
-                className="card-glass p-5 sm:p-6"
-                data-testid={`expect-${i}`}
-              >
-                <item.icon className="w-5 h-5 text-primary mb-3" />
-                <h3 className="font-bold text-foreground text-sm mb-1.5">{item.title}</h3>
-                <p className="text-sm text-muted-foreground leading-relaxed">{item.desc}</p>
-              </motion.div>
-            ))}
-          </div>
-        </div>
-      </section>
-
-      {/* ── STR Callout ── */}
-      <section className="py-16 sm:py-24">
-        <div className="container mx-auto px-4 sm:px-6 max-w-4xl">
-          <div className="card-glass p-8 sm:p-12">
-            <div className="grid lg:grid-cols-[1fr_auto] gap-8 items-center">
-              <div>
-                <span className="inline-flex items-center gap-2 text-[11px] font-semibold uppercase tracking-[0.2em] text-primary/80 mb-4">
-                  <Zap className="w-3.5 h-3.5" /> Airbnb & VRBO Hosts
-                </span>
-                <h2 className="text-[1.5rem] sm:text-3xl font-serif font-bold text-foreground tracking-[-0.01em] mb-4">
-                  Hosting on a Short-Term Rental Platform?
-                </h2>
-                <p className="text-muted-foreground text-[15px] leading-relaxed mb-5">
-                  We handle same-day turnovers, iCal booking sync, and hotel-quality resets — so your guests check in to a 5-star experience every time.
-                </p>
-                <ul className="space-y-2.5 mb-6">
-                  {[
-                    { icon: RefreshCw, text: "iCal sync with all major platforms" },
-                    { icon: Zap, text: "Same-day turnovers, 7 days a week" },
-                    { icon: HomeIcon, text: "Full property management available" },
-                    { icon: Star, text: "Hotel-quality cleans for 5-star reviews" },
-                  ].map((item, i) => (
-                    <li key={i} className="flex items-center gap-3 text-sm font-medium text-foreground">
-                      <item.icon className="w-4 h-4 text-primary flex-shrink-0" /> {item.text}
-                    </li>
-                  ))}
-                </ul>
-                <Link href="/short-term-rentals">
-                  <Button className="rounded-full px-7 h-11 font-semibold gap-2" data-testid="button-hiw-str">
-                    Explore STR Services <ArrowRight className="w-4 h-4" />
-                  </Button>
-                </Link>
-              </div>
-              <div className="grid grid-cols-2 gap-3 lg:w-60 flex-shrink-0">
-                {[
-                  { icon: RefreshCw, title: "iCal Sync", desc: "Automated platform sync." },
-                  { icon: Zap, title: "Same-Day", desc: "Back-to-back bookings." },
-                  { icon: HomeIcon, title: "Mgmt", desc: "Full property care." },
-                  { icon: Shield, title: "Insured", desc: "Bonded & protected." },
-                ].map((card, i) => {
-                  const Icon = card.icon;
-                  return (
-                    <div key={i} className="card-soft p-4" data-testid={`str-card-${i}`}>
-                      <div className="w-8 h-8 rounded-lg bg-primary/10 flex items-center justify-center mb-2.5">
-                        <Icon className="w-4 h-4 text-primary" />
-                      </div>
-                      <h3 className="font-bold text-foreground text-xs mb-1">{card.title}</h3>
-                      <p className="text-[11px] text-muted-foreground leading-relaxed">{card.desc}</p>
-                    </div>
-                  );
-                })}
-              </div>
+      {/* ── STR Callout (condensed) ── */}
+      <section className="py-12 sm:py-16">
+        <div className="container mx-auto px-4 sm:px-6 max-w-3xl">
+          <div className="card-glass p-6 sm:p-8 flex flex-col sm:flex-row items-start sm:items-center gap-5">
+            <div className="w-12 h-12 rounded-xl bg-primary/10 flex items-center justify-center flex-shrink-0">
+              <Zap className="w-5 h-5 text-primary" />
             </div>
+            <div className="flex-1">
+              <h3 className="font-bold text-foreground text-base mb-1">Airbnb & VRBO host?</h3>
+              <p className="text-sm text-muted-foreground leading-relaxed">We offer same-day turnovers, iCal sync, and full property management for short-term rental hosts across Southern Maine.</p>
+            </div>
+            <Link href="/short-term-rentals">
+              <Button className="rounded-full px-6 h-10 font-semibold gap-2 flex-shrink-0" data-testid="button-hiw-str">
+                Learn More <ArrowRight className="w-4 h-4" />
+              </Button>
+            </Link>
           </div>
         </div>
       </section>

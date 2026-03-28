@@ -358,59 +358,32 @@ export default function ShortTermRentals() {
         </div>
       </FadeSection>
 
-      {/* ── iCal / Platform Sync Feature Callout ── */}
+      {/* ── How iCal Sync Works (condensed) ── */}
       <WaveDividerCream />
-      <FadeSection className="py-20 sm:py-28 section-cream" id="ical-sync">
-        <div className="container mx-auto px-4 sm:px-6 max-w-4xl">
-          <div className="grid lg:grid-cols-2 gap-12 lg:gap-16 items-center">
-            <div>
-              <span className="text-[11px] font-semibold uppercase tracking-[0.2em] text-primary/80 mb-3 block">Smart Automation</span>
-              <h2 className="text-[1.75rem] sm:text-4xl font-serif font-bold text-foreground tracking-[-0.01em] mb-5 section-heading-accent text-left">
-                We Sync With Your Calendar — So You Don't Have To
-              </h2>
-              <p className="text-muted-foreground text-[15px] leading-relaxed mb-5">
-                Connect your Airbnb, VRBO, or any OTA calendar once via iCal, and we automatically know when each guest checks out and schedules the turnover clean in real time. No manual coordination needed.
-              </p>
-              <ul className="space-y-3 mb-8">
-                {[
-                  "Automatic scheduling from iCal/OTA calendar link",
-                  "Works with Airbnb, VRBO, Booking.com, Hipcamp & more",
-                  "Real-time updates when bookings change",
-                  "No app downloads or software required",
-                  "Same-day turnaround for back-to-back bookings",
-                  "You get notified when the clean is complete",
-                ].map((item, i) => (
-                  <li key={i} className="flex items-start gap-3 text-sm font-medium text-foreground" data-testid={`ical-feature-${i}`}>
-                    <CheckCircle2 className="w-4 h-4 text-primary flex-shrink-0 mt-0.5" /> {item}
-                  </li>
-                ))}
-              </ul>
-              <Button size="lg" className="rounded-full px-9 h-12 font-semibold" onClick={scrollToEstimate} data-testid="button-str-ical-cta">
-                Set Up Calendar Sync <ArrowRight className="ml-2 w-4 h-4" />
-              </Button>
-            </div>
-            <div className="card-glass p-6 sm:p-8 space-y-4">
-              <div className="flex items-center gap-3 mb-6">
-                <RefreshCw className="w-6 h-6 text-primary" />
-                <span className="font-bold text-foreground text-lg">How iCal Sync Works</span>
-              </div>
-              {[
-                { step: "1", title: "Share your calendar link", desc: "Copy your iCal export URL from Airbnb, VRBO, or your PMS." },
-                { step: "2", title: "We sync automatically", desc: "Our system reads your bookings in real time and schedules cleans for every checkout." },
-                { step: "3", title: "We clean on schedule", desc: "Our team arrives at your property after each guest departure and resets to guest-ready." },
-                { step: "4", title: "You get confirmation", desc: "A completion report is sent when the property is clean and ready for your next guest." },
-              ].map((s, i) => (
-                <div key={i} className="flex gap-4 items-start" data-testid={`ical-step-${i}`}>
-                  <div className="w-8 h-8 rounded-full bg-primary/15 flex items-center justify-center flex-shrink-0 text-sm font-bold text-primary">
-                    {s.step}
-                  </div>
-                  <div>
-                    <h4 className="font-semibold text-foreground text-sm">{s.title}</h4>
-                    <p className="text-xs text-muted-foreground mt-0.5 leading-relaxed">{s.desc}</p>
-                  </div>
+      <FadeSection className="py-16 sm:py-24 section-cream" id="ical-sync">
+        <div className="container mx-auto px-4 sm:px-6 max-w-3xl text-center">
+          <RefreshCw className="w-8 h-8 text-primary mx-auto mb-4" />
+          <h2 className="text-[1.75rem] sm:text-3xl font-serif font-bold text-foreground tracking-[-0.01em] mb-4 section-heading-accent">
+            We Sync With Your Calendar
+          </h2>
+          <p className="text-muted-foreground text-[15px] leading-relaxed mb-10 max-w-lg mx-auto">
+            Connect your Airbnb, VRBO, or any OTA calendar once via iCal. We automatically schedule turnover cleans for every checkout — no manual coordination needed.
+          </p>
+          <div className="grid sm:grid-cols-4 gap-4 sm:gap-6 mb-8">
+            {[
+              { step: "1", title: "Share your link", desc: "Copy your iCal URL from Airbnb or VRBO" },
+              { step: "2", title: "We sync", desc: "Bookings auto-schedule cleans" },
+              { step: "3", title: "We clean", desc: "Team arrives after each checkout" },
+              { step: "4", title: "You're notified", desc: "Confirmation when guest-ready" },
+            ].map((s, i) => (
+              <div key={i} className="text-center" data-testid={`ical-step-${i}`}>
+                <div className="w-10 h-10 rounded-full bg-primary/15 flex items-center justify-center mx-auto mb-3 text-sm font-bold text-primary">
+                  {s.step}
                 </div>
-              ))}
-            </div>
+                <h4 className="font-semibold text-foreground text-sm mb-1">{s.title}</h4>
+                <p className="text-xs text-muted-foreground leading-relaxed">{s.desc}</p>
+              </div>
+            ))}
           </div>
         </div>
       </FadeSection>
@@ -514,27 +487,19 @@ export default function ShortTermRentals() {
         </div>
       </FadeSection>
 
-      {/* ── Service Areas ── */}
+      {/* ── Coverage ── */}
       <WaveDivider />
       <FadeSection className="py-16 sm:py-20 section-white">
         <div className="container mx-auto px-4 sm:px-6 max-w-3xl text-center">
-          <span className="text-[11px] font-semibold uppercase tracking-[0.2em] text-primary/80 mb-3 block">Coverage</span>
-          <h2 className="text-[1.75rem] sm:text-3xl font-serif font-bold text-foreground tracking-[-0.01em] mb-5 section-heading-accent">
+          <h2 className="text-[1.75rem] sm:text-3xl font-serif font-bold text-foreground tracking-[-0.01em] mb-4 section-heading-accent">
             We Serve All of Southern Maine
           </h2>
-          <p className="text-muted-foreground text-[15px] leading-relaxed mb-8">
-            From the Seacoast to the Lakes Region — our STR cleaning and management services cover the hottest short-term rental markets in Maine.
+          <p className="text-muted-foreground text-[15px] leading-relaxed mb-6">
+            From Old Orchard Beach to Kennebunkport, Portland to Naples — our STR cleaning and management services cover every short-term rental market in York & Cumberland County.
           </p>
-          <div className="flex flex-wrap justify-center gap-2 mb-8">
-            {southernMaineHotspots.map((town) => (
-              <span key={town} className="text-xs font-medium text-muted-foreground bg-card border border-border rounded-full px-3 py-1.5">
-                {town}
-              </span>
-            ))}
-          </div>
-          <Link href="/#service-area">
+          <Link href="/service-areas">
             <Button variant="outline" className="h-10 px-6 rounded-full border-border text-sm font-semibold gap-2" data-testid="link-str-map">
-              <MapPin className="w-4 h-4 text-primary" /> View Our Service Map <ChevronRight className="w-4 h-4" />
+              <MapPin className="w-4 h-4 text-primary" /> View All Service Areas <ChevronRight className="w-4 h-4" />
             </Button>
           </Link>
         </div>
