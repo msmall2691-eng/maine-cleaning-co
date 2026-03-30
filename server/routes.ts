@@ -443,6 +443,25 @@ export async function registerRoutes(
           storage.updateIntakeSubmissionEmail(submission.id, "failed").catch(() => {});
         });
 
+      // Forward to CRM
+      const freqMap: Record<string, string> = { weekly: "Weekly", biweekly: "Biweekly", monthly: "Monthly", "one-time": "One-Time" };
+      fetch("https://connecteam-proxy.vercel.app/api/leads", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          name: normalized.name || "",
+          email: normalized.email || "",
+          phone: normalized.phone || "",
+          address: normalized.address || normalized.zip || "",
+          service: normalized.serviceType || "custom",
+          message: normalized.notes || `Estimate: $${normalized.estimateMin || "?"}–$${normalized.estimateMax || "?"}`,
+          propertyType: normalized.serviceType === "str" ? "vacation-rental" : normalized.serviceType === "commercial" ? "commercial" : "residential",
+          frequency: freqMap[normalized.frequency] || normalized.frequency || "",
+        }),
+      })
+        .then(r => log("INFO", "crm", `Lead forwarded to CRM`, { status: r.status, intakeId: submission.id }))
+        .catch(err => log("ERROR", "crm", `CRM forward failed`, { error: String(err), intakeId: submission.id }));
+
       return res.status(201).json({
         success: true,
         id: submission.id,
@@ -514,6 +533,25 @@ export async function registerRoutes(
         leadId: lead.id,
         emailSent: emailConfigured,
       });
+
+      // Forward to CRM
+      const crmFreqMap: Record<string, string> = { weekly: "Weekly", biweekly: "Biweekly", monthly: "Monthly", "one-time": "One-Time" };
+      fetch("https://connecteam-proxy.vercel.app/api/leads", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          name: lead.name || "",
+          email: lead.email || "",
+          phone: lead.phone || "",
+          address: lead.address || lead.zip || "",
+          service: lead.serviceType === "standard" ? "Standard Clean" : lead.serviceType === "deep" ? "Deep Clean" : lead.serviceType,
+          message: `${lead.sqft} sqft, ${lead.bathrooms} bath. Estimate: $${lead.estimateMin}–$${lead.estimateMax}. ${lead.notes || ""}`.trim(),
+          propertyType: "residential",
+          frequency: crmFreqMap[lead.frequency] || lead.frequency || "",
+        }),
+      })
+        .then(r => log("INFO", "crm", `Lead forwarded to CRM`, { status: r.status, leadId: lead.id }))
+        .catch(err => log("ERROR", "crm", `CRM forward failed`, { error: String(err), leadId: lead.id }));
 
       const webhookUrl = process.env.WEBHOOK_URL;
       const webhookSecret = process.env.WEBHOOK_SECRET;
