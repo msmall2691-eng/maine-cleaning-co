@@ -879,7 +879,7 @@ Pricing factors: Square footage (÷725 = base hours), number of bathrooms, prope
 
 Coverage area: Southern Maine including Portland, South Portland, Scarborough, Falmouth, Gorham, Windham, Naples, Casco, Standish, West Baldwin, Kennebunk, Old Orchard Beach, Waterboro.
 
-Company details: 7+ years in business, 5,000+ cleans completed, 4.9 Google rating, eco-friendly products, fully insured. Phone: 207-572-0502, Email: info@maine-clean.co
+Company details: 7+ years in business, 5,000+ cleans completed, 4.9 Google rating, eco-friendly products, fully insured. Phone: 207-572-0502, Email: office@mainecleaningco.com
 
 Rules:
 - Be warm, professional, and concise (2-4 sentences per response)

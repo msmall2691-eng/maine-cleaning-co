@@ -165,7 +165,7 @@ function buildCustomerConfirmationHtml(lead: QuoteLead, tempPassword?: string): 
         <p style="font-size:14px;margin:0;">
           <a href="tel:207-572-0502" style="color:#3a4f5c;font-weight:600;text-decoration:none;">207-572-0502</a>
           <span style="color:#d1d5db;margin:0 8px;">|</span>
-          <a href="mailto:info@maine-clean.co" style="color:#3a4f5c;font-weight:600;text-decoration:none;">info@maine-clean.co</a>
+          <a href="mailto:office@mainecleaningco.com" style="color:#3a4f5c;font-weight:600;text-decoration:none;">office@mainecleaningco.com</a>
         </p>
       </div>
     </div>
