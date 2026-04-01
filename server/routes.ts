@@ -10,6 +10,8 @@ import crypto from "crypto";
 import { setupAuth, hashPassword, comparePassword, requireAuth, requireAdmin } from "./auth";
 import OpenAI from "openai";
 
+const CRM_WEBHOOK_URL = process.env.CRM_WEBHOOK_URL || "https://connecteam-proxy.vercel.app/api/leads";
+
 function log(level: "INFO" | "WARN" | "ERROR", context: string, message: string, data?: Record<string, any>) {
   const ts = new Date().toISOString();
   const extra = data ? ` ${JSON.stringify(data)}` : "";
@@ -454,9 +456,16 @@ export async function registerRoutes(
         message: normalized.notes || `Estimate: $${normalized.estimateMin || "?"}–$${normalized.estimateMax || "?"}`,
         propertyType: normalized.serviceType === "str" ? "vacation-rental" : normalized.serviceType === "commercial" ? "commercial" : "residential",
         frequency: freqMap[normalized.frequency] || normalized.frequency || "",
+        estimateMin: normalized.estimateMin || null,
+        estimateMax: normalized.estimateMax || null,
+        squareFeet: normalized.sqft || null,
+        bathrooms: normalized.bathrooms || null,
+        petHair: normalized.petHair || null,
+        condition: normalized.condition || null,
+        source: "Website",
       };
       log("INFO", "crm", "Forwarding intake to CRM", { payload: crmPayload, intakeId: submission.id });
-      fetch("https://connecteam-proxy.vercel.app/api/leads", {
+      fetch(CRM_WEBHOOK_URL, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(crmPayload),
@@ -550,9 +559,16 @@ export async function registerRoutes(
         message: `${lead.sqft} sqft, ${lead.bathrooms} bath. Estimate: $${lead.estimateMin}–$${lead.estimateMax}. ${lead.notes || ""}`.trim(),
         propertyType: "residential",
         frequency: crmFreqMap[lead.frequency] || lead.frequency || "",
+        estimateMin: lead.estimateMin,
+        estimateMax: lead.estimateMax,
+        squareFeet: lead.sqft,
+        bathrooms: lead.bathrooms,
+        petHair: lead.petHair,
+        condition: lead.condition,
+        source: "Website",
       };
       log("INFO", "crm", "Forwarding quote to CRM", { payload: quoteCrmPayload, leadId: lead.id });
-      fetch("https://connecteam-proxy.vercel.app/api/leads", {
+      fetch(CRM_WEBHOOK_URL, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(quoteCrmPayload),
