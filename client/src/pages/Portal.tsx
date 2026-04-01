@@ -457,7 +457,7 @@ export default function Portal() {
                         <FileText className="w-10 h-10 text-muted-foreground mx-auto mb-3" />
                         <h3 className="font-bold text-foreground mb-1">No quotes yet</h3>
                         <p className="text-sm text-muted-foreground mb-4">Get started by requesting an estimate on our homepage.</p>
-                        <Link href="/#estimate"><Button className="rounded-full" data-testid="button-get-estimate">Get an Estimate</Button></Link>
+                        <Link href="/#get-estimate"><Button className="rounded-full" data-testid="button-get-estimate">Get an Estimate</Button></Link>
                       </div>
                     )}
                   </div>

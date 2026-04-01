@@ -550,7 +550,7 @@ export function InstantEstimate() {
               <div className="flex items-center gap-2.5 px-3.5 py-2.5 rounded-xl bg-blue-500/10 border border-blue-500/30" data-testid="text-availability">
                 <Clock className="w-4 h-4 text-blue-500 flex-shrink-0" />
                 <p className="text-xs text-blue-400 leading-relaxed">
-                  <span className="font-semibold">Typical availability in your area:</span> 3–7 business days
+                  <span className="font-semibold">Typical availability:</span> 3-7 business days
                 </p>
               </div>
 

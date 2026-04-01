@@ -1,4 +1,5 @@
-import { Switch, Route } from "wouter";
+import { useEffect } from "react";
+import { Switch, Route, useLocation } from "wouter";
 import { queryClient } from "./lib/queryClient";
 import { QueryClientProvider } from "@tanstack/react-query";
 import { Toaster } from "@/components/ui/toaster";
@@ -20,8 +21,18 @@ import NotFound from "@/pages/not-found";
 import { StickyMobileBar } from "@/components/ui/StickyMobileBar";
 import { AIChatWidget } from "@/components/ui/AIChatWidget";
 
+function ScrollToTop() {
+  const [location] = useLocation();
+  useEffect(() => {
+    window.scrollTo(0, 0);
+  }, [location]);
+  return null;
+}
+
 function Router() {
   return (
+    <>
+    <ScrollToTop />
     <Switch>
       <Route path="/" component={Home} />
       <Route path="/about" component={About} />
@@ -36,6 +47,7 @@ function Router() {
       <Route path="/terms" component={Terms} />
       <Route component={NotFound} />
     </Switch>
+    </>
   );
 }
 

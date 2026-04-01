@@ -15,7 +15,9 @@ export function StickyMobileBar() {
   }, []);
 
   const scrollToEstimate = () => {
-    document.getElementById("get-estimate")?.scrollIntoView({ behavior: "smooth" });
+    const el = document.getElementById("get-estimate");
+    if (el) el.scrollIntoView({ behavior: "smooth" });
+    else window.location.href = "/#get-estimate";
   };
 
   if (!visible) return null;
