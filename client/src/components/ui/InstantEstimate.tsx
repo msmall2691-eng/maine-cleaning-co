@@ -62,9 +62,9 @@ function Seg<T extends string>({
           type="button"
           onClick={() => onChange(o.id)}
           data-testid={`${id}-${o.id}`}
-          className={`flex-1 py-2 px-1 rounded-lg text-[12px] sm:text-[13px] font-medium transition-all text-center leading-snug min-h-[40px] flex items-center justify-center ${
+          className={`flex-1 py-2 px-1 rounded-lg text-[13px] sm:text-sm font-medium transition-all text-center leading-snug min-h-[44px] flex items-center justify-center ${
             value === o.id
-              ? "bg-card text-foreground shadow-sm"
+              ? "bg-card text-foreground shadow-md ring-1 ring-primary/30 font-semibold"
               : "text-muted-foreground hover:text-foreground"
           }`}
         >
@@ -373,9 +373,9 @@ export function InstantEstimate() {
 
         {/* ── Category Selector (always visible in step 1) ── */}
         {step === 1 && (
-          <div className="mb-5">
+          <div className="mb-6">
             <label className="label-sm">What type of property?</label>
-            <div className="grid grid-cols-2 gap-2">
+            <div className="grid grid-cols-2 gap-2.5">
               {categories.map((cat) => {
                 const Icon = cat.icon;
                 const active = category === cat.id;
@@ -385,9 +385,9 @@ export function InstantEstimate() {
                     type="button"
                     onClick={() => setCategory(cat.id)}
                     data-testid={`category-${cat.id}`}
-                    className={`flex items-start gap-2.5 p-3 rounded-xl border text-left transition-all ${
+                    className={`flex items-start gap-2.5 p-4 rounded-xl border text-left transition-all min-h-[80px] ${
                       active
-                        ? `${cat.bg} border-opacity-60`
+                        ? `${cat.bg} border-opacity-80 ring-1 ring-primary/25 shadow-sm`
                         : "border-border/50 bg-muted/20 hover:bg-muted/40"
                     }`}
                   >
@@ -395,8 +395,8 @@ export function InstantEstimate() {
                       <Icon className={`w-3.5 h-3.5 ${active ? cat.color : "text-muted-foreground"}`} />
                     </div>
                     <div className="min-w-0">
-                      <div className={`text-[12px] font-semibold leading-tight ${active ? "text-foreground" : "text-foreground/70"}`}>{cat.label}</div>
-                      <div className="text-[10px] text-muted-foreground mt-0.5 leading-snug">{cat.sub}</div>
+                      <div className={`text-[13px] font-semibold leading-tight ${active ? "text-foreground" : "text-foreground/70"}`}>{cat.label}</div>
+                      <div className="text-xs text-muted-foreground mt-0.5 leading-snug">{cat.sub}</div>
                     </div>
                   </button>
                 );
@@ -409,12 +409,12 @@ export function InstantEstimate() {
 
           {/* ── Step 1: Calculator (residential / deep-clean) ── */}
           {step === 1 && !isCustomQuote && (
-            <motion.div key="s1-calc" initial={{ opacity: 0, x: -10 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -10 }} transition={{ duration: 0.3, ease: [0.22, 1, 0.36, 1] }} className="space-y-5">
+            <motion.div key="s1-calc" initial={{ opacity: 0, x: -10 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -10 }} transition={{ duration: 0.3, ease: [0.22, 1, 0.36, 1] }} className="space-y-6">
 
               <div>
                 <div className="flex justify-between items-baseline mb-1.5">
                   <label className="label-sm !mb-0">Square footage</label>
-                  <span className="text-sm font-semibold text-foreground tabular-nums" data-testid="value-sqft">{sqft[0].toLocaleString()}</span>
+                  <span className="text-base font-bold text-foreground tabular-nums" data-testid="value-sqft">{sqft[0].toLocaleString()} <span className="text-sm font-semibold text-muted-foreground">sq ft</span></span>
                 </div>
                 <Slider value={sqft} onValueChange={setSqft} min={500} max={6000} step={100} className="w-full" data-testid="slider-sqft" />
                 <div className="flex justify-between mt-1 text-xs text-muted-foreground"><span>500</span><span>6,000+</span></div>
@@ -423,7 +423,7 @@ export function InstantEstimate() {
               <div>
                 <div className="flex justify-between items-baseline mb-1.5">
                   <label className="label-sm !mb-0">Bathrooms <span className="font-normal text-muted-foreground text-[11px]">(inc. half baths)</span></label>
-                  <span className="text-sm font-semibold text-foreground" data-testid="value-bathrooms">
+                  <span className="text-base font-bold text-foreground" data-testid="value-bathrooms">
                     {bathrooms % 1 === 0.5 ? `${Math.floor(bathrooms)}½` : bathrooms}
                   </span>
                 </div>
@@ -482,7 +482,7 @@ export function InstantEstimate() {
                 </div>
               )}
 
-              <div className="space-y-4">
+              <div className="border-t border-border/30 pt-5 space-y-4">
                 <div>
                   <label className="label-sm">Pet hair</label>
                   <Seg
@@ -511,10 +511,10 @@ export function InstantEstimate() {
                 />
               </div>
 
-              <div className="rounded-xl bg-muted/40 p-4">
-                <div className="text-xs font-semibold tracking-wide text-muted-foreground uppercase mb-1" data-testid="label-range">Estimated range</div>
-                <div className="text-2xl sm:text-3xl font-bold text-foreground tracking-tight" data-testid="text-range">
-                  {fmt(engine.min)}<span className="text-muted-foreground font-normal mx-1 text-lg sm:text-xl">–</span>{fmt(engine.max)}
+              <div className="rounded-xl bg-gradient-to-br from-emerald-500/10 to-blue-500/10 border border-emerald-500/20 p-5">
+                <div className="text-xs font-semibold tracking-wide text-muted-foreground uppercase mb-1.5" data-testid="label-range">Estimated range</div>
+                <div className="text-3xl sm:text-4xl font-bold text-foreground tracking-tight" data-testid="text-range">
+                  {fmt(engine.min)}<span className="text-muted-foreground font-normal mx-1.5 text-xl sm:text-2xl">–</span>{fmt(engine.max)}
                 </div>
                 <div className="flex flex-wrap gap-1.5 mt-2.5" data-testid="text-summary">
                   <span className="text-[11px] font-medium bg-muted/60 border border-border/40 text-muted-foreground rounded-full px-2 py-0.5">
@@ -554,15 +554,15 @@ export function InstantEstimate() {
                 </p>
               </div>
 
-              <Button className="w-full h-12 rounded-xl text-base font-semibold shadow-sm group" onClick={() => setStep(2)} data-testid="button-review">
-                Review & Submit <ChevronRight className="ml-1 w-4 h-4 group-hover:translate-x-0.5 transition-transform" />
+              <Button className="w-full h-[52px] rounded-xl text-base font-bold shadow-md group min-h-[48px]" onClick={() => setStep(2)} data-testid="button-review">
+                Review & Submit <ChevronRight className="ml-1 w-5 h-5 group-hover:translate-x-0.5 transition-transform" />
               </Button>
             </motion.div>
           )}
 
           {/* ── Step 1: Custom Quote (STR / Commercial) ── */}
           {step === 1 && isCustomQuote && (
-            <motion.div key="s1-custom" initial={{ opacity: 0, x: 10 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: 10 }} transition={{ duration: 0.3, ease: [0.22, 1, 0.36, 1] }} className="space-y-5">
+            <motion.div key="s1-custom" initial={{ opacity: 0, x: 10 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: 10 }} transition={{ duration: 0.3, ease: [0.22, 1, 0.36, 1] }} className="space-y-6">
 
               <div className="flex items-start gap-3 px-4 py-3.5 rounded-xl bg-amber-500/8 border border-amber-500/20">
                 <Info className="w-4 h-4 text-amber-400 mt-0.5 flex-shrink-0" />
@@ -627,7 +627,7 @@ export function InstantEstimate() {
               </div>
 
               <Button
-                className="w-full h-12 rounded-xl text-base font-semibold shadow-sm group"
+                className="w-full h-[52px] rounded-xl text-base font-bold shadow-md group min-h-[48px]"
                 disabled={submit.isPending || (!contactName && !contactPhone)}
                 onClick={() => submit.mutate()}
                 data-testid="button-submit-custom"
@@ -642,11 +642,12 @@ export function InstantEstimate() {
 
           {/* ── Step 2: Contact + confirm (residential/deep) ── */}
           {step === 2 && !isCustomQuote && (
-            <motion.div key="s2" initial={{ opacity: 0, x: 10 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: 10 }} transition={{ duration: 0.3, ease: [0.22, 1, 0.36, 1] }} className="space-y-5">
-              <div className="bg-muted/40 p-4 rounded-xl text-center">
-                <div className="text-xs font-medium uppercase tracking-widest text-muted-foreground mb-1">Your estimate</div>
-                <div className="text-2xl sm:text-3xl font-bold text-foreground tracking-tight" data-testid="text-review-range">
-                  {fmt(engine.min)}<span className="text-muted-foreground font-normal mx-1 text-base sm:text-lg">–</span>{fmt(engine.max)}
+            <motion.div key="s2" initial={{ opacity: 0, x: 10 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: 10 }} transition={{ duration: 0.3, ease: [0.22, 1, 0.36, 1] }} className="space-y-6">
+              <h4 className="text-base font-semibold text-foreground text-center">Almost there! Just a few details.</h4>
+              <div className="bg-gradient-to-br from-emerald-500/10 to-blue-500/10 border border-emerald-500/20 p-5 rounded-xl text-center">
+                <div className="text-xs font-semibold uppercase tracking-widest text-muted-foreground mb-1.5">Your estimate</div>
+                <div className="text-3xl sm:text-4xl font-bold text-foreground tracking-tight" data-testid="text-review-range">
+                  {fmt(engine.min)}<span className="text-muted-foreground font-normal mx-1.5 text-lg sm:text-xl">–</span>{fmt(engine.max)}
                 </div>
                 <p className="text-[13px] text-muted-foreground mt-1">
                   {sqft[0].toLocaleString()} sq ft · {bathrooms % 1 === 0.5 ? `${Math.floor(bathrooms)}½` : bathrooms} bath · {typeLabel}{category === "residential" ? ` · ${freqLabel[frequency]}` : ""}
@@ -654,20 +655,33 @@ export function InstantEstimate() {
                 <p className="text-xs text-muted-foreground mt-1 italic">Non-binding. Final price confirmed after review.</p>
               </div>
 
-              <div className="space-y-3">
+              <div className="space-y-3.5">
                 <p className="label-sm">Contact info <span className="font-normal text-muted-foreground">(all optional)</span></p>
-                <Input placeholder="Your name" value={contactName} onChange={e => setContactName(e.target.value)} className="input-field" data-testid="input-name" />
-                <Input placeholder="Phone number" type="tel" value={contactPhone} onChange={e => setContactPhone(e.target.value)} className="input-field" data-testid="input-phone" />
                 <div>
-                  <Input placeholder="Email address" type="email" value={contactEmail} onChange={e => setContactEmail(e.target.value)} className="input-field" data-testid="input-email" />
+                  <label className="text-xs font-medium text-muted-foreground mb-1 block">Name</label>
+                  <Input placeholder="Your name" value={contactName} onChange={e => setContactName(e.target.value)} className="input-field !h-11" data-testid="input-name" />
+                </div>
+                <div>
+                  <label className="text-xs font-medium text-muted-foreground mb-1 block">Phone</label>
+                  <Input placeholder="Phone number" type="tel" value={contactPhone} onChange={e => setContactPhone(e.target.value)} className="input-field !h-11" data-testid="input-phone" />
+                </div>
+                <div>
+                  <label className="text-xs font-medium text-muted-foreground mb-1 block">Email</label>
+                  <Input placeholder="Email address" type="email" value={contactEmail} onChange={e => setContactEmail(e.target.value)} className="input-field !h-11" data-testid="input-email" />
                   <p className="text-[11px] text-muted-foreground mt-1 ml-1">Enter your email to receive a copy of this request.</p>
                 </div>
-                <AddressInput
-                  value={contactAddress}
-                  onChange={setContactAddress}
-                  onZipDetected={(z) => setZip(z)}
-                />
-                <Input placeholder="Anything else? (optional)" value={contactNotes} onChange={e => setContactNotes(e.target.value)} className="input-field" data-testid="input-notes" />
+                <div>
+                  <label className="text-xs font-medium text-muted-foreground mb-1 block">Address</label>
+                  <AddressInput
+                    value={contactAddress}
+                    onChange={setContactAddress}
+                    onZipDetected={(z) => setZip(z)}
+                  />
+                </div>
+                <div>
+                  <label className="text-xs font-medium text-muted-foreground mb-1 block">Notes</label>
+                  <Input placeholder="Anything else? (optional)" value={contactNotes} onChange={e => setContactNotes(e.target.value)} className="input-field !h-11" data-testid="input-notes" />
+                </div>
               </div>
 
               <div>
@@ -708,8 +722,8 @@ export function InstantEstimate() {
               </ul>
 
               <div className="flex gap-3">
-                <Button variant="outline" className="h-12 px-4 sm:px-5 rounded-xl border-border text-sm" onClick={() => setStep(1)} data-testid="button-back">Back</Button>
-                <Button className="flex-1 h-12 text-[15px] rounded-xl shadow-sm font-semibold" disabled={submit.isPending} onClick={() => submit.mutate()} data-testid="button-submit">
+                <Button variant="outline" className="h-[52px] px-5 sm:px-6 rounded-xl border-border text-sm font-medium" onClick={() => setStep(1)} data-testid="button-back">Back</Button>
+                <Button className="flex-1 h-[52px] text-base rounded-xl shadow-md font-bold" disabled={submit.isPending} onClick={() => submit.mutate()} data-testid="button-submit">
                   {submit.isPending ? <><Loader2 className="w-4 h-4 animate-spin mr-2" /> Submitting…</> : <><Send className="w-4 h-4 mr-2" /> Submit Request</>}
                 </Button>
               </div>
@@ -718,17 +732,17 @@ export function InstantEstimate() {
 
           {/* ── Step 3: Success ── */}
           {step === 3 && (
-            <motion.div key="s3" initial={{ opacity: 0, scale: 0.95 }} animate={{ opacity: 1, scale: 1 }} exit={{ opacity: 0, scale: 0.95 }} transition={{ duration: 0.35, ease: [0.22, 1, 0.36, 1] }} className="py-4 sm:py-6 space-y-5">
+            <motion.div key="s3" initial={{ opacity: 0, scale: 0.95 }} animate={{ opacity: 1, scale: 1 }} exit={{ opacity: 0, scale: 0.95 }} transition={{ duration: 0.35, ease: [0.22, 1, 0.36, 1] }} className="py-5 sm:py-8 space-y-6">
               <div className="text-center">
-                <div className="w-14 h-14 rounded-full bg-emerald-500/15 flex items-center justify-center mx-auto mb-3">
-                  <CheckCircle2 className="w-7 h-7 text-green-500" />
+                <div className="w-18 h-18 w-[72px] h-[72px] rounded-full bg-emerald-500/15 flex items-center justify-center mx-auto mb-4">
+                  <CheckCircle2 className="w-9 h-9 text-green-500" />
                 </div>
-                <h3 className="text-xl font-bold text-foreground" data-testid="text-success-title">
+                <h3 className="text-2xl font-bold text-foreground" data-testid="text-success-title">
                   {isCustomQuote ? "Quote Request Sent!" : "Request Sent!"}
                 </h3>
                 {!isCustomQuote && (
-                  <p className="text-muted-foreground text-sm mt-1">
-                    Estimate range: <span className="font-semibold text-foreground">{fmt(engine.min)} – {fmt(engine.max)}</span>
+                  <p className="text-foreground text-lg mt-2 font-medium">
+                    Estimate range: <span className="font-bold text-foreground">{fmt(engine.min)} – {fmt(engine.max)}</span>
                   </p>
                 )}
                 {contactEmail && emailSent ? (
@@ -787,13 +801,13 @@ export function InstantEstimate() {
 
               <div className="grid grid-cols-2 gap-2">
                 <a href={companyInfo.contact.phoneHref} data-testid="link-success-call">
-                  <Button variant="outline" className="w-full h-10 rounded-xl border-border text-xs sm:text-sm">
-                    <Phone className="w-3.5 h-3.5 mr-1.5" /> Call Us
+                  <Button variant="outline" className="w-full h-12 rounded-xl border-border text-sm min-h-[48px]">
+                    <Phone className="w-4 h-4 mr-1.5" /> Call Us
                   </Button>
                 </a>
                 <a href={companyInfo.contact.smsHref} data-testid="link-success-text">
-                  <Button variant="outline" className="w-full h-10 rounded-xl border-border text-xs sm:text-sm">
-                    <MessageSquare className="w-3.5 h-3.5 mr-1.5" /> Text Us
+                  <Button variant="outline" className="w-full h-12 rounded-xl border-border text-sm min-h-[48px]">
+                    <MessageSquare className="w-4 h-4 mr-1.5" /> Text Us
                   </Button>
                 </a>
               </div>
