@@ -6,12 +6,18 @@ import {
   type ScheduledCleaning,
   type Payment,
   type IntakeSubmission, type InsertIntakeSubmission,
-  users, quoteLeads, onboardingChecklists, contracts, scheduledCleanings, payments, intakeSubmissions
+  type BookingRequest, type InsertBookingRequest,
+  users, quoteLeads, onboardingChecklists, contracts, scheduledCleanings, payments, intakeSubmissions, bookingRequests
 } from "@shared/schema";
 import { db } from "./db";
 import { eq, desc, and, sql } from "drizzle-orm";
 
 export interface IStorage {
+  createBookingRequest(data: InsertBookingRequest): Promise<BookingRequest>;
+  getBookingRequests(opts?: { status?: string; limit?: number; offset?: number }): Promise<{ bookings: BookingRequest[]; total: number }>;
+  getBookingRequest(id: number): Promise<BookingRequest | undefined>;
+  updateBookingRequestStatus(id: number, status: string, adminNotes?: string): Promise<BookingRequest | undefined>;
+  updateBookingRequestExternalIds(id: number, ids: { googleEventId?: string; connecteamShiftId?: string; crmBookingId?: string }): Promise<BookingRequest | undefined>;
   createIntakeSubmission(data: InsertIntakeSubmission): Promise<IntakeSubmission>;
   updateIntakeSubmissionEmail(id: number, status: "sent" | "failed"): Promise<void>;
   updateIntakeSubmissionQuoteLead(id: number, quoteLeadId: number): Promise<void>;
@@ -235,6 +241,43 @@ export class DatabaseStorage implements IStorage {
   async createPayment(data: Partial<Payment>): Promise<Payment> {
     const [payment] = await db.insert(payments).values(data as any).returning();
     return payment;
+  }
+
+  async createBookingRequest(data: InsertBookingRequest): Promise<BookingRequest> {
+    const [row] = await db.insert(bookingRequests).values(data).returning();
+    return row;
+  }
+
+  async getBookingRequests(opts?: { status?: string; limit?: number; offset?: number }): Promise<{ bookings: BookingRequest[]; total: number }> {
+    const limit = opts?.limit ?? 50;
+    const offset = opts?.offset ?? 0;
+    const conditions = [];
+    if (opts?.status) conditions.push(eq(bookingRequests.status, opts.status));
+    const where = conditions.length > 0 ? and(...conditions) : undefined;
+    const [countResult] = await db.select({ count: sql<number>`count(*)::int` }).from(bookingRequests).where(where);
+    const bookings = await db.select().from(bookingRequests).where(where).orderBy(desc(bookingRequests.createdAt)).limit(limit).offset(offset);
+    return { bookings, total: countResult?.count ?? 0 };
+  }
+
+  async getBookingRequest(id: number): Promise<BookingRequest | undefined> {
+    const [row] = await db.select().from(bookingRequests).where(eq(bookingRequests.id, id));
+    return row;
+  }
+
+  async updateBookingRequestStatus(id: number, status: string, adminNotes?: string): Promise<BookingRequest | undefined> {
+    const updates: Partial<BookingRequest> = { status, updatedAt: new Date() };
+    if (adminNotes !== undefined) updates.adminNotes = adminNotes;
+    const [row] = await db.update(bookingRequests).set(updates).where(eq(bookingRequests.id, id)).returning();
+    return row;
+  }
+
+  async updateBookingRequestExternalIds(id: number, ids: { googleEventId?: string; connecteamShiftId?: string; crmBookingId?: string }): Promise<BookingRequest | undefined> {
+    const updates: any = { updatedAt: new Date() };
+    if (ids.googleEventId) updates.googleEventId = ids.googleEventId;
+    if (ids.connecteamShiftId) updates.connecteamShiftId = ids.connecteamShiftId;
+    if (ids.crmBookingId) updates.crmBookingId = ids.crmBookingId;
+    const [row] = await db.update(bookingRequests).set(updates).where(eq(bookingRequests.id, id)).returning();
+    return row;
   }
 
   async createIntakeSubmission(data: InsertIntakeSubmission): Promise<IntakeSubmission> {

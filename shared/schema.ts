@@ -163,6 +163,47 @@ export const insertIntakeSubmissionSchema = createInsertSchema(intakeSubmissions
 export type InsertIntakeSubmission = z.infer<typeof insertIntakeSubmissionSchema>;
 export type IntakeSubmission = typeof intakeSubmissions.$inferSelect;
 
+export const bookingRequests = pgTable("booking_requests", {
+  id: serial("id").primaryKey(),
+  intakeId: integer("intake_id"),
+  name: text("name"),
+  email: text("email"),
+  phone: text("phone"),
+  address: text("address"),
+  zip: text("zip"),
+  serviceType: text("service_type").notNull(),
+  frequency: text("frequency"),
+  sqft: integer("sqft"),
+  bathrooms: integer("bathrooms"),
+  petHair: text("pet_hair"),
+  condition: text("condition"),
+  estimateMin: integer("estimate_min"),
+  estimateMax: integer("estimate_max"),
+  requestedDate: timestamp("requested_date").notNull(),
+  distanceMiles: integer("distance_miles"),
+  status: text("status").notNull().default("pending"),
+  adminNotes: text("admin_notes"),
+  googleEventId: text("google_event_id"),
+  connecteamShiftId: text("connecteam_shift_id"),
+  crmBookingId: text("crm_booking_id"),
+  createdAt: timestamp("created_at").notNull().defaultNow(),
+  updatedAt: timestamp("updated_at").notNull().defaultNow(),
+});
+
+export const insertBookingRequestSchema = createInsertSchema(bookingRequests).omit({
+  id: true,
+  status: true,
+  adminNotes: true,
+  googleEventId: true,
+  connecteamShiftId: true,
+  crmBookingId: true,
+  createdAt: true,
+  updatedAt: true,
+});
+
+export type InsertBookingRequest = z.infer<typeof insertBookingRequestSchema>;
+export type BookingRequest = typeof bookingRequests.$inferSelect;
+
 export const conversations = pgTable("conversations", {
   id: serial("id").primaryKey(),
   title: text("title").notNull(),
