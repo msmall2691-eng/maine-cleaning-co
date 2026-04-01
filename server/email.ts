@@ -11,7 +11,8 @@ const transporter = nodemailer.createTransport({
   },
 });
 
-const FROM_ADDRESS = process.env.SMTP_FROM || process.env.SMTP_USER || 'info@maine-clean.co';
+const FROM_ADDRESS = process.env.SMTP_FROM || process.env.SMTP_USER || 'office@mainecleaningco.com';
+const NOTIFY_ADDRESS = process.env.NOTIFY_EMAIL || 'office@mainecleaningco.com';
 
 async function sendEmail(to: string, subject: string, html: string, replyTo?: string) {
   if (!process.env.SMTP_USER || !process.env.SMTP_PASS) {
@@ -180,7 +181,7 @@ export async function sendLeadNotification(lead: QuoteLead): Promise<void> {
   try {
     const html = buildLeadEmailHtml(lead);
     const subject = `New Quote QT-${lead.id}: ${lead.serviceType === "standard" ? "Standard" : "Deep"} · $${lead.estimateMin}–$${lead.estimateMax}`;
-    await sendEmail("info@maine-clean.co", subject, html, lead.email || undefined);
+    await sendEmail(NOTIFY_ADDRESS, subject, html, lead.email || undefined);
     console.log(`[email] Lead notification sent for QT-${lead.id}`);
   } catch (error) {
     console.error(`[email] Failed to send lead notification for QT-${lead.id}:`, error);
@@ -227,7 +228,7 @@ export async function sendIntakeNotification(
   normalized: Record<string, any>,
   raw: Record<string, any>
 ): Promise<void> {
-  const to = "info@maine-clean.co";
+  const to = NOTIFY_ADDRESS;
   const replyTo = normalized.email || undefined;
   const serviceLabel = normalized.serviceType === "standard" ? "Standard Clean"
     : normalized.serviceType === "deep" ? "Deep Clean"
