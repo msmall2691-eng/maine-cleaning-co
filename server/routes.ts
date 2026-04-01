@@ -96,6 +96,14 @@ export async function registerRoutes(
         res.status(400).json({ message: "Email and password are required" });
         return;
       }
+      if (typeof password !== "string" || password.length < 8) {
+        res.status(400).json({ message: "Password must be at least 8 characters" });
+        return;
+      }
+      if (typeof email !== "string" || !email.includes("@")) {
+        res.status(400).json({ message: "A valid email is required" });
+        return;
+      }
       const existing = await storage.getUserByEmail(email);
       if (existing) {
         res.status(409).json({ message: "An account with this email already exists" });
@@ -198,7 +206,7 @@ export async function registerRoutes(
         const host = req.headers.host || "maine-clean.co";
         const protocol = (req.headers["x-forwarded-proto"] as string) || req.protocol || "https";
         const resetLink = `${protocol}://${host}/portal/reset-password?token=${token}`;
-        log("INFO", "auth", "Sending reset email", { to: user.email || normalizedEmail, link: resetLink });
+        log("INFO", "auth", "Sending reset email", { to: user.email || normalizedEmail });
         try {
           await sendPasswordResetEmail(user.email || normalizedEmail, user.name, resetLink);
           log("INFO", "auth", "Reset email sent successfully", { to: user.email || normalizedEmail });
@@ -217,13 +225,22 @@ export async function registerRoutes(
 
   app.post("/api/auth/reset-password", async (req, res) => {
     try {
+      const ip = req.ip || req.socket.remoteAddress || "unknown";
+      if (!checkAuthRateLimit(ip)) {
+        res.status(429).json({ message: "Too many attempts. Please try again later." });
+        return;
+      }
       const { token, password } = req.body;
       if (!token || !password) {
         res.status(400).json({ message: "Token and new password are required" });
         return;
       }
-      if (password.length < 6) {
-        res.status(400).json({ message: "Password must be at least 6 characters" });
+      if (typeof token !== "string" || !/^[a-f0-9]{64}$/.test(token)) {
+        res.status(400).json({ message: "Invalid reset token format" });
+        return;
+      }
+      if (typeof password !== "string" || password.length < 8) {
+        res.status(400).json({ message: "Password must be at least 8 characters" });
         return;
       }
       const user = await storage.getUserByResetToken(token);
@@ -316,11 +333,18 @@ export async function registerRoutes(
     try {
       const id = parseInt(req.params.id);
       const { signedName } = req.body;
-      if (!signedName) {
+      if (!signedName || typeof signedName !== "string") {
         res.status(400).json({ message: "Signature name is required" });
         return;
       }
-      const contract = await storage.signContract(id, signedName);
+      // Verify the contract belongs to this client before signing
+      const clientContracts = await storage.getContractsByClient(req.session.userId!);
+      const ownsContract = clientContracts.some(c => c.id === id);
+      if (!ownsContract) {
+        res.status(404).json({ message: "Contract not found" });
+        return;
+      }
+      const contract = await storage.signContract(id, signedName.slice(0, 200));
       if (!contract) {
         res.status(404).json({ message: "Contract not found" });
         return;
@@ -416,6 +440,10 @@ export async function registerRoutes(
 
   app.post("/api/intake/submit", async (req, res) => {
     try {
+      const ip = req.ip || req.socket.remoteAddress || "unknown";
+      if (!checkRateLimit(`intake:${ip}`, 5, 60_000)) {
+        return res.status(429).json({ success: false, message: "Too many submissions. Please try again later." });
+      }
       const parseResult = intakeSubmitSchema.safeParse(req.body);
       if (!parseResult.success) {
         return res.status(422).json({
@@ -514,7 +542,7 @@ export async function registerRoutes(
           lead.clientId = existingUser.id;
           existingAccount = true;
         } else {
-          tempPassword = crypto.randomBytes(4).toString('hex');
+          tempPassword = crypto.randomBytes(6).toString('base64url').slice(0, 12);
           const hashedPw = await hashPassword(tempPassword);
           const newUser = await storage.createUser({
             username: lead.email,
@@ -677,7 +705,11 @@ export async function registerRoutes(
       }
 
       res.status(201).json({
-        ...lead,
+        id: lead.id,
+        estimateMin: lead.estimateMin,
+        estimateMax: lead.estimateMax,
+        serviceType: lead.serviceType,
+        frequency: lead.frequency,
         portalAccountCreated,
         portalLoggedIn,
         existingAccount,
@@ -949,6 +981,19 @@ Rules:
       if (!messages || !Array.isArray(messages) || messages.length === 0) {
         res.status(400).json({ message: "Messages array is required" });
         return;
+      }
+
+      // Validate message structure - only allow user/assistant roles, enforce string content
+      const validRoles = ["user", "assistant"];
+      for (const m of messages) {
+        if (!m || typeof m.content !== "string" || !validRoles.includes(m.role)) {
+          res.status(400).json({ message: "Invalid message format" });
+          return;
+        }
+        if (m.content.length > 2000) {
+          res.status(400).json({ message: "Message too long" });
+          return;
+        }
       }
 
       if (messages.length > 20) {

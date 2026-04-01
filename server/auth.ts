@@ -21,11 +21,12 @@ export function setupAuth(app: Express) {
         conString: process.env.DATABASE_URL,
         createTableIfMissing: true,
       }),
+      name: "mcc.sid",
       secret: getSessionSecret(),
       resave: false,
       saveUninitialized: false,
       cookie: {
-        maxAge: 30 * 24 * 60 * 60 * 1000,
+        maxAge: 7 * 24 * 60 * 60 * 1000, // 7 days
         httpOnly: true,
         secure: isProduction,
         sameSite: "lax",
@@ -42,7 +43,7 @@ declare module "express-session" {
 }
 
 export async function hashPassword(password: string): Promise<string> {
-  return bcrypt.hash(password, 10);
+  return bcrypt.hash(password, 12);
 }
 
 export async function comparePassword(password: string, hash: string): Promise<boolean> {

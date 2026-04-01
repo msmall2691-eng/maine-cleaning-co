@@ -1,6 +1,17 @@
 import nodemailer from 'nodemailer';
 import type { QuoteLead } from '@shared/schema';
 
+/** Escape HTML special characters to prevent XSS in email templates */
+function escapeHtml(str: string | null | undefined): string {
+  if (!str) return '';
+  return str
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&#39;');
+}
+
 const transporter = nodemailer.createTransport({
   host: process.env.SMTP_HOST || 'smtp.gmail.com',
   port: parseInt(process.env.SMTP_PORT || '587', 10),
@@ -56,24 +67,24 @@ function buildLeadEmailHtml(lead: QuoteLead): string {
         <tr><td style="padding:8px 0;color:#6b7280;">Bathrooms</td><td style="padding:8px 0;font-weight:600;">${lead.bathrooms}</td></tr>
         <tr><td style="padding:8px 0;color:#6b7280;">Pet Hair</td><td style="padding:8px 0;font-weight:600;text-transform:capitalize;">${lead.petHair}</td></tr>
         <tr><td style="padding:8px 0;color:#6b7280;">Condition</td><td style="padding:8px 0;font-weight:600;text-transform:capitalize;">${lead.condition}</td></tr>
-        ${lead.zip ? `<tr><td style="padding:8px 0;color:#6b7280;">ZIP Code</td><td style="padding:8px 0;font-weight:600;">${lead.zip}</td></tr>` : ''}
-        ${lead.address ? `<tr><td style="padding:8px 0;color:#6b7280;">Address</td><td style="padding:8px 0;font-weight:600;">${lead.address}</td></tr>` : ''}
+        ${lead.zip ? `<tr><td style="padding:8px 0;color:#6b7280;">ZIP Code</td><td style="padding:8px 0;font-weight:600;">${escapeHtml(lead.zip)}</td></tr>` : ''}
+        ${lead.address ? `<tr><td style="padding:8px 0;color:#6b7280;">Address</td><td style="padding:8px 0;font-weight:600;">${escapeHtml(lead.address)}</td></tr>` : ''}
       </table>
 
       ${(lead.name || lead.email || lead.phone) ? `
       <div style="border-top:1px solid #e8e8e6;margin-top:16px;padding-top:16px;">
         <div style="font-size:13px;color:#6b7280;font-weight:600;text-transform:uppercase;letter-spacing:0.5px;margin-bottom:10px;">Contact Info</div>
         <table style="width:100%;font-size:14px;color:#374151;border-collapse:collapse;">
-          ${lead.name ? `<tr><td style="padding:6px 0;color:#6b7280;width:140px;">Name</td><td style="padding:6px 0;font-weight:600;">${lead.name}</td></tr>` : ''}
-          ${lead.email ? `<tr><td style="padding:6px 0;color:#6b7280;">Email</td><td style="padding:6px 0;font-weight:600;">${lead.email}</td></tr>` : ''}
-          ${lead.phone ? `<tr><td style="padding:6px 0;color:#6b7280;">Phone</td><td style="padding:6px 0;font-weight:600;">${lead.phone}</td></tr>` : ''}
+          ${lead.name ? `<tr><td style="padding:6px 0;color:#6b7280;width:140px;">Name</td><td style="padding:6px 0;font-weight:600;">${escapeHtml(lead.name)}</td></tr>` : ''}
+          ${lead.email ? `<tr><td style="padding:6px 0;color:#6b7280;">Email</td><td style="padding:6px 0;font-weight:600;">${escapeHtml(lead.email)}</td></tr>` : ''}
+          ${lead.phone ? `<tr><td style="padding:6px 0;color:#6b7280;">Phone</td><td style="padding:6px 0;font-weight:600;">${escapeHtml(lead.phone)}</td></tr>` : ''}
         </table>
       </div>` : ''}
 
       ${lead.notes ? `
       <div style="border-top:1px solid #e8e8e6;margin-top:16px;padding-top:16px;">
         <div style="font-size:13px;color:#6b7280;font-weight:600;text-transform:uppercase;letter-spacing:0.5px;margin-bottom:6px;">Notes</div>
-        <p style="font-size:14px;color:#374151;margin:0;line-height:1.5;">${lead.notes}</p>
+        <p style="font-size:14px;color:#374151;margin:0;line-height:1.5;">${escapeHtml(lead.notes)}</p>
       </div>` : ''}
     </div>
     <div style="padding:16px 32px;background:#f9fafb;border-top:1px solid #e8e8e6;text-align:center;">
@@ -87,7 +98,7 @@ function buildLeadEmailHtml(lead: QuoteLead): string {
 function buildCustomerConfirmationHtml(lead: QuoteLead, tempPassword?: string): string {
   const serviceLabel = lead.serviceType === "standard" ? "Standard Clean" : "Deep Clean";
   const freqLabel: Record<string, string> = { weekly: "Weekly", biweekly: "Biweekly", monthly: "Monthly", "one-time": "One-Time" };
-  const firstName = lead.name?.split(' ')[0] || 'there';
+  const firstName = escapeHtml(lead.name?.split(' ')[0]) || 'there';
 
   return `
 <!DOCTYPE html>
@@ -113,7 +124,7 @@ function buildCustomerConfirmationHtml(lead: QuoteLead, tempPassword?: string): 
         <tr><td style="padding:7px 0;color:#6b7280;">Frequency</td><td style="padding:7px 0;font-weight:600;">${freqLabel[lead.frequency] || lead.frequency}</td></tr>
         <tr><td style="padding:7px 0;color:#6b7280;">Square Footage</td><td style="padding:7px 0;font-weight:600;">${lead.sqft.toLocaleString()} sq ft</td></tr>
         <tr><td style="padding:7px 0;color:#6b7280;">Bathrooms</td><td style="padding:7px 0;font-weight:600;">${lead.bathrooms}</td></tr>
-        ${lead.address ? `<tr><td style="padding:7px 0;color:#6b7280;">Address</td><td style="padding:7px 0;font-weight:600;">${lead.address}</td></tr>` : ''}
+        ${lead.address ? `<tr><td style="padding:7px 0;color:#6b7280;">Address</td><td style="padding:7px 0;font-weight:600;">${escapeHtml(lead.address)}</td></tr>` : ''}
       </table>
 
       <div style="background:#f8f8f6;border-radius:10px;padding:20px;margin-bottom:24px;">
@@ -154,8 +165,8 @@ function buildCustomerConfirmationHtml(lead: QuoteLead, tempPassword?: string): 
         <div style="font-size:13px;color:#92400e;font-weight:600;text-transform:uppercase;letter-spacing:0.5px;margin-bottom:8px;">Your Client Portal</div>
         <p style="font-size:14px;color:#374151;margin:0 0 10px;line-height:1.5;">We've created a personal portal for you to track your quote, complete onboarding, and manage your cleaning service.</p>
         <table style="width:100%;font-size:14px;color:#374151;border-collapse:collapse;">
-          <tr><td style="padding:4px 0;color:#6b7280;width:100px;">Email</td><td style="padding:4px 0;font-weight:600;">${lead.email}</td></tr>
-          <tr><td style="padding:4px 0;color:#6b7280;">Password</td><td style="padding:4px 0;font-weight:600;font-family:monospace;letter-spacing:1px;">${tempPassword}</td></tr>
+          <tr><td style="padding:4px 0;color:#6b7280;width:100px;">Email</td><td style="padding:4px 0;font-weight:600;">${escapeHtml(lead.email)}</td></tr>
+          <tr><td style="padding:4px 0;color:#6b7280;">Password</td><td style="padding:4px 0;font-weight:600;font-family:monospace;letter-spacing:1px;">${escapeHtml(tempPassword)}</td></tr>
         </table>
         <p style="font-size:12px;color:#92400e;margin:10px 0 0;font-style:italic;">We recommend changing your password after your first login.</p>
       </div>` : ''}
@@ -190,7 +201,7 @@ export async function sendLeadNotification(lead: QuoteLead): Promise<void> {
 
 export async function sendPasswordResetEmail(email: string, name: string | null, resetLink: string): Promise<void> {
   try {
-    const firstName = name?.split(' ')[0] || '';
+    const firstName = escapeHtml(name?.split(' ')[0]) || '';
     const html = `
 <!DOCTYPE html>
 <html>
@@ -238,7 +249,7 @@ export async function sendIntakeNotification(
   };
 
   const row = (label: string, value: string | null | undefined) =>
-    value ? `<tr><td style="padding:7px 0;color:#6b7280;width:140px;vertical-align:top;">${label}</td><td style="padding:7px 0;font-weight:600;color:#374151;">${value}</td></tr>` : "";
+    value ? `<tr><td style="padding:7px 0;color:#6b7280;width:140px;vertical-align:top;">${escapeHtml(label)}</td><td style="padding:7px 0;font-weight:600;color:#374151;">${escapeHtml(value)}</td></tr>` : "";
 
   const html = `<!DOCTYPE html>
 <html><head><meta charset="utf-8"></head>
@@ -281,7 +292,7 @@ export async function sendIntakeNotification(
     ${normalized.notes ? `
     <div style="border-top:1px solid #e8e8e6;padding-top:20px;margin-bottom:20px;">
       <div style="font-size:12px;font-weight:700;text-transform:uppercase;letter-spacing:0.5px;color:#9ca3af;margin-bottom:8px;">Notes</div>
-      <p style="font-size:14px;color:#374151;margin:0;line-height:1.6;">${normalized.notes}</p>
+      <p style="font-size:14px;color:#374151;margin:0;line-height:1.6;">${escapeHtml(normalized.notes)}</p>
     </div>` : ""}
   </div>
   <div style="background:#f9fafb;border-top:1px solid #e8e8e6;padding:16px 32px;text-align:center;">
@@ -290,7 +301,8 @@ export async function sendIntakeNotification(
 </div>
 </body></html>`;
 
-  const subject = `New Intake #INT-${submissionId}${normalized.name ? ` — ${normalized.name}` : ""}${normalized.estimateMin != null ? ` · $${normalized.estimateMin}–$${normalized.estimateMax}` : ""}`;
+  const safeName = typeof normalized.name === "string" ? normalized.name.replace(/[^\w\s.\-']/g, "").slice(0, 100) : "";
+  const subject = `New Intake #INT-${submissionId}${safeName ? ` — ${safeName}` : ""}${normalized.estimateMin != null ? ` · $${normalized.estimateMin}–$${normalized.estimateMax}` : ""}`;
   await sendEmail(to, subject, html, replyTo);
 }
 
