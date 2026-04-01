@@ -27,6 +27,8 @@ import {
   Waves,
   Building2,
   Info,
+  Calendar,
+  AlertCircle,
 } from "lucide-react";
 import { companyInfo } from "@/lib/company-info";
 
@@ -226,11 +228,17 @@ export function InstantEstimate({ defaultCategory }: InstantEstimateProps = {}) 
   const [photos, setPhotos] = useState<string[]>([]);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
-  const [step, setStep] = useState<1 | 2 | 3>(1);
+  const [step, setStep] = useState<1 | 2 | 3 | 4>(1);
   const [portalCreated, setPortalCreated] = useState(false);
   const [portalLoggedIn, setPortalLoggedIn] = useState(false);
   const [existingAccount, setExistingAccount] = useState(false);
   const [emailSent, setEmailSent] = useState(true);
+  const [bookingDate, setBookingDate] = useState("");
+  const [addressEligible, setAddressEligible] = useState<boolean | null>(null);
+  const [addressDistance, setAddressDistance] = useState<number | null>(null);
+  const [addressCheckMsg, setAddressCheckMsg] = useState("");
+  const [checkingAddress, setCheckingAddress] = useState(false);
+  const [bookingSubmitted, setBookingSubmitted] = useState(false);
   const { toast } = useToast();
 
   const isCustomQuote = category === "str" || category === "commercial";
@@ -356,12 +364,87 @@ export function InstantEstimate({ defaultCategory }: InstantEstimateProps = {}) 
     onError: () => { toast({ title: "Something went wrong", description: "Please try again or call us directly.", variant: "destructive" }); },
   });
 
+  const bookingMutation = useMutation({
+    mutationFn: async () => {
+      const serviceTypeMap: Record<ServiceCategory, string> = {
+        residential: "standard",
+        "deep-clean": "deep",
+        str: "str",
+        commercial: "commercial",
+      };
+      const res = await fetch("/api/booking/submit", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          name: contactName,
+          email: contactEmail || null,
+          phone: contactPhone,
+          address: contactAddress,
+          zip: zip || null,
+          serviceType: serviceTypeMap[category],
+          frequency: isCustomQuote ? null : frequency,
+          sqft: isCustomQuote ? null : sqft[0],
+          bathrooms: isCustomQuote ? null : Math.round(bathrooms),
+          petHair: isCustomQuote ? null : petHair,
+          condition: isCustomQuote ? null : condition,
+          estimateMin: engine.min || null,
+          estimateMax: engine.max || null,
+          requestedDate: bookingDate,
+          distanceMiles: addressDistance,
+        }),
+      });
+      const json = await res.json();
+      if (!res.ok) throw new Error(json?.message || "Failed");
+      return json;
+    },
+    onSuccess: () => {
+      setBookingSubmitted(true);
+      setStep(4);
+      toast({ title: "Booking request sent!", description: "We'll confirm within 1 business day." });
+    },
+    onError: (err: Error) => {
+      toast({ title: "Booking failed", description: err.message || "Please try again or call us.", variant: "destructive" });
+    },
+  });
+
+  const checkAddressEligibility = useCallback(async (address: string) => {
+    if (address.length < 10) return;
+    setCheckingAddress(true);
+    try {
+      const res = await fetch("/api/booking/validate-address", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ address }),
+      });
+      const data = await res.json();
+      setAddressEligible(data.eligible);
+      setAddressDistance(data.distanceMiles ?? null);
+      setAddressCheckMsg(data.message || "");
+    } catch {
+      setAddressEligible(null);
+      setAddressCheckMsg("");
+    } finally {
+      setCheckingAddress(false);
+    }
+  }, []);
+
+  const minBookingDate = useMemo(() => {
+    const d = new Date();
+    d.setDate(d.getDate() + 2);
+    return d.toISOString().split("T")[0];
+  }, []);
+
   const resetForm = () => {
     setStep(1);
     setPortalCreated(false);
     setPortalLoggedIn(false);
     setExistingAccount(false);
     setEmailSent(true);
+    setBookingDate("");
+    setAddressEligible(null);
+    setAddressDistance(null);
+    setAddressCheckMsg("");
+    setBookingSubmitted(false);
     setContactName("");
     setContactEmail("");
     setContactPhone("");
@@ -369,6 +452,7 @@ export function InstantEstimate({ defaultCategory }: InstantEstimateProps = {}) 
     setContactAddress("");
     setPhotos([]);
     submit.reset();
+    bookingMutation.reset();
   };
 
   return (
@@ -745,8 +829,8 @@ export function InstantEstimate({ defaultCategory }: InstantEstimateProps = {}) 
             </motion.div>
           )}
 
-          {/* ── Step 3: Success ── */}
-          {step === 3 && (
+          {/* ── Step 3: Success + Book a Date ── */}
+          {step === 3 && !bookingSubmitted && (
             <motion.div key="s3" initial={{ opacity: 0, scale: 0.95 }} animate={{ opacity: 1, scale: 1 }} exit={{ opacity: 0, scale: 0.95 }} transition={{ duration: 0.35, ease: [0.22, 1, 0.36, 1] }} className="py-5 sm:py-8 space-y-6">
               <div className="text-center">
                 <div className="w-18 h-18 w-[72px] h-[72px] rounded-full bg-emerald-500/15 flex items-center justify-center mx-auto mb-4">
@@ -778,6 +862,74 @@ export function InstantEstimate({ defaultCategory }: InstantEstimateProps = {}) 
                   </p>
                 )}
               </div>
+
+              {/* ── Book a Date Section ── */}
+              {!isCustomQuote && contactAddress && contactName && contactPhone && (
+                <div className="rounded-xl bg-gradient-to-br from-blue-500/10 to-primary/10 border border-blue-500/25 p-5 space-y-4">
+                  <div className="flex items-center gap-2">
+                    <Calendar className="w-5 h-5 text-blue-500" />
+                    <h4 className="text-sm font-bold text-foreground">Want to book a date?</h4>
+                  </div>
+                  <p className="text-xs text-muted-foreground leading-relaxed">
+                    Pick your preferred cleaning date below. We'll review and confirm within 1 business day. Must be at least 2 days out and within 30 miles of North Waterboro, ME.
+                  </p>
+
+                  {/* Address eligibility check */}
+                  {addressEligible === null && !checkingAddress && (
+                    <Button
+                      variant="outline"
+                      className="w-full h-10 rounded-xl text-sm"
+                      onClick={() => checkAddressEligibility(contactAddress)}
+                    >
+                      <MapPin className="w-4 h-4 mr-1.5" /> Check if you're in our booking area
+                    </Button>
+                  )}
+                  {checkingAddress && (
+                    <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                      <Loader2 className="w-4 h-4 animate-spin" /> Checking your location...
+                    </div>
+                  )}
+                  {addressEligible === true && (
+                    <>
+                      <div className="flex items-start gap-2 px-3 py-2 rounded-lg bg-emerald-500/10 border border-emerald-500/20">
+                        <CheckCircle2 className="w-4 h-4 text-green-500 mt-0.5 flex-shrink-0" />
+                        <p className="text-xs text-green-400">{addressCheckMsg}</p>
+                      </div>
+                      <div>
+                        <label className="text-xs font-medium text-muted-foreground mb-1.5 block">Preferred date</label>
+                        <input
+                          type="date"
+                          min={minBookingDate}
+                          value={bookingDate}
+                          onChange={(e) => setBookingDate(e.target.value)}
+                          className="w-full h-11 rounded-xl border border-border bg-card px-3 text-sm text-foreground focus:outline-none focus:ring-2 focus:ring-primary/30"
+                          data-testid="input-booking-date"
+                        />
+                      </div>
+                      <Button
+                        className="w-full h-[52px] rounded-xl text-base font-bold shadow-md"
+                        disabled={!bookingDate || bookingMutation.isPending}
+                        onClick={() => bookingMutation.mutate()}
+                        data-testid="button-book-date"
+                      >
+                        {bookingMutation.isPending
+                          ? <><Loader2 className="w-4 h-4 animate-spin mr-2" /> Submitting...</>
+                          : <><Calendar className="w-4 h-4 mr-2" /> Request This Date</>
+                        }
+                      </Button>
+                      <p className="text-[10px] text-muted-foreground text-center">
+                        Requires approval. You'll get a confirmation call/text.
+                      </p>
+                    </>
+                  )}
+                  {addressEligible === false && (
+                    <div className="flex items-start gap-2 px-3 py-2 rounded-lg bg-amber-500/10 border border-amber-500/20">
+                      <AlertCircle className="w-4 h-4 text-amber-400 mt-0.5 flex-shrink-0" />
+                      <p className="text-xs text-amber-400">{addressCheckMsg}</p>
+                    </div>
+                  )}
+                </div>
+              )}
 
               {!isCustomQuote && (contactName || contactPhone || contactEmail || contactAddress) && (
                 <div className="rounded-xl bg-muted/30 border border-border/40 px-4 py-3 space-y-1.5 text-[13px]" data-testid="block-submission-summary">
@@ -829,6 +981,64 @@ export function InstantEstimate({ defaultCategory }: InstantEstimateProps = {}) 
 
               <button className="w-full text-sm text-muted-foreground hover:text-foreground transition-colors py-1.5 text-center" onClick={resetForm} data-testid="button-new">
                 Start a new {isCustomQuote ? "request" : "estimate"}
+              </button>
+            </motion.div>
+          )}
+
+          {/* ── Step 4: Booking Confirmed ── */}
+          {(step === 4 || (step === 3 && bookingSubmitted)) && (
+            <motion.div key="s4" initial={{ opacity: 0, scale: 0.95 }} animate={{ opacity: 1, scale: 1 }} exit={{ opacity: 0, scale: 0.95 }} transition={{ duration: 0.35, ease: [0.22, 1, 0.36, 1] }} className="py-5 sm:py-8 space-y-6">
+              <div className="text-center">
+                <div className="w-[72px] h-[72px] rounded-full bg-blue-500/15 flex items-center justify-center mx-auto mb-4">
+                  <Calendar className="w-9 h-9 text-blue-500" />
+                </div>
+                <h3 className="text-2xl font-bold text-foreground">Booking Request Sent!</h3>
+                <p className="text-foreground text-lg mt-2 font-medium">
+                  {new Date(bookingDate + "T12:00:00").toLocaleDateString("en-US", { weekday: "long", month: "long", day: "numeric", year: "numeric" })}
+                </p>
+                {!isCustomQuote && (
+                  <p className="text-muted-foreground text-sm mt-1">
+                    Estimate: <span className="font-semibold text-foreground">{fmt(engine.min)} – {fmt(engine.max)}</span>
+                  </p>
+                )}
+              </div>
+
+              <div className="rounded-xl bg-blue-500/8 border border-blue-500/20 p-4 space-y-3">
+                <div className="flex items-start gap-2">
+                  <Clock className="w-4 h-4 text-blue-500 mt-0.5 flex-shrink-0" />
+                  <div>
+                    <p className="text-sm font-medium text-foreground">Pending approval</p>
+                    <p className="text-xs text-muted-foreground mt-0.5">
+                      We'll review your request and confirm via phone or text within 1 business day. Once approved, your cleaning will be added to our schedule.
+                    </p>
+                  </div>
+                </div>
+              </div>
+
+              <div className="rounded-xl bg-muted/30 border border-border/40 px-4 py-3 space-y-1.5 text-[13px]">
+                <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground mb-2">Booking Details</p>
+                <div className="flex justify-between"><span className="text-muted-foreground">Date</span><span className="font-medium text-foreground">{new Date(bookingDate + "T12:00:00").toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" })}</span></div>
+                {!isCustomQuote && <div className="flex justify-between"><span className="text-muted-foreground">Service</span><span className="font-medium text-foreground">{typeLabel}{category === "residential" ? ` · ${freqLabel[frequency]}` : ""}</span></div>}
+                {contactName && <div className="flex justify-between"><span className="text-muted-foreground">Name</span><span className="font-medium text-foreground">{contactName}</span></div>}
+                {contactAddress && <div className="flex justify-between gap-3"><span className="text-muted-foreground flex-shrink-0">Address</span><span className="font-medium text-foreground text-right">{contactAddress}</span></div>}
+                {addressDistance && <div className="flex justify-between"><span className="text-muted-foreground">Distance</span><span className="font-medium text-foreground">{addressDistance} miles</span></div>}
+              </div>
+
+              <div className="grid grid-cols-2 gap-2">
+                <a href={companyInfo.contact.phoneHref}>
+                  <Button variant="outline" className="w-full h-12 rounded-xl border-border text-sm min-h-[48px]">
+                    <Phone className="w-4 h-4 mr-1.5" /> Call Us
+                  </Button>
+                </a>
+                <a href={companyInfo.contact.smsHref}>
+                  <Button variant="outline" className="w-full h-12 rounded-xl border-border text-sm min-h-[48px]">
+                    <MessageSquare className="w-4 h-4 mr-1.5" /> Text Us
+                  </Button>
+                </a>
+              </div>
+
+              <button className="w-full text-sm text-muted-foreground hover:text-foreground transition-colors py-1.5 text-center" onClick={resetForm}>
+                Start a new estimate
               </button>
             </motion.div>
           )}

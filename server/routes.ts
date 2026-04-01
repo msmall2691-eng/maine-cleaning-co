@@ -994,5 +994,213 @@ Rules:
     }
   });
 
+  // ── BOOKING REQUESTS ──
+
+  // North Waterboro, ME coordinates
+  const SERVICE_CENTER_LAT = 43.5712;
+  const SERVICE_CENTER_LNG = -70.7287;
+  const MAX_SERVICE_RADIUS_MILES = 30;
+  const MIN_LEAD_DAYS = 2;
+
+  function haversineDistance(lat1: number, lng1: number, lat2: number, lng2: number): number {
+    const R = 3959; // Earth radius in miles
+    const dLat = (lat2 - lat1) * Math.PI / 180;
+    const dLng = (lng2 - lng1) * Math.PI / 180;
+    const a = Math.sin(dLat / 2) ** 2 + Math.cos(lat1 * Math.PI / 180) * Math.cos(lat2 * Math.PI / 180) * Math.sin(dLng / 2) ** 2;
+    return R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+  }
+
+  async function geocodeAddress(address: string): Promise<{ lat: number; lng: number } | null> {
+    try {
+      const res = await fetch(
+        `https://nominatim.openstreetmap.org/search?q=${encodeURIComponent(address + ", Maine, USA")}&format=json&limit=1`,
+        { headers: { "User-Agent": "MaineCleaningCo-Booking", "Accept-Language": "en" } }
+      );
+      if (!res.ok) return null;
+      const data = await res.json();
+      if (data.length === 0) return null;
+      return { lat: parseFloat(data[0].lat), lng: parseFloat(data[0].lon) };
+    } catch {
+      return null;
+    }
+  }
+
+  app.post("/api/booking/validate-address", async (req, res) => {
+    try {
+      const { address } = req.body;
+      if (!address) return res.status(400).json({ eligible: false, message: "Address is required" });
+
+      const coords = await geocodeAddress(address);
+      if (!coords) return res.json({ eligible: false, message: "We couldn't verify that address. Please check it and try again." });
+
+      const distance = haversineDistance(SERVICE_CENTER_LAT, SERVICE_CENTER_LNG, coords.lat, coords.lng);
+      const eligible = distance <= MAX_SERVICE_RADIUS_MILES;
+
+      res.json({
+        eligible,
+        distanceMiles: Math.round(distance),
+        message: eligible
+          ? `You're ${Math.round(distance)} miles from our service center — you're in our area!`
+          : `Unfortunately, ${Math.round(distance)} miles is outside our ${MAX_SERVICE_RADIUS_MILES}-mile service area from North Waterboro. Call us at 207-572-0502 to discuss options.`,
+      });
+    } catch (error) {
+      log("ERROR", "booking", "Address validation failed", { error: String(error) });
+      res.status(500).json({ eligible: false, message: "Address validation failed. Please try again." });
+    }
+  });
+
+  const bookingSubmitSchema = z.object({
+    name: z.string().min(1),
+    email: z.string().email().optional().nullable(),
+    phone: z.string().min(1),
+    address: z.string().min(1),
+    zip: z.string().optional().nullable(),
+    serviceType: z.string(),
+    frequency: z.string().optional().nullable(),
+    sqft: z.number().optional().nullable(),
+    bathrooms: z.number().optional().nullable(),
+    petHair: z.string().optional().nullable(),
+    condition: z.string().optional().nullable(),
+    estimateMin: z.number().optional().nullable(),
+    estimateMax: z.number().optional().nullable(),
+    requestedDate: z.string().min(1),
+    distanceMiles: z.number().optional().nullable(),
+    intakeId: z.number().optional().nullable(),
+  });
+
+  app.post("/api/booking/submit", async (req, res) => {
+    try {
+      const ip = req.ip || req.socket.remoteAddress || "unknown";
+      if (!checkRateLimit(ip)) {
+        return res.status(429).json({ success: false, message: "Too many requests. Please try again later." });
+      }
+
+      const parsed = bookingSubmitSchema.safeParse(req.body);
+      if (!parsed.success) {
+        return res.status(422).json({ success: false, message: "Validation failed", errors: parsed.error.flatten().fieldErrors });
+      }
+
+      const data = parsed.data;
+      const requestedDate = new Date(data.requestedDate);
+      const now = new Date();
+      const minDate = new Date(now.getTime() + MIN_LEAD_DAYS * 24 * 60 * 60 * 1000);
+      minDate.setHours(0, 0, 0, 0);
+
+      if (requestedDate < minDate) {
+        return res.status(400).json({ success: false, message: `Please select a date at least ${MIN_LEAD_DAYS} days from today.` });
+      }
+
+      // Validate distance if not already provided
+      let distanceMiles = data.distanceMiles;
+      if (!distanceMiles && data.address) {
+        const coords = await geocodeAddress(data.address);
+        if (coords) {
+          distanceMiles = Math.round(haversineDistance(SERVICE_CENTER_LAT, SERVICE_CENTER_LNG, coords.lat, coords.lng));
+        }
+      }
+      if (distanceMiles && distanceMiles > MAX_SERVICE_RADIUS_MILES) {
+        return res.status(400).json({ success: false, message: `Sorry, ${distanceMiles} miles is outside our ${MAX_SERVICE_RADIUS_MILES}-mile service area.` });
+      }
+
+      const booking = await storage.createBookingRequest({
+        intakeId: data.intakeId ?? null,
+        name: data.name,
+        email: data.email ?? null,
+        phone: data.phone,
+        address: data.address,
+        zip: data.zip ?? null,
+        serviceType: data.serviceType,
+        frequency: data.frequency ?? null,
+        sqft: data.sqft ?? null,
+        bathrooms: data.bathrooms ?? null,
+        petHair: data.petHair ?? null,
+        condition: data.condition ?? null,
+        estimateMin: data.estimateMin ?? null,
+        estimateMax: data.estimateMax ?? null,
+        requestedDate: requestedDate,
+        distanceMiles: distanceMiles ?? null,
+      });
+
+      log("INFO", "booking", "New booking request created", { id: booking.id, date: data.requestedDate, name: data.name });
+
+      // Forward to CRM for approval workflow
+      const CRM_BOOKING_URL = process.env.CRM_WEBHOOK_URL
+        ? process.env.CRM_WEBHOOK_URL.replace("/api/leads", "/api/bookings")
+        : "https://connecteam-proxy.vercel.app/api/bookings";
+
+      fetch(CRM_BOOKING_URL + "?action=create", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          websiteBookingId: booking.id,
+          name: data.name,
+          email: data.email,
+          phone: data.phone,
+          address: data.address,
+          zip: data.zip,
+          serviceType: data.serviceType,
+          frequency: data.frequency,
+          sqft: data.sqft,
+          bathrooms: data.bathrooms,
+          petHair: data.petHair,
+          condition: data.condition,
+          estimateMin: data.estimateMin,
+          estimateMax: data.estimateMax,
+          requestedDate: data.requestedDate,
+          distanceMiles: distanceMiles,
+          source: "Website",
+        }),
+      })
+        .then(async r => {
+          const body = await r.text().catch(() => "");
+          log("INFO", "booking", "CRM booking forward response", { status: r.status, body: body.slice(0, 300) });
+          try {
+            const json = JSON.parse(body);
+            if (json.bookingId) {
+              storage.updateBookingRequestExternalIds(booking.id, { crmBookingId: String(json.bookingId) }).catch(() => {});
+            }
+          } catch {}
+        })
+        .catch(err => log("ERROR", "booking", "CRM booking forward failed", { error: String(err) }));
+
+      return res.status(201).json({
+        success: true,
+        bookingId: booking.id,
+        requestedDate: data.requestedDate,
+        message: "Your booking request has been submitted! We'll review and confirm within 1 business day.",
+      });
+    } catch (error) {
+      log("ERROR", "booking", "Booking submission failed", { error: String(error) });
+      return res.status(500).json({ success: false, message: "Failed to submit booking request. Please try again." });
+    }
+  });
+
+  // Admin: list booking requests
+  app.get("/api/admin/bookings", requireAdmin, async (req, res) => {
+    try {
+      const status = req.query.status as string | undefined;
+      const result = await storage.getBookingRequests({ status });
+      res.json(result);
+    } catch (error) {
+      res.status(500).json({ message: "Failed to fetch bookings" });
+    }
+  });
+
+  // Admin: approve/reject booking
+  app.patch("/api/admin/bookings/:id/status", requireAdmin, async (req, res) => {
+    try {
+      const id = parseInt(req.params.id);
+      const { status, adminNotes } = req.body;
+      if (!["approved", "rejected", "pending"].includes(status)) {
+        return res.status(400).json({ message: "Invalid status" });
+      }
+      const booking = await storage.updateBookingRequestStatus(id, status, adminNotes);
+      if (!booking) return res.status(404).json({ message: "Booking not found" });
+      res.json(booking);
+    } catch (error) {
+      res.status(500).json({ message: "Failed to update booking" });
+    }
+  });
+
   return httpServer;
 }
