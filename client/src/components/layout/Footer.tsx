@@ -33,13 +33,16 @@ export default function Footer() {
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-10 mb-14">
           {/* Brand */}
           <div className="sm:col-span-2 lg:col-span-1">
-            <div className="mb-4">
-              <span className="font-serif font-bold text-lg tracking-[-0.02em] text-foreground block">
-                The Maine Cleaning Co.
-              </span>
-              <span className="text-xs tracking-[0.06em] text-muted-foreground uppercase font-medium mt-0.5 block">
-                Est. 2018 · Southern Maine
-              </span>
+            <div className="mb-4 flex items-center gap-2.5">
+              <img src="/logo-icon.svg" alt="The Maine Cleaning Co. logo" className="h-10 w-auto" />
+              <div>
+                <span className="font-serif font-bold text-lg tracking-[-0.02em] text-foreground block">
+                  The Maine Cleaning Co.
+                </span>
+                <span className="text-xs tracking-[0.06em] text-muted-foreground uppercase font-medium mt-0.5 block">
+                  Est. 2018 · Southern Maine
+                </span>
+              </div>
             </div>
             <p className="text-muted-foreground text-sm leading-relaxed mb-6 max-w-xs">
               Professional cleaning for homes, businesses, and vacation rentals across Southern Maine since 2018.

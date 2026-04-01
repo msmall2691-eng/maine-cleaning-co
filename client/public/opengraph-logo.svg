@@ -1,0 +1,71 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 630" fill="none">
+  <!-- Background -->
+  <rect width="1200" height="630" fill="#f8fafb"/>
+
+  <!-- Subtle border -->
+  <rect x="4" y="4" width="1192" height="622" fill="none" stroke="#e2e8f0" stroke-width="2" rx="8"/>
+
+  <!-- Shield shape centered -->
+  <path d="M400 120 L600 90 L800 120 L800 380 L600 440 L400 380 Z" fill="white" stroke="#1a2332" stroke-width="4"/>
+
+  <!-- Rocky ground -->
+  <path d="M420 310 Q470 295 520 305 Q570 290 600 298 Q650 285 700 300 Q740 290 780 310 L790 340 L600 380 L410 340 Z" fill="#6b7b8d"/>
+
+  <!-- Pine trees left -->
+  <g fill="#2d5a3d">
+    <path d="M460 305 L448 265 L436 305 Z"/>
+    <path d="M460 280 L448 240 L436 280 Z"/>
+    <path d="M460 260 L448 225 L436 260 Z"/>
+    <path d="M485 300 L475 262 L465 300 Z"/>
+    <path d="M485 278 L475 242 L465 278 Z"/>
+    <path d="M505 303 L497 272 L489 303 Z"/>
+    <path d="M505 285 L497 256 L489 285 Z"/>
+  </g>
+
+  <!-- Pine trees right -->
+  <g fill="#2d5a3d">
+    <path d="M715 300 L705 262 L695 300 Z"/>
+    <path d="M715 278 L705 242 L695 278 Z"/>
+    <path d="M715 260 L705 228 L695 260 Z"/>
+    <path d="M740 305 L730 268 L720 305 Z"/>
+    <path d="M740 282 L730 248 L720 282 Z"/>
+    <path d="M758 308 L750 278 L742 308 Z"/>
+  </g>
+
+  <!-- Lighthouse body -->
+  <path d="M580 305 L575 200 L625 200 L620 305 Z" fill="#d4dae0" stroke="#1a2332" stroke-width="2.5"/>
+  <rect x="577" y="225" width="46" height="12" fill="#e8edf2"/>
+  <rect x="578" y="252" width="44" height="12" fill="#e8edf2"/>
+  <rect x="579" y="278" width="42" height="12" fill="#e8edf2"/>
+
+  <!-- Gallery -->
+  <rect x="568" y="192" width="64" height="10" fill="#1a2332" rx="1"/>
+  <rect x="572" y="183" width="56" height="10" fill="#c4cdd6" stroke="#1a2332" stroke-width="2"/>
+
+  <!-- Lantern room -->
+  <path d="M580 183 L582 158 L618 158 L620 183 Z" fill="#8faabe" stroke="#1a2332" stroke-width="2"/>
+  <line x1="592" y1="160" x2="592" y2="181" stroke="#1a2332" stroke-width="1.5"/>
+  <line x1="600" y1="160" x2="600" y2="181" stroke="#1a2332" stroke-width="1.5"/>
+  <line x1="608" y1="160" x2="608" y2="181" stroke="#1a2332" stroke-width="1.5"/>
+
+  <!-- Dome -->
+  <path d="M584 158 Q600 138 616 158 Z" fill="#1a2332"/>
+  <line x1="600" y1="138" x2="600" y2="124" stroke="#1a2332" stroke-width="3" stroke-linecap="round"/>
+
+  <!-- Water hints -->
+  <path d="M415 338 Q460 332 510 338 Q560 342 600 336" fill="none" stroke="#7ba7c9" stroke-width="1.5" opacity="0.4"/>
+  <path d="M600 340 Q650 334 700 340 Q740 344 785 336" fill="none" stroke="#7ba7c9" stroke-width="1.5" opacity="0.4"/>
+
+  <!-- Text: THE MAINE -->
+  <text x="600" y="372" text-anchor="middle" font-family="'Georgia', 'Times New Roman', serif" font-weight="bold" font-size="36" fill="#1a2332" letter-spacing="4">THE MAINE</text>
+
+  <!-- Text: CLEANING CO. -->
+  <text x="600" y="400" text-anchor="middle" font-family="'Georgia', 'Times New Roman', serif" font-weight="bold" font-size="26" fill="#1a2332" letter-spacing="5">CLEANING CO.</text>
+
+  <!-- Tagline below shield -->
+  <text x="600" y="478" text-anchor="middle" font-family="'Georgia', serif" font-size="22" fill="#4a5568" letter-spacing="2">CLEANING &amp; PROPERTY MANAGEMENT</text>
+  <text x="600" y="510" text-anchor="middle" font-family="'Georgia', serif" font-size="18" fill="#6b7b8d" letter-spacing="3">SOUTHERN MAINE · EST. 2018</text>
+
+  <!-- Decorative line -->
+  <line x1="480" y1="455" x2="720" y2="455" stroke="#d1d5db" stroke-width="1"/>
+</svg>

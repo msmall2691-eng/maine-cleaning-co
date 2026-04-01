@@ -1,0 +1,77 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" fill="none">
+  <!-- Background circle for favicon use -->
+  <circle cx="256" cy="256" r="256" fill="white"/>
+
+  <!-- Shield/banner shape -->
+  <path d="M80 180 L256 140 L432 180 L432 340 L256 400 L80 340 Z" fill="white" stroke="#1a2332" stroke-width="6"/>
+  <path d="M80 340 L256 400 L432 340" fill="none" stroke="#1a2332" stroke-width="6"/>
+
+  <!-- Rocky ground / island -->
+  <path d="M100 280 Q140 260 180 270 Q220 250 256 260 Q300 245 340 265 Q380 255 412 275 L420 300 L256 340 L92 300 Z" fill="#6b7b8d"/>
+  <path d="M120 275 Q150 265 170 272 Q190 260 210 268" fill="none" stroke="#4a5568" stroke-width="2"/>
+  <path d="M310 260 Q340 252 360 262 Q380 254 400 270" fill="none" stroke="#4a5568" stroke-width="2"/>
+
+  <!-- Pine trees left -->
+  <g fill="#2d5a3d">
+    <path d="M140 270 L130 230 L120 270 Z"/>
+    <path d="M140 250 L130 210 L120 250 Z"/>
+    <path d="M140 230 L130 195 L120 230 Z"/>
+
+    <path d="M160 265 L150 228 L140 265 Z"/>
+    <path d="M160 245 L150 210 L140 245 Z"/>
+    <path d="M160 228 L150 195 L140 228 Z"/>
+
+    <path d="M175 268 L167 240 L159 268 Z"/>
+    <path d="M175 252 L167 225 L159 252 Z"/>
+  </g>
+
+  <!-- Pine trees right -->
+  <g fill="#2d5a3d">
+    <path d="M352 265 L342 228 L332 265 Z"/>
+    <path d="M352 245 L342 210 L332 245 Z"/>
+    <path d="M352 228 L342 195 L332 228 Z"/>
+
+    <path d="M372 270 L362 233 L352 270 Z"/>
+    <path d="M372 250 L362 215 L352 250 Z"/>
+
+    <path d="M390 272 L382 242 L374 272 Z"/>
+    <path d="M390 255 L382 228 L374 255 Z"/>
+  </g>
+
+  <!-- Lighthouse base -->
+  <path d="M236 270 L232 180 L280 180 L276 270 Z" fill="#d4dae0" stroke="#1a2332" stroke-width="2.5"/>
+
+  <!-- Lighthouse stripes -->
+  <rect x="234" y="200" width="44" height="12" fill="#e8edf2" rx="0"/>
+  <rect x="235" y="225" width="42" height="12" fill="#e8edf2" rx="0"/>
+  <rect x="236" y="250" width="40" height="12" fill="#e8edf2" rx="0"/>
+
+  <!-- Lighthouse gallery/observation deck -->
+  <rect x="225" y="172" width="62" height="10" fill="#1a2332" rx="1"/>
+  <rect x="230" y="164" width="52" height="10" fill="#c4cdd6" stroke="#1a2332" stroke-width="2"/>
+
+  <!-- Lighthouse lantern room -->
+  <path d="M238 164 L240 140 L272 140 L274 164 Z" fill="#8faabe" stroke="#1a2332" stroke-width="2"/>
+  <!-- Window panes -->
+  <line x1="248" y1="142" x2="248" y2="162" stroke="#1a2332" stroke-width="1.5"/>
+  <line x1="256" y1="142" x2="256" y2="162" stroke="#1a2332" stroke-width="1.5"/>
+  <line x1="264" y1="142" x2="264" y2="162" stroke="#1a2332" stroke-width="1.5"/>
+
+  <!-- Lighthouse dome/cap -->
+  <path d="M242 140 Q256 120 270 140 Z" fill="#1a2332"/>
+  <!-- Spire -->
+  <line x1="256" y1="120" x2="256" y2="108" stroke="#1a2332" stroke-width="3" stroke-linecap="round"/>
+
+  <!-- Water hints -->
+  <path d="M90 300 Q130 295 170 300 Q210 305 250 298" fill="none" stroke="#7ba7c9" stroke-width="1.5" opacity="0.5"/>
+  <path d="M260 302 Q300 295 340 300 Q380 305 420 298" fill="none" stroke="#7ba7c9" stroke-width="1.5" opacity="0.5"/>
+
+  <!-- Text: THE MAINE -->
+  <text x="256" y="338" text-anchor="middle" font-family="'Georgia', 'Times New Roman', serif" font-weight="bold" font-size="38" fill="#1a2332" letter-spacing="4">THE MAINE</text>
+
+  <!-- Text: CLEANING CO. -->
+  <text x="256" y="365" text-anchor="middle" font-family="'Georgia', 'Times New Roman', serif" font-weight="bold" font-size="28" fill="#1a2332" letter-spacing="6">CLEANING CO.</text>
+
+  <!-- Text: EST. 2018 -->
+  <text x="256" y="388" text-anchor="middle" font-family="'Georgia', 'Times New Roman', serif" font-size="14" fill="#4a5568" letter-spacing="3">CLEANING &amp; PROPERTY MANAGEMENT · EST. 2018</text>
+</svg>

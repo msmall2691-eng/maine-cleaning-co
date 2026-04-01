@@ -51,7 +51,12 @@ export default function Navbar() {
     >
       <div className="container mx-auto px-5 sm:px-8 flex items-center justify-between gap-4">
         {/* Wordmark */}
-        <Link href="/" className="flex-shrink-0 group" data-testid="link-home-logo">
+        <Link href="/" className="flex-shrink-0 group flex items-center gap-2.5" data-testid="link-home-logo">
+          <img
+            src="/logo-icon.svg"
+            alt="The Maine Cleaning Co. logo"
+            className="h-9 sm:h-10 w-auto drop-shadow-sm group-hover:scale-105 transition-transform duration-200"
+          />
           <div className="flex flex-col leading-none">
             <span className="font-serif font-bold text-[15px] sm:text-[17px] md:text-[18px] tracking-[-0.01em] text-foreground group-hover:text-primary transition-colors duration-200">
               The Maine Cleaning Co.
