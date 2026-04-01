@@ -16,8 +16,8 @@ export const companyInfo = {
     phoneDisplay: "207-572-0502",
     phoneHref: "tel:+12075720502",
     smsHref: "sms:+12075720502",
-    email: "info@maine-clean.co",
-    emailHref: "mailto:info@maine-clean.co",
+    email: "office@mainecleaningco.com",
+    emailHref: "mailto:office@mainecleaningco.com",
   },
   socials: {
     facebook: "https://www.facebook.com/mainecleaningco",
