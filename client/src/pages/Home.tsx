@@ -1,6 +1,6 @@
 import { useRef, useEffect, useState, useCallback } from "react";
 import { useSEO } from "@/hooks/use-seo";
-import { motion, useInView } from "framer-motion";
+import { motion } from "framer-motion";
 import { Link } from "wouter";
 import {
   ArrowRight,
@@ -18,11 +18,6 @@ import {
   Shield,
   MapPin,
   Users,
-  Award,
-  TrendingUp,
-  Clock,
-  Instagram,
-  Facebook,
   Sun,
   Cloud,
   CloudRain,
@@ -65,14 +60,6 @@ const trustSignals = [
   { icon: Leaf, label: "Eco-Conscious" },
 ];
 
-const businessStats = [
-  { icon: Calendar, value: 7, suffix: "+", label: "Years in Business" },
-  { icon: TrendingUp, value: 5000, suffix: "+", label: "Cleans Completed" },
-  { icon: Clock, value: 30, suffix: "+", label: "Years Combined Exp." },
-  { icon: Award, value: 4.9, suffix: "★", label: "Google Rating", isDecimal: true },
-  { icon: Facebook, value: 1500, suffix: "+", label: "Facebook Followers" },
-  { icon: Instagram, value: 1900, suffix: "+", label: "Instagram Followers" },
-];
 
 function getWeatherIcon(iconName: string) {
   const map: Record<string, any> = {
@@ -104,24 +91,6 @@ function FadeSection({ className = "", children, id, ...rest }: { className?: st
   return <section ref={ref} className={`section-fade ${className}`} id={id} {...rest}>{children}</section>;
 }
 
-function AnimatedNumber({ target, suffix = "" }: { target: number; suffix?: string }) {
-  const ref = useRef<HTMLSpanElement>(null);
-  const inView = useInView(ref, { once: true, margin: "-50px" });
-  const [value, setValue] = useState(0);
-  useEffect(() => {
-    if (!inView) return;
-    const duration = 1200;
-    const start = performance.now();
-    const step = (now: number) => {
-      const progress = Math.min((now - start) / duration, 1);
-      const eased = 1 - Math.pow(1 - progress, 3);
-      setValue(Math.round(eased * target));
-      if (progress < 1) requestAnimationFrame(step);
-    };
-    requestAnimationFrame(step);
-  }, [inView, target]);
-  return <span ref={ref}>{value.toLocaleString()}{suffix}</span>;
-}
 
 function WaveDivider({ flip = false, className = "" }: { flip?: boolean; className?: string }) {
   return (
@@ -467,53 +436,21 @@ export default function Home() {
         </div>
       </FadeSection>
 
-      {/* ── Stats ── */}
-      <WaveDivider />
-      <FadeSection className="py-20 sm:py-28 section-cream relative overflow-hidden" id="stats">
-        <div className="absolute inset-0 pointer-events-none" aria-hidden="true">
-          <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[300px] rounded-full bg-primary/[0.04] blur-[100px]" />
-        </div>
-        <div className="container mx-auto px-4 sm:px-6 relative z-10">
-          <div className="text-center mb-10 sm:mb-14">
-            <h2 className="text-[1.75rem] sm:text-4xl md:text-[2.5rem] font-serif font-bold text-foreground tracking-[-0.01em] mb-4 section-heading-accent">By the Numbers</h2>
-            <p className="text-muted-foreground text-[15px] leading-relaxed">Real results across Southern Maine.</p>
-          </div>
-          <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-4 sm:gap-5 max-w-5xl mx-auto">
-            {businessStats.map((stat, i) => {
-              const Icon = stat.icon;
-              return (
-                <motion.div
-                  key={i}
-                  variants={fadeUp}
-                  initial="hidden"
-                  whileInView="visible"
-                  viewport={{ once: true }}
-                  custom={i}
-                  className="text-center group card-glass p-4 sm:p-5"
-                  data-testid={`stat-${i}`}
-                >
-                  <div className="w-11 h-11 rounded-xl bg-primary/10 flex items-center justify-center mx-auto mb-3 group-hover:bg-primary/15 transition-all">
-                    <Icon className="w-5 h-5 text-primary" />
-                  </div>
-                  <div className="text-2xl sm:text-3xl font-bold text-foreground tracking-tight">
-                    {stat.isDecimal ? <span>{stat.value}{stat.suffix}</span> : <AnimatedNumber target={stat.value} suffix={stat.suffix} />}
-                  </div>
-                  <p className="text-xs sm:text-sm text-muted-foreground mt-1.5 font-medium">{stat.label}</p>
-                </motion.div>
-              );
-            })}
-          </div>
-        </div>
-      </FadeSection>
-
       {/* ── Reviews ── */}
-      <WaveDividerCream />
+      <WaveDivider />
       <FadeSection className="py-20 sm:py-28 section-cream" id="reviews">
         <div className="container mx-auto px-4 sm:px-6">
           <div className="flex flex-col sm:flex-row sm:items-end sm:justify-between mb-10 sm:mb-14 max-w-4xl mx-auto gap-4">
             <div>
               <h2 className="text-[1.75rem] sm:text-4xl md:text-[2.5rem] font-serif font-bold text-foreground tracking-[-0.01em] mb-4 section-heading-accent">What Clients Say</h2>
-              <p className="text-muted-foreground text-[15px]">Real feedback from our Southern Maine customers.</p>
+              <p className="text-muted-foreground text-[15px] mb-4">Real feedback from our Southern Maine customers.</p>
+              <div className="flex flex-wrap justify-start gap-x-5 gap-y-1.5 text-xs sm:text-[13px] text-muted-foreground font-medium">
+                <span>7+ Years</span>
+                <span className="text-border">·</span>
+                <span>5,000+ Cleans</span>
+                <span className="text-border">·</span>
+                <span>4.9★ Google</span>
+              </div>
             </div>
             <div className="hidden sm:flex gap-2">
               <button onClick={() => scrollCarousel(-1)} className="w-9 h-9 rounded-full border border-border flex items-center justify-center hover:bg-card hover:shadow-[0_2px_8px_rgba(0,0,0,0.2)] transition-all" aria-label="Previous review">
@@ -625,31 +562,6 @@ export default function Home() {
           </div>
         </div>
       </FadeSection>
-
-      {/* ── Final CTA ── */}
-      <section className="py-20 sm:py-28 bg-primary text-primary-foreground">
-        <div className="container mx-auto px-4 sm:px-6 text-center max-w-lg">
-          <h2 className="text-[1.75rem] sm:text-4xl md:text-[2.5rem] font-serif font-bold mb-5 tracking-[-0.01em]">The Maine choice for a clean space.</h2>
-          <p className="text-base opacity-85 mb-10 leading-relaxed">
-            Let us handle the cleaning so you can enjoy what matters most.
-          </p>
-          <div className="flex flex-col sm:flex-row justify-center gap-3 sm:gap-4">
-            <Button
-              size="lg"
-              className="h-13 sm:h-14 px-9 rounded-full bg-background text-foreground hover:bg-background/90 shadow-[0_4px_20px_rgba(0,0,0,0.3)] font-semibold text-base sm:text-[17px]"
-              onClick={scrollToEstimate}
-              data-testid="button-cta-estimate"
-            >
-              Get My Estimate
-            </Button>
-            <a href={companyInfo.contact.phoneHref} data-testid="link-cta-call">
-              <Button size="lg" variant="outline" className="w-full sm:w-auto h-13 sm:h-14 px-9 rounded-full border-white/20 hover:bg-white/10 text-white font-semibold text-base">
-                <Phone className="w-4 h-4 mr-2" /> Call {companyInfo.contact.phoneDisplay}
-              </Button>
-            </a>
-          </div>
-        </div>
-      </section>
 
       {/* Back to Top */}
       <motion.button
