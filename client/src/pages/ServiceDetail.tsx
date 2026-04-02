@@ -39,6 +39,15 @@ export default function ServiceDetail() {
   };
   const checklistVariant = checklistVariantMap[service.id] || "residential";
 
+  const slugToCategoryMap: Record<string, "residential" | "deep-clean" | "str" | "commercial"> = {
+    "residential": "residential",
+    "deep-cleaning": "deep-clean",
+    "vacation-rentals": "str",
+    "commercial": "commercial",
+    "move-in-out": "deep-clean",
+  };
+  const estimateCategory = slugToCategoryMap[service.id] || "residential";
+
   const scrollToEstimate = () => {
     const el = document.getElementById("estimate-section-anchor");
     if (el) {
@@ -142,7 +151,7 @@ export default function ServiceDetail() {
           <section className="relative">
             <div id="estimate-section-anchor" className="absolute -top-32" />
             <h2 className="text-xl sm:text-2xl font-serif font-bold text-foreground mb-5">Get Your Estimate</h2>
-            <InstantEstimate />
+            <InstantEstimate defaultCategory={estimateCategory} />
           </section>
         ) : (
           <section>
