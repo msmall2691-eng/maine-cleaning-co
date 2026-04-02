@@ -1123,12 +1123,10 @@ Rules:
 
       log("INFO", "booking", "New booking request created", { id: booking.id, date: data.requestedDate, name: data.name });
 
-      // Forward to CRM for approval workflow
-      const CRM_BOOKING_URL = process.env.CRM_WEBHOOK_URL
-        ? process.env.CRM_WEBHOOK_URL.replace("/api/leads", "/api/bookings")
-        : "https://connecteam-proxy.vercel.app/api/bookings";
+      // Forward to CRM for approval workflow (uses leads endpoint with booking- prefix)
+      const CRM_BOOKING_URL = process.env.CRM_WEBHOOK_URL || "https://connecteam-proxy.vercel.app/api/leads";
 
-      fetch(CRM_BOOKING_URL + "?action=create", {
+      fetch(CRM_BOOKING_URL + "?action=booking-create", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
