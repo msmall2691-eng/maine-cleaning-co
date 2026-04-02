@@ -1,6 +1,8 @@
 import { companyInfo } from "@/lib/company-info";
+import { useSEO } from "@/hooks/use-seo";
 
 export default function Privacy() {
+  useSEO({ title: "Privacy Policy", description: "Privacy policy for The Maine Cleaning Co. — how we collect, use, and protect your personal information." });
   return (
     <div className="min-h-screen bg-background">
       <div className="container mx-auto px-4 sm:px-6 py-20 sm:py-28 max-w-3xl">

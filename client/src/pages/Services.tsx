@@ -8,7 +8,7 @@ import { CleaningQuiz } from "@/components/ui/CleaningQuiz";
 import { InstantEstimate } from "@/components/ui/InstantEstimate";
 
 export default function Services() {
-  useSEO({ title: "Cleaning Services", description: "Residential, deep cleaning, Airbnb turnovers, commercial janitorial, and move-in/move-out cleaning across Southern Maine. Eco-friendly products, transparent pricing." });
+  useSEO({ title: "Residential, Commercial & Airbnb Cleaning Services", description: "Residential, deep cleaning, Airbnb turnovers, commercial janitorial, and move-in/move-out cleaning across Southern Maine. Eco-friendly products, transparent pricing." });
   const services = getServicesList();
 
   useEffect(() => {

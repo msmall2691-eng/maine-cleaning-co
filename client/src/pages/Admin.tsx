@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { Shield, Activity, Users, FileText, ChevronDown, ChevronUp, Search, RefreshCw, Download, Archive, Phone, Mail, MessageSquare } from "lucide-react";
+import { useSEO } from "@/hooks/use-seo";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
@@ -27,6 +28,7 @@ const statusFilters = ["All", "New", "Reviewed", "Booked", "Transferred"] as con
 const PAGE_SIZE = 50;
 
 export default function Admin() {
+  useSEO({ title: "Admin Dashboard", description: "Admin management dashboard for The Maine Cleaning Co." });
   const [auth, setAuth] = useState(false);
   const [password, setPassword] = useState("");
   const [search, setSearch] = useState("");

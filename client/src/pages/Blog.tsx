@@ -5,7 +5,7 @@ import { motion } from "framer-motion";
 import { Calendar, Clock, ArrowRight } from "lucide-react";
 
 export default function Blog() {
-  useSEO({ title: "Blog", description: "Cleaning tips, home maintenance advice, and short-term rental insights from The Maine Cleaning Co. — Southern Maine's trusted cleaning experts." });
+  useSEO({ title: "Journal & Insights", description: "Cleaning tips, home maintenance advice, and short-term rental insights from The Maine Cleaning Co. — Southern Maine's trusted cleaning experts." });
   const posts = getBlogPosts();
 
   return (

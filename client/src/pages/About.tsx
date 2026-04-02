@@ -32,7 +32,7 @@ const testimonials = [
 ];
 
 export default function About() {
-  useSEO({ title: "About Us", description: "Meet The Maine Cleaning Co. — Southern Maine's trusted cleaning team since 2018. Eco-friendly products, bonded & insured crews, and a commitment to consistent results." });
+  useSEO({ title: "About Us — Southern Maine's Trusted Cleaning Team", description: "Meet The Maine Cleaning Co. — Southern Maine's trusted cleaning team since 2018. Eco-friendly products, bonded & insured crews, and a commitment to consistent results." });
   return (
     <div className="w-full overflow-x-hidden">
       {/* ── Page Hero ── */}

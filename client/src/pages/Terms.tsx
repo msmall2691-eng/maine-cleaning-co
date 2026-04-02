@@ -1,6 +1,8 @@
 import { companyInfo } from "@/lib/company-info";
+import { useSEO } from "@/hooks/use-seo";
 
 export default function Terms() {
+  useSEO({ title: "Terms of Service", description: "Terms of service for The Maine Cleaning Co. — scheduling, cancellations, payment, and satisfaction guarantee." });
   return (
     <div className="min-h-screen bg-background">
       <div className="container mx-auto px-4 sm:px-6 py-20 sm:py-28 max-w-3xl">
