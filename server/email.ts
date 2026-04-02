@@ -30,7 +30,12 @@ async function sendEmail(to: string, subject: string, html: string, replyTo?: st
 }
 
 function buildLeadEmailHtml(lead: QuoteLead): string {
-  const serviceLabel = lead.serviceType === "standard" ? "Standard Clean" : "Deep Clean";
+  const serviceLabels: Record<string, string> = {
+    standard: "Standard Clean", deep: "Deep Clean", str: "Vacation Rental Turnover",
+    "vacation-rental": "Vacation Rental Turnover", commercial: "Commercial Cleaning",
+    "move-in-out": "Move-In/Move-Out Clean",
+  };
+  const serviceLabel = serviceLabels[lead.serviceType] || lead.serviceType;
   const freqLabel: Record<string, string> = { weekly: "Weekly", biweekly: "Biweekly", monthly: "Monthly", "one-time": "One-Time" };
 
   return `
@@ -85,7 +90,12 @@ function buildLeadEmailHtml(lead: QuoteLead): string {
 }
 
 function buildCustomerConfirmationHtml(lead: QuoteLead, tempPassword?: string): string {
-  const serviceLabel = lead.serviceType === "standard" ? "Standard Clean" : "Deep Clean";
+  const serviceLabels: Record<string, string> = {
+    standard: "Standard Clean", deep: "Deep Clean", str: "Vacation Rental Turnover",
+    "vacation-rental": "Vacation Rental Turnover", commercial: "Commercial Cleaning",
+    "move-in-out": "Move-In/Move-Out Clean",
+  };
+  const serviceLabel = serviceLabels[lead.serviceType] || lead.serviceType;
   const freqLabel: Record<string, string> = { weekly: "Weekly", biweekly: "Biweekly", monthly: "Monthly", "one-time": "One-Time" };
   const firstName = lead.name?.split(' ')[0] || 'there';
 
@@ -180,7 +190,13 @@ function buildCustomerConfirmationHtml(lead: QuoteLead, tempPassword?: string): 
 export async function sendLeadNotification(lead: QuoteLead): Promise<void> {
   try {
     const html = buildLeadEmailHtml(lead);
-    const subject = `New Quote QT-${lead.id}: ${lead.serviceType === "standard" ? "Standard" : "Deep"} · $${lead.estimateMin}–$${lead.estimateMax}`;
+    const svcLabels: Record<string, string> = {
+      standard: "Standard", deep: "Deep Clean", str: "Vacation Rental",
+      "vacation-rental": "Vacation Rental", commercial: "Commercial", "move-in-out": "Move-In/Out",
+    };
+    const svcLabel = svcLabels[lead.serviceType] || lead.serviceType;
+    const estimate = lead.estimateMin && lead.estimateMax ? ` · $${lead.estimateMin}–$${lead.estimateMax}` : "";
+    const subject = `New Quote QT-${lead.id}: ${svcLabel}${estimate}`;
     await sendEmail(NOTIFY_ADDRESS, subject, html, lead.email || undefined);
     console.log(`[email] Lead notification sent for QT-${lead.id}`);
   } catch (error) {

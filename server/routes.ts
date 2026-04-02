@@ -550,14 +550,23 @@ export async function registerRoutes(
 
       // Forward to CRM
       const crmFreqMap: Record<string, string> = { weekly: "Weekly", biweekly: "Biweekly", monthly: "Monthly", "one-time": "One-Time" };
+      const crmServiceLabels: Record<string, string> = {
+        standard: "Standard Clean", deep: "Deep Clean", str: "Vacation Rental Turnover",
+        "vacation-rental": "Vacation Rental Turnover", commercial: "Commercial Cleaning",
+        "move-in-out": "Move-In/Move-Out Clean",
+      };
+      const crmPropertyTypes: Record<string, string> = {
+        standard: "residential", deep: "residential", str: "vacation-rental",
+        "vacation-rental": "vacation-rental", commercial: "commercial", "move-in-out": "residential",
+      };
       const quoteCrmPayload = {
         name: lead.name || "",
         email: lead.email || "",
         phone: lead.phone || "",
         address: lead.address || (lead as any).zip || "",
-        service: lead.serviceType === "standard" ? "Standard Clean" : lead.serviceType === "deep" ? "Deep Clean" : lead.serviceType,
-        message: `${lead.sqft} sqft, ${lead.bathrooms} bath. Estimate: $${lead.estimateMin}–$${lead.estimateMax}. ${lead.notes || ""}`.trim(),
-        propertyType: "residential",
+        service: crmServiceLabels[lead.serviceType] || lead.serviceType,
+        message: `${lead.sqft ? lead.sqft + " sqft" : ""}${lead.bathrooms ? ", " + lead.bathrooms + " bath" : ""}${lead.estimateMin ? ". Estimate: $" + lead.estimateMin + "–$" + lead.estimateMax : ""}${lead.notes ? ". " + lead.notes : ""}`.replace(/^, /, "").trim() || "Custom quote request",
+        propertyType: crmPropertyTypes[lead.serviceType] || "residential",
         frequency: crmFreqMap[lead.frequency] || lead.frequency || "",
         estimateMin: lead.estimateMin,
         estimateMax: lead.estimateMax,
@@ -585,6 +594,10 @@ export async function registerRoutes(
         const serviceTypeMap: Record<string, string> = {
           standard: "Standard Clean",
           deep: "Deep Clean",
+          str: "Vacation Rental Turnover",
+          "vacation-rental": "Vacation Rental Turnover",
+          commercial: "Commercial Cleaning",
+          "move-in-out": "Move-In/Move-Out Clean",
         };
         const webhookPayload = {
           source: "website",
@@ -629,6 +642,10 @@ export async function registerRoutes(
         const serviceTypeMap: Record<string, string> = {
           standard: "Standard Clean",
           deep: "Deep Clean",
+          str: "Vacation Rental Turnover",
+          "vacation-rental": "Vacation Rental Turnover",
+          commercial: "Commercial Cleaning",
+          "move-in-out": "Move-In/Move-Out Clean",
         };
         const nameParts = (lead.name || "").trim().split(/\s+/);
         const railwayPayload = {
