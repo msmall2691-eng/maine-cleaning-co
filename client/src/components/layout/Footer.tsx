@@ -80,6 +80,7 @@ export default function Footer() {
               <li><Link href="/how-it-works" className="text-muted-foreground hover:text-foreground transition-colors">How It Works</Link></li>
               <li><Link href="/service-areas" className="text-muted-foreground hover:text-foreground transition-colors">Service Areas</Link></li>
               <li><Link href="/blog" className="text-muted-foreground hover:text-foreground transition-colors">Blog</Link></li>
+              <li><a href="/#contact" onClick={(e) => { if (location === "/") { e.preventDefault(); document.getElementById("contact")?.scrollIntoView({ behavior: "smooth" }); }}} className="text-muted-foreground hover:text-foreground transition-colors">Contact</a></li>
             </ul>
           </div>
 

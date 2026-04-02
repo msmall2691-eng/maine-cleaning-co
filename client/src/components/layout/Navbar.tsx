@@ -13,6 +13,7 @@ const navLinks = [
   { href: "/service-areas", label: "Service Areas" },
   { href: "/short-term-rentals", label: "Airbnb & STR" },
   { href: "/blog", label: "Blog" },
+  { href: "/#contact", label: "Contact" },
 ];
 
 export default function Navbar() {
@@ -36,12 +37,15 @@ export default function Navbar() {
     return () => { document.body.style.overflow = ""; };
   }, [mobileMenuOpen]);
 
-  const scrollToEstimate = () => {
+  const scrollToSection = (hash: string) => {
     setMobileMenuOpen(false);
-    const el = document.getElementById("get-estimate") || document.getElementById("estimate-section-anchor");
+    const id = hash.replace("#", "");
+    const el = document.getElementById(id);
     if (el) el.scrollIntoView({ behavior: "smooth" });
-    else window.location.href = "/#get-estimate";
+    else window.location.href = "/#" + id;
   };
+
+  const scrollToEstimate = () => scrollToSection("get-estimate");
 
   return (
     <header
@@ -64,26 +68,44 @@ export default function Navbar() {
 
         {/* Desktop nav */}
         <nav className="hidden md:flex items-center gap-0.5 lg:gap-1">
-          {navLinks.map((link) => (
-            <Link
-              key={link.href}
-              href={link.href}
-              className={`relative px-3.5 lg:px-4 py-2 text-[13px] lg:text-[13.5px] font-medium transition-colors duration-200 rounded-xl tracking-wide group ${
-                location === link.href
-                  ? "text-foreground font-semibold"
-                  : "text-muted-foreground hover:text-foreground"
-              }`}
-              data-testid={`link-nav-${link.label.toLowerCase().replace(/[^a-z]/g, "-")}`}
-            >
-              {link.label}
-              {location === link.href && (
-                <motion.span
-                  layoutId="nav-active-dot"
-                  className="absolute bottom-1 left-1/2 -translate-x-1/2 w-1 h-1 rounded-full bg-primary"
-                />
-              )}
-            </Link>
-          ))}
+          {navLinks.map((link) => {
+            const isHash = link.href.includes("#");
+            const hashId = isHash ? link.href.split("#")[1] : "";
+            const baseCls = `relative px-3.5 lg:px-4 py-2 text-[13px] lg:text-[13.5px] font-medium transition-colors duration-200 rounded-xl tracking-wide group ${
+              location === link.href
+                ? "text-foreground font-semibold"
+                : "text-muted-foreground hover:text-foreground"
+            }`;
+            if (isHash) {
+              return (
+                <a
+                  key={link.href}
+                  href={link.href}
+                  className={baseCls}
+                  data-testid={`link-nav-${link.label.toLowerCase().replace(/[^a-z]/g, "-")}`}
+                  onClick={(e) => { e.preventDefault(); scrollToSection(hashId); }}
+                >
+                  {link.label}
+                </a>
+              );
+            }
+            return (
+              <Link
+                key={link.href}
+                href={link.href}
+                className={baseCls}
+                data-testid={`link-nav-${link.label.toLowerCase().replace(/[^a-z]/g, "-")}`}
+              >
+                {link.label}
+                {location === link.href && (
+                  <motion.span
+                    layoutId="nav-active-dot"
+                    className="absolute bottom-1 left-1/2 -translate-x-1/2 w-1 h-1 rounded-full bg-primary"
+                  />
+                )}
+              </Link>
+            );
+          })}
         </nav>
 
         {/* Desktop CTAs */}
@@ -142,26 +164,42 @@ export default function Navbar() {
               className="md:hidden navbar-glass border-t-0 overflow-hidden absolute top-full left-0 right-0 z-50"
             >
               <nav className="flex flex-col px-6 pt-4 pb-7 gap-0.5">
-                {navLinks.map((link, i) => (
-                  <motion.div
-                    key={link.href}
-                    initial={{ opacity: 0, x: -12 }}
-                    animate={{ opacity: 1, x: 0 }}
-                    transition={{ delay: i * 0.04, duration: 0.28, ease: [0.22, 1, 0.36, 1] }}
-                  >
-                    <Link
-                      href={link.href}
-                      className={`flex items-center py-3.5 px-4 rounded-2xl text-[15px] font-medium active:bg-secondary/50 transition-colors ${
-                        location === link.href
-                          ? "text-foreground font-semibold bg-secondary/40"
-                          : "text-muted-foreground hover:text-foreground hover:bg-secondary/20"
-                      }`}
-                      data-testid={`link-mobile-${link.label.toLowerCase().replace(/[^a-z]/g, "-")}`}
+                {navLinks.map((link, i) => {
+                  const isHash = link.href.includes("#");
+                  const hashId = isHash ? link.href.split("#")[1] : "";
+                  const cls = `flex items-center py-3.5 px-4 rounded-2xl text-[15px] font-medium active:bg-secondary/50 transition-colors ${
+                    location === link.href
+                      ? "text-foreground font-semibold bg-secondary/40"
+                      : "text-muted-foreground hover:text-foreground hover:bg-secondary/20"
+                  }`;
+                  return (
+                    <motion.div
+                      key={link.href}
+                      initial={{ opacity: 0, x: -12 }}
+                      animate={{ opacity: 1, x: 0 }}
+                      transition={{ delay: i * 0.04, duration: 0.28, ease: [0.22, 1, 0.36, 1] }}
                     >
-                      {link.label}
-                    </Link>
-                  </motion.div>
-                ))}
+                      {isHash ? (
+                        <a
+                          href={link.href}
+                          className={cls}
+                          data-testid={`link-mobile-${link.label.toLowerCase().replace(/[^a-z]/g, "-")}`}
+                          onClick={(e) => { e.preventDefault(); scrollToSection(hashId); }}
+                        >
+                          {link.label}
+                        </a>
+                      ) : (
+                        <Link
+                          href={link.href}
+                          className={cls}
+                          data-testid={`link-mobile-${link.label.toLowerCase().replace(/[^a-z]/g, "-")}`}
+                        >
+                          {link.label}
+                        </Link>
+                      )}
+                    </motion.div>
+                  );
+                })}
 
                 <motion.div
                   initial={{ opacity: 0, y: 8 }}

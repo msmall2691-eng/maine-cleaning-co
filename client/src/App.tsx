@@ -24,7 +24,16 @@ import { AIChatWidget } from "@/components/ui/AIChatWidget";
 function ScrollToTop() {
   const [location] = useLocation();
   useEffect(() => {
-    window.scrollTo(0, 0);
+    const hash = window.location.hash;
+    if (hash) {
+      // Let the page render, then scroll to the hash target
+      setTimeout(() => {
+        const el = document.getElementById(hash.slice(1));
+        if (el) el.scrollIntoView({ behavior: "smooth" });
+      }, 100);
+    } else {
+      window.scrollTo(0, 0);
+    }
   }, [location]);
   return null;
 }

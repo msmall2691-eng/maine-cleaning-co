@@ -26,6 +26,7 @@ import {
   CloudDrizzle,
   CloudFog,
   Home as HomeIcon,
+  Send,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { InstantEstimate } from "@/components/ui/InstantEstimate";
@@ -111,6 +112,111 @@ function WaveDividerCream({ flip = false }: { flip?: boolean }) {
         <path d="M0,50 C240,75 480,15 720,45 C960,70 1200,25 1440,50 L1440,80 L0,80 Z" fill="hsl(220 18% 10%)" />
       </svg>
     </div>
+  );
+}
+
+function ContactForm() {
+  const [form, setForm] = useState({ name: "", email: "", phone: "", message: "" });
+  const [status, setStatus] = useState<"idle" | "sending" | "sent" | "error">("idle");
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!form.name.trim() || !form.message.trim()) return;
+    setStatus("sending");
+    try {
+      const res = await fetch("/api/intake/submit", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          name: form.name,
+          email: form.email || null,
+          phone: form.phone || null,
+          notes: form.message,
+          source: "contact_form",
+        }),
+      });
+      if (!res.ok) throw new Error("Failed");
+      setStatus("sent");
+      setForm({ name: "", email: "", phone: "", message: "" });
+    } catch {
+      setStatus("error");
+    }
+  };
+
+  if (status === "sent") {
+    return (
+      <div className="bg-card border border-border/60 rounded-2xl p-8 text-center">
+        <CheckCircle2 className="w-10 h-10 text-primary mx-auto mb-4" />
+        <p className="text-lg font-semibold text-foreground mb-2">Message Sent!</p>
+        <p className="text-sm text-muted-foreground">We'll get back to you within one business day.</p>
+        <Button variant="outline" className="mt-6 rounded-full" onClick={() => setStatus("idle")}>
+          Send Another Message
+        </Button>
+      </div>
+    );
+  }
+
+  return (
+    <form onSubmit={handleSubmit} className="bg-card border border-border/60 rounded-2xl p-6 sm:p-8 space-y-5">
+      <div className="grid sm:grid-cols-2 gap-5">
+        <div>
+          <label htmlFor="contact-name" className="block text-sm font-medium text-foreground mb-1.5">Name *</label>
+          <input
+            id="contact-name"
+            type="text"
+            required
+            value={form.name}
+            onChange={(e) => setForm({ ...form, name: e.target.value })}
+            className="w-full rounded-xl border border-border bg-background px-4 py-2.5 text-sm text-foreground placeholder:text-muted-foreground/50 focus:outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary/50 transition-all"
+            placeholder="Your name"
+          />
+        </div>
+        <div>
+          <label htmlFor="contact-email" className="block text-sm font-medium text-foreground mb-1.5">Email</label>
+          <input
+            id="contact-email"
+            type="email"
+            value={form.email}
+            onChange={(e) => setForm({ ...form, email: e.target.value })}
+            className="w-full rounded-xl border border-border bg-background px-4 py-2.5 text-sm text-foreground placeholder:text-muted-foreground/50 focus:outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary/50 transition-all"
+            placeholder="you@example.com"
+          />
+        </div>
+      </div>
+      <div>
+        <label htmlFor="contact-phone" className="block text-sm font-medium text-foreground mb-1.5">Phone</label>
+        <input
+          id="contact-phone"
+          type="tel"
+          value={form.phone}
+          onChange={(e) => setForm({ ...form, phone: e.target.value })}
+          className="w-full rounded-xl border border-border bg-background px-4 py-2.5 text-sm text-foreground placeholder:text-muted-foreground/50 focus:outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary/50 transition-all"
+          placeholder="207-555-0123"
+        />
+      </div>
+      <div>
+        <label htmlFor="contact-message" className="block text-sm font-medium text-foreground mb-1.5">Message *</label>
+        <textarea
+          id="contact-message"
+          required
+          rows={4}
+          value={form.message}
+          onChange={(e) => setForm({ ...form, message: e.target.value })}
+          className="w-full rounded-xl border border-border bg-background px-4 py-2.5 text-sm text-foreground placeholder:text-muted-foreground/50 focus:outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary/50 transition-all resize-none"
+          placeholder="How can we help?"
+        />
+      </div>
+      {status === "error" && (
+        <p className="text-sm text-red-400">Something went wrong. Please try again or call us directly.</p>
+      )}
+      <Button
+        type="submit"
+        disabled={status === "sending"}
+        className="rounded-full h-11 px-8 text-sm font-semibold shadow-[0_2px_8px_rgba(0,0,0,0.15)] gap-2"
+      >
+        {status === "sending" ? "Sending..." : <><Send className="w-4 h-4" /> Send Message</>}
+      </Button>
+    </form>
   );
 }
 
@@ -559,6 +665,31 @@ export default function Home() {
               </div>
             </div>
             <InstantEstimate />
+          </div>
+        </div>
+      </FadeSection>
+
+      {/* ── Contact Form ── */}
+      <WaveDividerCream flip />
+      <FadeSection className="py-20 sm:py-28" id="contact">
+        <div className="container mx-auto px-4 sm:px-6">
+          <div className="max-w-2xl mx-auto">
+            <h2 className="text-[1.75rem] sm:text-4xl md:text-[2.5rem] font-serif font-bold text-foreground tracking-[-0.01em] mb-3 text-center section-heading-accent">Get in Touch</h2>
+            <p className="text-muted-foreground text-[15px] mb-10 leading-relaxed text-center max-w-lg mx-auto">
+              Have a question or need more info? Drop us a message and we'll get back to you within one business day.
+            </p>
+            <ContactForm />
+            <div className="mt-10 flex flex-col sm:flex-row items-center justify-center gap-6 text-sm text-muted-foreground">
+              <a href={companyInfo.contact.phoneHref} className="flex items-center gap-2 hover:text-foreground transition-colors">
+                <Phone className="w-4 h-4 text-primary" /> {companyInfo.contact.phoneDisplay}
+              </a>
+              <a href={companyInfo.contact.emailHref} className="flex items-center gap-2 hover:text-foreground transition-colors">
+                <Mail className="w-4 h-4 text-primary" /> {companyInfo.contact.email}
+              </a>
+              <a href={companyInfo.contact.smsHref} className="flex items-center gap-2 hover:text-foreground transition-colors sm:hidden">
+                <MessageSquare className="w-4 h-4 text-primary" /> Text Us
+              </a>
+            </div>
           </div>
         </div>
       </FadeSection>
