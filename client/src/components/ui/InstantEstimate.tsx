@@ -302,7 +302,7 @@ export function InstantEstimate() {
       const serviceTypeMap: Record<ServiceCategory, string> = {
         residential: "standard",
         "deep-clean": "deep",
-        str: "str",
+        str: "vacation-rental",
         commercial: "commercial",
       };
       const res = await fetch("/api/intake/submit", {

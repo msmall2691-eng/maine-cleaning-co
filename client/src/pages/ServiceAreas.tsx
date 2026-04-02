@@ -1,6 +1,6 @@
 import { motion } from "framer-motion";
 import { Link } from "wouter";
-import { MapPin, ArrowRight, Phone, RefreshCw, Sparkles, Building2, Calendar } from "lucide-react";
+import { MapPin, ArrowRight, Phone, RefreshCw, Sparkles, Calendar } from "lucide-react";
 import { useSEO } from "@/hooks/use-seo";
 import { Button } from "@/components/ui/button";
 import { ServiceAreaMap } from "@/components/ui/ServiceAreaMap";
