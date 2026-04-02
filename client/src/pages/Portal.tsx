@@ -1,6 +1,7 @@
 import { useState, useEffect, useCallback, useRef } from "react";
 import { useLocation, Link } from "wouter";
 import { useAuth } from "@/lib/auth";
+import { useSEO } from "@/hooks/use-seo";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import {
@@ -81,6 +82,7 @@ function statusBadge(status: string) {
 type PortalTab = "dashboard" | "quotes" | "onboarding" | "documents" | "schedule" | "payments";
 
 export default function Portal() {
+  useSEO({ title: "Client Dashboard", description: "Manage your cleaning services, view quotes, and update your account with The Maine Cleaning Co." });
   const { user, logout, loading: authLoading } = useAuth();
   const [, navigate] = useLocation();
   const [tab, setTab] = useState<PortalTab>("dashboard");

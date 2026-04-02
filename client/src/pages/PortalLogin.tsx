@@ -4,8 +4,10 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { useAuth } from "@/lib/auth";
 import { Shield, Loader2, ArrowRight, Mail, CheckCircle2 } from "lucide-react";
+import { useSEO } from "@/hooks/use-seo";
 
 export default function PortalLogin() {
+  useSEO({ title: "Client Portal", description: "Sign in to your Maine Cleaning Co. client portal to manage your cleaning services and account." });
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");

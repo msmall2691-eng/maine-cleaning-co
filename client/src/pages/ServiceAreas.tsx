@@ -78,7 +78,7 @@ const regions = [
 ];
 
 export default function ServiceAreas() {
-  useSEO({ title: "Service Areas", description: "The Maine Cleaning Co. serves 49+ communities across York & Cumberland County. Portland, Kennebunkport, Old Orchard Beach, Scarborough, and more." });
+  useSEO({ title: "Service Areas — York & Cumberland County", description: "The Maine Cleaning Co. serves 49+ communities across York & Cumberland County. Portland, Kennebunkport, Old Orchard Beach, Scarborough, and more." });
   return (
     <div className="w-full overflow-x-hidden">
       {/* ── Page Hero ── */}

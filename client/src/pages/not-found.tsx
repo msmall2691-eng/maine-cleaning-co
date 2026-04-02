@@ -1,8 +1,10 @@
 import { Link } from "wouter";
 import { Home, ArrowLeft } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { useSEO } from "@/hooks/use-seo";
 
 export default function NotFound() {
+  useSEO({ title: "Page Not Found", description: "The page you're looking for doesn't exist or has been moved." });
   return (
     <div className="min-h-screen w-full flex items-center justify-center bg-background">
       <div className="text-center px-6 max-w-md">
