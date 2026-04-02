@@ -193,9 +193,24 @@ const categories: { id: ServiceCategory; label: string; sub: string; icon: any; 
   { id: "commercial", label: "Commercial", sub: "Offices & businesses", icon: Building2, color: "text-slate-400", bg: "bg-slate-500/10 border-slate-500/20" },
 ];
 
-export function InstantEstimate() {
+interface InstantEstimateProps {
+  defaultCategory?: ServiceCategory;
+}
+
+export function InstantEstimate({ defaultCategory }: InstantEstimateProps = {}) {
   const [, navigate] = useLocation();
-  const [category, setCategory] = useState<ServiceCategory>("residential");
+
+  // Determine initial category: prop > URL param > default "residential"
+  const initialCategory = (): ServiceCategory => {
+    if (defaultCategory) return defaultCategory;
+    const params = new URLSearchParams(window.location.search);
+    const svc = params.get("service");
+    const valid: ServiceCategory[] = ["residential", "deep-clean", "str", "commercial"];
+    if (svc && valid.includes(svc as ServiceCategory)) return svc as ServiceCategory;
+    return "residential";
+  };
+
+  const [category, setCategory] = useState<ServiceCategory>(initialCategory);
   const [sqft, setSqft] = useState([2000]);
   const [frequency, setFrequency] = useState<Frequency>("biweekly");
   const [petHair, setPetHair] = useState<PetHair>("none");

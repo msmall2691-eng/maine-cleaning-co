@@ -25,6 +25,7 @@ import {
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { companyInfo } from "@/lib/company-info";
+import { InstantEstimate } from "@/components/ui/InstantEstimate";
 
 const fadeUp = {
   hidden: { opacity: 0, y: 20 },
@@ -125,7 +126,10 @@ const southernMaineHotspots = [
 ];
 
 const scrollToEstimate = () => {
-  window.location.href = "/#get-estimate";
+  const el = document.getElementById("str-estimate-section");
+  if (el) {
+    el.scrollIntoView({ behavior: "smooth", block: "start" });
+  }
 };
 
 export default function ShortTermRentals() {
@@ -504,6 +508,15 @@ export default function ShortTermRentals() {
           </Link>
         </div>
       </FadeSection>
+
+      {/* ── Estimate Section ── */}
+      <section className="py-16 sm:py-24 relative">
+        <div id="str-estimate-section" className="absolute -top-32" />
+        <div className="container mx-auto px-4 sm:px-6 max-w-xl">
+          <h2 className="text-xl sm:text-2xl font-serif font-bold text-foreground mb-5 text-center">Get Your Rental Cleaning Quote</h2>
+          <InstantEstimate defaultCategory="str" />
+        </div>
+      </section>
 
       {/* ── Final CTA ── */}
       <section className="py-20 sm:py-28 bg-primary text-primary-foreground">
