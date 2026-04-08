@@ -6,6 +6,7 @@ import { z } from "zod";
 import { sendLeadNotification, sendCustomerConfirmation, sendPasswordResetEmail, sendIntakeNotification } from "./email";
 import { intakeSubmitSchema } from "./lib/validators";
 import { normalizeIntakePayload } from "./lib/normalize";
+import { createQuoteRequestInTwenty } from "./lib/twenty";
 import crypto from "crypto";
 import { setupAuth, hashPassword, comparePassword, requireAuth, requireAdmin } from "./auth";
 import OpenAI from "openai";
@@ -475,6 +476,25 @@ export async function registerRoutes(
           log("INFO", "crm", `CRM response`, { status: r.status, body: body.slice(0, 300), intakeId: submission.id });
         })
         .catch(err => log("ERROR", "crm", `CRM forward failed`, { error: String(err), intakeId: submission.id }));
+
+      // Sync to Twenty CRM (non-blocking)
+      createQuoteRequestInTwenty({
+        name: normalized.name,
+        email: normalized.email,
+        phone: normalized.phone,
+        address: normalized.address,
+        zip: normalized.zip,
+        serviceType: normalized.serviceType,
+        frequency: normalized.frequency,
+        sqft: normalized.sqft,
+        bathrooms: normalized.bathrooms,
+        petHair: normalized.petHair,
+        condition: normalized.condition,
+        estimateMin: normalized.estimateMin,
+        estimateMax: normalized.estimateMax,
+        notes: normalized.notes,
+        source: "Website",
+      });
 
       return res.status(201).json({
         success: true,
@@ -1160,6 +1180,25 @@ Rules:
           } catch {}
         })
         .catch(err => log("ERROR", "booking", "CRM booking forward failed", { error: String(err) }));
+
+      // Sync to Twenty CRM (non-blocking)
+      createQuoteRequestInTwenty({
+        name: data.name,
+        email: data.email,
+        phone: data.phone,
+        address: data.address,
+        zip: data.zip,
+        serviceType: data.serviceType,
+        frequency: data.frequency,
+        sqft: data.sqft,
+        bathrooms: data.bathrooms,
+        petHair: data.petHair,
+        condition: data.condition,
+        estimateMin: data.estimateMin,
+        estimateMax: data.estimateMax,
+        requestedDate: data.requestedDate,
+        source: "Website",
+      });
 
       return res.status(201).json({
         success: true,
