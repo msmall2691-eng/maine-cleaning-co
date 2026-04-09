@@ -21,6 +21,9 @@ export interface IStorage {
   createIntakeSubmission(data: InsertIntakeSubmission): Promise<IntakeSubmission>;
   updateIntakeSubmissionEmail(id: number, status: "sent" | "failed"): Promise<void>;
   updateIntakeSubmissionQuoteLead(id: number, quoteLeadId: number): Promise<void>;
+  updateIntakeSubmissionApprovalToken(id: number, token: string, expiresAt: Date): Promise<void>;
+  updateIntakeSubmissionApprovalStatus(id: number, status: "approved" | "rejected", method?: string): Promise<void>;
+  updateIntakeSubmissionTwentySyncStatus(id: number, syncStatus: "pending" | "synced" | "failed", companyId?: string, contactId?: string, quoteRequestId?: string, error?: string): Promise<void>;
   getIntakeSubmissions(limit?: number, offset?: number): Promise<IntakeSubmission[]>;
   getUser(id: string): Promise<User | undefined>;
   getUserByUsername(username: string): Promise<User | undefined>;
@@ -294,6 +297,44 @@ export class DatabaseStorage implements IStorage {
   async updateIntakeSubmissionQuoteLead(id: number, quoteLeadId: number): Promise<void> {
     await db.update(intakeSubmissions)
       .set({ quoteLeadId })
+      .where(eq(intakeSubmissions.id, id));
+  }
+
+  async updateIntakeSubmissionApprovalToken(id: number, token: string, expiresAt: Date): Promise<void> {
+    await db.update(intakeSubmissions)
+      .set({ approvalToken: token, approvalTokenExpires: expiresAt })
+      .where(eq(intakeSubmissions.id, id));
+  }
+
+  async updateIntakeSubmissionApprovalStatus(id: number, status: "approved" | "rejected", method?: string): Promise<void> {
+    const updates: any = {
+      approvalStatus: status,
+      approvalTimestamp: new Date(),
+    };
+    if (method) updates.approvalMethod = method;
+    await db.update(intakeSubmissions)
+      .set(updates)
+      .where(eq(intakeSubmissions.id, id));
+  }
+
+  async updateIntakeSubmissionTwentySyncStatus(
+    id: number,
+    syncStatus: "pending" | "synced" | "failed",
+    companyId?: string,
+    contactId?: string,
+    quoteRequestId?: string,
+    error?: string
+  ): Promise<void> {
+    const updates: any = {
+      twentySyncStatus: syncStatus,
+      twentySyncedAt: syncStatus === "synced" ? new Date() : null,
+    };
+    if (companyId) updates.twentyCompanyId = companyId;
+    if (contactId) updates.twentyContactId = contactId;
+    if (quoteRequestId) updates.twentyQuoteRequestId = quoteRequestId;
+    if (error) updates.twentySyncError = error;
+    await db.update(intakeSubmissions)
+      .set(updates)
       .where(eq(intakeSubmissions.id, id));
   }
 

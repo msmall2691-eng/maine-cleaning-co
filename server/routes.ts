@@ -7,6 +7,7 @@ import { sendLeadNotification, sendCustomerConfirmation, sendPasswordResetEmail,
 import { intakeSubmitSchema } from "./lib/validators";
 import { normalizeIntakePayload } from "./lib/normalize";
 import { createQuoteRequestInTwenty } from "./lib/twenty";
+import { generateApprovalToken, buildApprovalLink } from "./lib/approval";
 import crypto from "crypto";
 import { setupAuth, hashPassword, comparePassword, requireAuth, requireAdmin } from "./auth";
 import OpenAI from "openai";
@@ -429,6 +430,14 @@ export async function registerRoutes(
       const rawPayload = parseResult.data;
       const normalized = normalizeIntakePayload(rawPayload);
 
+      // Generate approval token for SMS/email links (24 hour expiration)
+      const { token: approvalToken, expiresAt: approvalTokenExpires } = generateApprovalToken(
+        0, // Will be set after submission created
+        normalized.email,
+        normalized.phone,
+        24
+      );
+
       const submission = await storage.createIntakeSubmission({
         source: rawPayload.source ?? "website_form",
         rawPayload: rawPayload as Record<string, any>,
@@ -437,8 +446,37 @@ export async function registerRoutes(
         emailNotificationStatus: "pending",
         processingStatus: "captured",
         quoteLeadId: null,
+        approvalStatus: "pending",
+        approvalToken,
+        approvalTokenExpires,
+        estimatedPrice: normalized.estimatePrice,
+        preferredContactMethod: normalized.preferredContactMethod ?? "email",
+        twentySyncStatus: "pending",
       });
 
+      log("INFO", "intake", "New submission received", {
+        id: submission.id,
+        name: normalized.name,
+        email: normalized.email,
+        phone: normalized.phone,
+        estimateRange: normalized.estimateRange,
+      });
+
+      // Regenerate token now that we have the submission ID
+      const { token: approvalTokenWithId } = generateApprovalToken(
+        submission.id,
+        normalized.email,
+        normalized.phone,
+        24
+      );
+      await storage.updateIntakeSubmissionApprovalToken(submission.id, approvalTokenWithId, approvalTokenExpires);
+
+      // Build approval link for SMS/email
+      const host = req.headers.host || "maine-clean.co";
+      const protocol = (req.headers["x-forwarded-proto"] as string) || req.protocol || "https";
+      const approvalLink = buildApprovalLink(approvalTokenWithId, `${protocol}://${host}`);
+
+      // Send intake notification with approval link
       sendIntakeNotification(submission.id, normalized as unknown as Record<string, any>, rawPayload as Record<string, any>)
         .then(() => storage.updateIntakeSubmissionEmail(submission.id, "sent"))
         .catch((err) => {
@@ -446,7 +484,7 @@ export async function registerRoutes(
           storage.updateIntakeSubmissionEmail(submission.id, "failed").catch(() => {});
         });
 
-      // Forward to CRM
+      // Forward to CRM webhook (fire-and-forget)
       const freqMap: Record<string, string> = { weekly: "Weekly", biweekly: "Biweekly", monthly: "Monthly", "one-time": "One-Time" };
       const crmPayload = {
         name: normalized.name || "",
@@ -465,7 +503,7 @@ export async function registerRoutes(
         condition: normalized.condition || null,
         source: "Website",
       };
-      log("INFO", "crm", "Forwarding intake to CRM", { payload: crmPayload, intakeId: submission.id });
+      log("INFO", "crm", "Forwarding intake to CRM", { intakeId: submission.id });
       fetch(CRM_WEBHOOK_URL, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -473,11 +511,11 @@ export async function registerRoutes(
       })
         .then(async r => {
           const body = await r.text().catch(() => "");
-          log("INFO", "crm", `CRM response`, { status: r.status, body: body.slice(0, 300), intakeId: submission.id });
+          log("INFO", "crm", `CRM response`, { status: r.status, intakeId: submission.id });
         })
         .catch(err => log("ERROR", "crm", `CRM forward failed`, { error: String(err), intakeId: submission.id }));
 
-      // Sync to Twenty CRM (non-blocking)
+      // Sync to Twenty CRM (non-blocking with status tracking)
       createQuoteRequestInTwenty({
         name: normalized.name,
         email: normalized.email,
@@ -494,7 +532,7 @@ export async function registerRoutes(
         estimateMax: normalized.estimateMax,
         notes: normalized.notes,
         source: "Website",
-      });
+      }, submission.id);
 
       return res.status(201).json({
         success: true,
@@ -502,6 +540,7 @@ export async function registerRoutes(
         estimateMin: normalized.estimateMin,
         estimateMax: normalized.estimateMax,
         estimateRange: normalized.estimateRange,
+        approvalLink,
         message: "Your request has been received. We'll be in touch shortly.",
       });
     } catch (error) {

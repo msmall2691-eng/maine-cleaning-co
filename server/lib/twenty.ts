@@ -429,8 +429,9 @@ async function createQuoteRequest(
 /**
  * Main entry point: creates a Client + Contact + Quote Request in Twenty.
  * Fire-and-forget — logs errors but never throws.
+ * Tracks sync status in database if intakeSubmissionId is provided.
  */
-export async function createQuoteRequestInTwenty(body: QuoteRequestBody): Promise<void> {
+export async function createQuoteRequestInTwenty(body: QuoteRequestBody, intakeSubmissionId?: number): Promise<void> {
   if (!isConfigured()) {
     console.log("[twenty] Skipping sync — TWENTY_API_URL / TWENTY_API_KEY not set");
     return;
@@ -449,7 +450,40 @@ export async function createQuoteRequestInTwenty(body: QuoteRequestBody): Promis
     console.log(
       `[twenty] Synced: companyId=${companyId ?? "none"}, contactId=${contactId ?? "none"}, quoteRequestId=${quoteRequestId ?? "none"}`,
     );
+
+    // Track sync status in database if we have submission ID
+    if (intakeSubmissionId) {
+      try {
+        const { storage } = await import("../storage");
+        await storage.updateIntakeSubmissionTwentySyncStatus(
+          intakeSubmissionId,
+          "synced",
+          companyId || undefined,
+          contactId || undefined,
+          quoteRequestId || undefined
+        );
+      } catch (err) {
+        console.error(`[twenty] Failed to update sync status for submission ${intakeSubmissionId}:`, err);
+      }
+    }
   } catch (err) {
     console.error("[twenty] Sync failed:", err);
+
+    // Track sync failure in database
+    if (intakeSubmissionId) {
+      try {
+        const { storage } = await import("../storage");
+        await storage.updateIntakeSubmissionTwentySyncStatus(
+          intakeSubmissionId,
+          "failed",
+          undefined,
+          undefined,
+          undefined,
+          String(err)
+        );
+      } catch (dbErr) {
+        console.error(`[twenty] Failed to update sync failure status for submission ${intakeSubmissionId}:`, dbErr);
+      }
+    }
   }
 }

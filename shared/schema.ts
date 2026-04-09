@@ -152,7 +152,37 @@ export const intakeSubmissions = pgTable("intake_submissions", {
   emailNotificationStatus: text("email_notification_status").notNull().default("pending"),
   processingStatus: text("processing_status").notNull().default("captured"),
   quoteLeadId: integer("quote_lead_id"),
+
+  // Approval workflow
+  approvalToken: varchar("approval_token").unique(),
+  approvalTokenExpires: timestamp("approval_token_expires"),
+  approvalStatus: text("approval_status").notNull().default("pending"),
+  approvalMethod: text("approval_method"),
+  approvalTimestamp: timestamp("approval_timestamp"),
+
+  // Contact preferences
+  preferredContactMethod: text("preferred_contact_method"),
+
+  // Twenty CRM sync tracking
+  twentySyncStatus: text("twenty_sync_status").notNull().default("pending"),
+  twentySyncError: text("twenty_sync_error"),
+  twentyCompanyId: varchar("twenty_company_id"),
+  twentyContactId: varchar("twenty_contact_id"),
+  twentyQuoteRequestId: varchar("twenty_quote_request_id"),
+  twentySyncedAt: timestamp("twenty_synced_at"),
+
+  // Payment/Stripe tracking
+  estimatedPrice: integer("estimated_price"),
+  stripeCheckoutSessionId: varchar("stripe_checkout_session_id"),
+  stripePriceId: varchar("stripe_price_id"),
+
+  // Job completion tracking
+  bookingId: integer("booking_id"),
+  jobCompletedAt: timestamp("job_completed_at"),
+
+  // Timestamps
   createdAt: timestamp("created_at").notNull().defaultNow(),
+  updatedAt: timestamp("updated_at").notNull().defaultNow(),
 });
 
 export const insertIntakeSubmissionSchema = createInsertSchema(intakeSubmissions).omit({
