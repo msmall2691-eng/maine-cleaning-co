@@ -319,10 +319,10 @@ async function createQuoteRequest(
     requestDate: new Date().toISOString(),
   };
 
-  // Address — Twenty Address composite field
+  // Address — Twenty custom Address field (API name: addressCustom, not address)
   const address = parseAddress(body.address, body.zip);
   if (address.addressStreet1) {
-    payload.address = address;
+    payload.addressCustom = address;
   }
 
   // Custom fields
