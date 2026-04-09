@@ -8,7 +8,9 @@ import { intakeSubmitSchema } from "./lib/validators";
 import { normalizeIntakePayload } from "./lib/normalize";
 import { createQuoteRequestInTwenty } from "./lib/twenty";
 import { generateApprovalToken, buildApprovalLink } from "./lib/approval";
-import { sendApprovalQuoteSMS, parseTwilioWebhook, isApprovalResponse, isRejectionResponse, isTwilioConfigured } from "./lib/twilio";
+import { sendApprovalQuoteSMS, parseTwilioWebhook, isApprovalResponse, isRejectionResponse, isTwilioConfigured, sendInvoiceSMS } from "./lib/twilio";
+import { createOrGetStripeCustomer, createCheckoutSession, isStripeConfigured, verifyStripeWebhookSignature, formatAmountForDisplay } from "./lib/stripe";
+import { generateInvoiceData, formatInvoiceAsText, generateInvoiceSMSSummary } from "./lib/invoice";
 import crypto from "crypto";
 import { setupAuth, hashPassword, comparePassword, requireAuth, requireAdmin } from "./auth";
 import OpenAI from "openai";
@@ -1446,8 +1448,22 @@ Rules:
             from: inboundSMS.from,
           });
 
-          // TODO: Send payment link SMS
-          // TODO: Create booking/calendar event
+          // Send payment link SMS if Stripe is configured
+          if (isStripeConfigured()) {
+            const normalized = submission.normalizedPayload as any;
+            const host = req.headers.host || "maine-clean.co";
+            const protocol = (req.headers["x-forwarded-proto"] as string) || req.protocol || "https";
+            const paymentLink = `${protocol}://${host}/pay?submission=${submission.id}`;
+
+            sendApprovalQuoteSMS(
+              normalized.phone,
+              normalized.name || "there",
+              `Complete payment here: ${paymentLink}`,
+              paymentLink
+            ).catch((err) =>
+              log("ERROR", "sms", "Failed to send payment SMS after approval", { error: String(err) })
+            );
+          }
         } else {
           log("WARN", "sms-webhook", "No pending approval found for phone", { from: inboundSMS.from });
         }
@@ -1473,6 +1489,191 @@ Rules:
       log("ERROR", "sms-webhook", "Webhook processing failed", { error: String(error) });
       // Still return 200 to prevent Twilio retries
       res.status(200).send();
+    }
+  });
+
+  // ============================================================
+  // Stripe Payment Integration
+  // ============================================================
+
+  /**
+   * POST /api/payments/create-checkout
+   * Create a Stripe checkout session for payment
+   * Call this after customer approves the quote
+   */
+  app.post("/api/payments/create-checkout", async (req, res) => {
+    try {
+      if (!isStripeConfigured()) {
+        return res.status(503).json({ success: false, message: "Payments not available" });
+      }
+
+      const { submissionId } = req.body;
+      if (!submissionId) {
+        return res.status(400).json({ success: false, message: "Submission ID required" });
+      }
+
+      const submissions = await storage.getIntakeSubmissions(1000);
+      const submission = submissions.find((s) => s.id === submissionId);
+
+      if (!submission) {
+        return res.status(404).json({ success: false, message: "Submission not found" });
+      }
+
+      const normalized = submission.normalizedPayload as any;
+      if (!normalized.email || !normalized.estimateMin) {
+        return res.status(400).json({ success: false, message: "Missing required fields for payment" });
+      }
+
+      // Create or get Stripe customer
+      const customerId = await createOrGetStripeCustomer(
+        normalized.email,
+        normalized.name,
+        normalized.phone
+      );
+
+      if (!customerId) {
+        return res.status(500).json({ success: false, message: "Failed to create customer" });
+      }
+
+      // Build URLs
+      const host = req.headers.host || "maine-clean.co";
+      const protocol = (req.headers["x-forwarded-proto"] as string) || req.protocol || "https";
+      const baseUrl = `${protocol}://${host}`;
+
+      const successUrl = `${baseUrl}/payment-success?submission=${submissionId}&session={CHECKOUT_SESSION_ID}`;
+      const cancelUrl = `${baseUrl}/payment-canceled?submission=${submissionId}`;
+
+      // Create checkout session
+      const checkoutUrl = await createCheckoutSession(
+        customerId,
+        submissionId,
+        submission.estimatedPrice || Math.round(((normalized.estimateMin + normalized.estimateMax) / 2) * 100),
+        `${normalized.serviceType || "Cleaning"} Service - ${normalized.frequency || "One-time"}`,
+        successUrl,
+        cancelUrl
+      );
+
+      if (!checkoutUrl) {
+        return res.status(500).json({ success: false, message: "Failed to create checkout session" });
+      }
+
+      // Save Stripe session reference
+      await storage.updateIntakeSubmissionTwentySyncStatus(
+        submissionId,
+        submission.twentySyncStatus as any,
+        submission.twentyCompanyId || undefined,
+        submission.twentyContactId || undefined,
+        submission.twentyQuoteRequestId || undefined
+      );
+
+      log("INFO", "payment", "Checkout session created", { submissionId, customerId });
+
+      return res.json({
+        success: true,
+        submissionId,
+        checkoutUrl,
+        message: "Checkout session created successfully",
+      });
+    } catch (error) {
+      log("ERROR", "payment", "Failed to create checkout", { error: String(error) });
+      return res.status(500).json({ success: false, message: "Failed to create checkout session" });
+    }
+  });
+
+  /**
+   * POST /api/webhooks/stripe
+   * Webhook to receive Stripe events
+   * Handles payment completion, failures, etc.
+   */
+  app.post("/api/webhooks/stripe", async (req, res) => {
+    try {
+      const signature = req.headers["stripe-signature"] as string;
+      if (!signature) {
+        return res.status(400).json({ error: "No signature" });
+      }
+
+      // Get raw body for signature verification
+      let rawBody = (req as any).rawBody;
+      if (Buffer.isBuffer(rawBody)) {
+        rawBody = rawBody.toString('utf-8');
+      } else if (typeof rawBody !== 'string') {
+        rawBody = JSON.stringify(req.body);
+      }
+
+      const event = verifyStripeWebhookSignature(rawBody, signature);
+      if (!event) {
+        return res.status(400).json({ error: "Invalid signature" });
+      }
+
+      log("INFO", "stripe-webhook", "Event received", { type: event.type, id: event.id });
+
+      if (event.type === "checkout.session.completed") {
+        const session = event.data.object as any;
+        const submissionId = parseInt(session.client_reference_id || "0");
+
+        if (!submissionId) {
+          log("WARN", "stripe-webhook", "No submission ID in session");
+          return res.json({ received: true });
+        }
+
+        const submissions = await storage.getIntakeSubmissions(1000);
+        const submission = submissions.find((s) => s.id === submissionId);
+
+        if (!submission) {
+          log("WARN", "stripe-webhook", "Submission not found", { submissionId });
+          return res.json({ received: true });
+        }
+
+        const normalized = submission.normalizedPayload as any;
+
+        // Payment successful - create invoice
+        const invoice = generateInvoiceData(
+          submissionId,
+          normalized.name || "Customer",
+          normalized.email || "",
+          normalized.phone || "",
+          normalized.address || "",
+          normalized.serviceType || "Cleaning",
+          normalized.frequency || "One-time",
+          normalized.estimateMin || 0,
+          normalized.estimateMax || 0,
+          normalized.sqft,
+          normalized.bathrooms,
+          normalized.notes
+        );
+
+        // Store invoice reference
+        const invoiceText = formatInvoiceAsText(invoice);
+        log("INFO", "payment", "Payment completed - invoice created", {
+          submissionId,
+          invoiceId: invoice.id,
+          amount: normalized.estimateMax,
+        });
+
+        // Send invoice SMS if phone configured
+        if (normalized.phone && isTwilioConfigured()) {
+          const invoiceUrl = `${req.headers.host || "maine-clean.co"}/invoices/${invoice.id}`;
+          const amountDisplay = formatAmountForDisplay((normalized.estimateMax || 0) * 100);
+
+          sendInvoiceSMS(normalized.phone, normalized.name || "there", amountDisplay, invoiceUrl).catch(
+            (err) => log("ERROR", "sms", "Failed to send invoice SMS", { error: String(err) })
+          );
+        }
+
+        // TODO: Create booking if automatic scheduling enabled
+        // TODO: Send booking confirmation email/SMS
+      } else if (event.type === "charge.refunded") {
+        const charge = event.data.object as any;
+        log("INFO", "stripe-webhook", "Refund processed", {
+          chargeId: charge.id,
+          amount: charge.refunded,
+        });
+      }
+
+      res.json({ received: true });
+    } catch (error) {
+      log("ERROR", "stripe-webhook", "Webhook processing failed", { error: String(error) });
+      res.status(200).json({ received: true }); // Still return 200 to prevent retries
     }
   });
 
