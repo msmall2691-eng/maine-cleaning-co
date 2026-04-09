@@ -18,7 +18,7 @@ const TWENTY_API_KEY = process.env.TWENTY_API_KEY;
 /** Base URL for Twenty REST API (strips any trailing slash from env var) */
 function restBase(): string {
   const base = (TWENTY_API_URL || "").replace(/\/+$/, "");
-  return `${base}/rest/api`;
+  return `${base}/rest`;
 }
 
 function twentyHeaders(): Record<string, string> {
@@ -189,6 +189,7 @@ const SOURCE_MAP: Record<string, string> = {
 const PET_HAIR_MAP: Record<string, string> = {
   none: "NONE",
   light: "LIGHT",
+  some: "LIGHT",
   heavy: "HEAVY",
 };
 
@@ -201,6 +202,7 @@ const PET_HAIR_MAP: Record<string, string> = {
 const CONDITION_MAP: Record<string, string> = {
   maintenance: "MAINTENANCE",
   light: "LIGHT",
+  moderate: "LIGHT",
   deep: "DEEP",
   trashed: "TRASHED",
 };
