@@ -38,6 +38,33 @@ function isConfigured(): boolean {
   return Boolean(TWENTY_API_URL && TWENTY_API_KEY);
 }
 
+/**
+ * Extract the record ID from a Twenty REST API response.
+ * Twenty may return different shapes depending on version:
+ *   { data: { id: "..." } }
+ *   { data: { createCompanies: [{ id: "..." }] } }
+ *   { id: "..." }
+ *   or just the record object directly
+ */
+function extractId(json: any): string | null {
+  if (!json) return null;
+  // Direct id on root
+  if (typeof json.id === "string") return json.id;
+  // Nested under data
+  if (json.data) {
+    if (typeof json.data.id === "string") return json.data.id;
+    // data might be an array
+    if (Array.isArray(json.data) && json.data[0]?.id) return json.data[0].id;
+    // data might contain a nested object with the record
+    for (const key of Object.keys(json.data)) {
+      const val = json.data[key];
+      if (val && typeof val === "object" && typeof val.id === "string") return val.id;
+      if (Array.isArray(val) && val[0]?.id) return val[0].id;
+    }
+  }
+  return null;
+}
+
 interface QuoteRequestBody {
   name?: string | null;
   email?: string | null;
@@ -170,12 +197,13 @@ const CLIENT_TYPE_MAP: Record<string, string> = {
 async function findClientByName(name: string): Promise<string | null> {
   const url = `${restBase()}/companies?filter[name][eq]=${encodeURIComponent(name)}`;
   const res = await fetch(url, { method: "GET", headers: twentyHeaders() });
+  const text = await res.text().catch(() => "");
   if (!res.ok) {
-    const text = await res.text().catch(() => "");
     console.error(`[twenty] findClientByName failed: ${res.status} ${text.slice(0, 200)}`);
     return null;
   }
-  const json = await res.json();
+  const json = JSON.parse(text);
+  console.log(`[twenty] findClientByName response keys:`, JSON.stringify(Object.keys(json)).slice(0, 200));
   const records = json?.data?.companies ?? json?.data ?? [];
   if (Array.isArray(records) && records.length > 0) {
     return records[0].id;
@@ -220,14 +248,16 @@ async function createClient(body: QuoteRequestBody): Promise<string | null> {
     body: JSON.stringify(payload),
   });
 
+  const text = await res.text().catch(() => "");
+  console.log(`[twenty] Create client response: ${res.status} ${text.slice(0, 500)}`);
+
   if (!res.ok) {
-    const text = await res.text().catch(() => "");
-    console.error(`[twenty] Failed to create client: ${res.status} ${text.slice(0, 300)}`);
+    console.error(`[twenty] Failed to create client: ${res.status}`);
     return null;
   }
 
-  const json = await res.json();
-  const id = json?.data?.id ?? json?.id ?? null;
+  const json = JSON.parse(text);
+  const id = extractId(json);
   console.log(`[twenty] Created client: ${id}`);
   return id;
 }
@@ -268,20 +298,24 @@ async function createContact(body: QuoteRequestBody, companyId: string | null): 
     payload.companyId = companyId;
   }
 
+  console.log(`[twenty] Creating contact with payload:`, JSON.stringify(payload).slice(0, 400));
+
   const res = await fetch(`${restBase()}/people`, {
     method: "POST",
     headers: twentyHeaders(),
     body: JSON.stringify(payload),
   });
 
+  const text = await res.text().catch(() => "");
+  console.log(`[twenty] Create contact response: ${res.status} ${text.slice(0, 500)}`);
+
   if (!res.ok) {
-    const text = await res.text().catch(() => "");
-    console.error(`[twenty] Failed to create contact: ${res.status} ${text.slice(0, 300)}`);
+    console.error(`[twenty] Failed to create contact: ${res.status}`);
     return null;
   }
 
-  const json = await res.json();
-  const id = json?.data?.id ?? json?.id ?? null;
+  const json = JSON.parse(text);
+  const id = extractId(json);
   console.log(`[twenty] Created contact: ${id}`);
   return id;
 }
@@ -374,14 +408,16 @@ async function createQuoteRequest(
     body: JSON.stringify(payload),
   });
 
+  const text = await res.text().catch(() => "");
+  console.log(`[twenty] Create quote request response: ${res.status} ${text.slice(0, 800)}`);
+
   if (!res.ok) {
-    const text = await res.text().catch(() => "");
-    console.error(`[twenty] Failed to create quote request: ${res.status} ${text.slice(0, 500)}`);
+    console.error(`[twenty] Failed to create quote request: ${res.status}`);
     return null;
   }
 
-  const json = await res.json();
-  const id = json?.data?.id ?? json?.id ?? null;
+  const json = JSON.parse(text);
+  const id = extractId(json);
   console.log(`[twenty] Created quote request: ${id}`);
   return id;
 }
