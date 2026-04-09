@@ -107,7 +107,7 @@ async function createPerson(body: QuoteRequestBody): Promise<string | null> {
       primaryEmail: body.email || "",
     },
     phones: {
-      primaryPhoneNumber: body.phone || "",
+      primaryPhoneNumber: body.phone ? (body.phone.startsWith("+") ? body.phone : `+1${body.phone.replace(/\D/g, "")}`) : "",
     },
     city: body.address || "",
   };
@@ -238,9 +238,15 @@ async function createQuoteRequest(
     ? `${body.name} — ${body.serviceType || "Cleaning"} Request`
     : `New Quote Request`;
 
-  // Notes now only holds free-text notes + overflow info (distance, contact)
+  // Notes holds all details that don't have dedicated Twenty fields
   const notesParts: string[] = [];
   if (body.notes) notesParts.push(body.notes);
+  if (body.address) notesParts.push(`Address: ${body.address}`);
+  if (body.zip) notesParts.push(`Zip: ${body.zip}`);
+  if (body.sqft) notesParts.push(`Sq Ft: ${body.sqft}`);
+  if (body.bathrooms) notesParts.push(`Bathrooms: ${body.bathrooms}`);
+  if (body.petHair) notesParts.push(`Pet Hair: ${body.petHair}`);
+  if (body.condition) notesParts.push(`Condition: ${body.condition}`);
   if (body.distanceMiles) notesParts.push(`Distance: ${body.distanceMiles} mi`);
   if (body.email) notesParts.push(`Email: ${body.email}`);
   if (body.phone) notesParts.push(`Phone: ${body.phone}`);
@@ -254,49 +260,11 @@ async function createQuoteRequest(
     requestDate: new Date().toISOString(),
   };
 
-  // ── New dedicated fields ──
-
-  // Address (Twenty Address composite field)
-  if (body.address || body.zip) {
-    payload.address = {
-      addressStreet1: body.address || "",
-      addressPostcode: body.zip || "",
-      addressCountry: "US",
-    };
-  }
-
-  // Square Footage (Number)
-  if (body.sqft) {
-    payload.squareFootage = body.sqft;
-  }
-
-  // Bathrooms (Number)
-  if (body.bathrooms) {
-    payload.bathrooms = body.bathrooms;
-  }
-
-  // Pet Hair (Select: NONE | LIGHT | HEAVY)
-  if (body.petHair) {
-    payload.petHair = PET_HAIR_MAP[(body.petHair || "").toLowerCase()] || null;
-  }
-
-  // Condition (Select: MAINTENANCE | LIGHT | DEEP | TRASHED)
-  if (body.condition) {
-    payload.condition = CONDITION_MAP[(body.condition || "").toLowerCase()] || null;
-  }
-
-  // Photos (Links field — store first photo URL as primary link)
+  // Photos — append URLs to notes if present
   if (body.photoUrls && body.photoUrls.length > 0) {
-    payload.photos = {
-      primaryLinkUrl: body.photoUrls[0],
-      primaryLinkLabel: "Photo 1",
-    };
-    // If more than one photo, add extra URLs to notes
-    if (body.photoUrls.length > 1) {
-      const extraPhotos = body.photoUrls.slice(1).map((url, i) => `Photo ${i + 2}: ${url}`);
-      const currentNotes = payload.notes || "";
-      payload.notes = [currentNotes, ...extraPhotos].filter(Boolean).join("\n");
-    }
+    const photoLines = body.photoUrls.map((url, i) => `Photo ${i + 1}: ${url}`);
+    const currentNotes = payload.notes || "";
+    payload.notes = [currentNotes, ...photoLines].filter(Boolean).join("\n");
   }
 
   // Estimated Price — Twenty Currency field uses amountMicros (integer in millionths)
