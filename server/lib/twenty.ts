@@ -70,7 +70,7 @@ function splitName(name?: string | null): { firstName: string; lastName: string 
  * Twenty REST API: GET /rest/api/people?filter[emails][primaryEmail][eq]=<email>
  */
 async function findPersonByEmail(email: string): Promise<string | null> {
-  const url = `${restBase()}/people?filter={"emails":{"primaryEmail":{"eq":"${encodeURIComponent(email)}"}}}`;
+  const url = `${restBase()}/people?filter[emails][primaryEmail][eq]=${encodeURIComponent(email)}`;
   const res = await fetch(url, { method: "GET", headers: twentyHeaders() });
   if (!res.ok) {
     const text = await res.text().catch(() => "");
@@ -221,7 +221,7 @@ const CONDITION_MAP: Record<string, string> = {
  *   - notes (Text)
  *   - source (Select: WEBSITE | PHONE | EMAIL | SMS | REFERRAL | SOCIAL_MEDIA | OTHER)
  *   - stage (Select)
- *   - contactId (Relation to Contacts/People)
+ *   - personId (Relation to People)
  *   - address (Address: { addressStreet1, addressCity, addressState, addressPostcode, addressCountry })
  *   - squareFootage (Number)
  *   - bathrooms (Number)
@@ -283,7 +283,7 @@ async function createQuoteRequest(
 
   // Link to person/contact if we have one
   if (personId) {
-    payload.contactId = personId;
+    payload.personId = personId;
   }
 
   console.log(`[twenty] Creating quote request with payload:`, JSON.stringify(payload).slice(0, 500));
