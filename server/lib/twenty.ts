@@ -7,10 +7,19 @@
  * Requires env vars:
  *   TWENTY_API_URL  – e.g. https://21-production-0bd4.up.railway.app
  *   TWENTY_API_KEY  – API key from Twenty settings
+ *
+ * Twenty REST API base path: /rest/api/
+ * Docs: https://docs.twenty.com/developers/extend/api
  */
 
 const TWENTY_API_URL = process.env.TWENTY_API_URL;
 const TWENTY_API_KEY = process.env.TWENTY_API_KEY;
+
+/** Base URL for Twenty REST API (strips any trailing slash from env var) */
+function restBase(): string {
+  const base = (TWENTY_API_URL || "").replace(/\/+$/, "");
+  return `${base}/rest/api`;
+}
 
 function twentyHeaders(): Record<string, string> {
   return {
@@ -41,6 +50,7 @@ interface QuoteRequestBody {
   requestedDate?: string | null;
   distanceMiles?: number | null;
   source?: string | null;
+  photoUrls?: string[] | null;
 }
 
 /**
@@ -57,13 +67,18 @@ function splitName(name?: string | null): { firstName: string; lastName: string 
 
 /**
  * Find an existing person in Twenty by email.
+ * Twenty REST API: GET /rest/api/people?filter[emails][primaryEmail][eq]=<email>
  */
 async function findPersonByEmail(email: string): Promise<string | null> {
-  const url = `${TWENTY_API_URL}/api/objects/people?filter={"emails":{"primaryEmail":{"eq":"${email}"}}}`;
+  const url = `${restBase()}/people?filter={"emails":{"primaryEmail":{"eq":"${encodeURIComponent(email)}"}}}`;
   const res = await fetch(url, { method: "GET", headers: twentyHeaders() });
-  if (!res.ok) return null;
+  if (!res.ok) {
+    const text = await res.text().catch(() => "");
+    console.error(`[twenty] findPersonByEmail failed: ${res.status} ${text.slice(0, 200)}`);
+    return null;
+  }
   const json = await res.json();
-  const records = json?.data?.people ?? json?.data ?? [];
+  const records = json?.data?.people ?? json?.data ?? json?.people ?? [];
   if (Array.isArray(records) && records.length > 0) {
     return records[0].id;
   }
@@ -72,6 +87,7 @@ async function findPersonByEmail(email: string): Promise<string | null> {
 
 /**
  * Create a Person in Twenty and return their ID.
+ * POST /rest/api/people
  */
 async function createPerson(body: QuoteRequestBody): Promise<string | null> {
   const { firstName, lastName } = splitName(body.name);
@@ -96,7 +112,7 @@ async function createPerson(body: QuoteRequestBody): Promise<string | null> {
     city: body.address || "",
   };
 
-  const res = await fetch(`${TWENTY_API_URL}/api/objects/people`, {
+  const res = await fetch(`${restBase()}/people`, {
     method: "POST",
     headers: twentyHeaders(),
     body: JSON.stringify(payload),
@@ -109,57 +125,200 @@ async function createPerson(body: QuoteRequestBody): Promise<string | null> {
   }
 
   const json = await res.json();
-  return json?.data?.id ?? json?.data?.people?.[0]?.id ?? null;
+  return json?.data?.id ?? json?.data?.createPerson?.id ?? json?.id ?? null;
 }
 
 /**
+ * Map website form service types to Twenty Select API values.
+ *
+ * Twenty quoteRequests.serviceType Select options:
+ *   STANDARD  → "Standard Clean"
+ *   DEEP      → "Deep Clean"
+ *   MOVE_IN_OUT → "Move In/Out"
+ *   TURNOVER  → "Turnover"
+ */
+const SERVICE_TYPE_MAP: Record<string, string> = {
+  standard: "STANDARD",
+  deep: "DEEP",
+  "move-in-out": "MOVE_IN_OUT",
+  "move-in/out": "MOVE_IN_OUT",
+  str: "TURNOVER",
+  "vacation-rental": "TURNOVER",
+  commercial: "STANDARD", // fallback — no dedicated commercial option
+};
+
+/**
+ * Map website form frequency values to Twenty Select API values.
+ *
+ * Twenty quoteRequests.frequency Select options:
+ *   WEEKLY    → "Weekly"
+ *   BIWEEKLY  → "Biweekly"
+ *   MONTHLY   → "Monthly"
+ *   ONE_TIME  → "One Time"
+ */
+const FREQUENCY_MAP: Record<string, string> = {
+  weekly: "WEEKLY",
+  biweekly: "BIWEEKLY",
+  monthly: "MONTHLY",
+  "one-time": "ONE_TIME",
+  "one time": "ONE_TIME",
+};
+
+/**
+ * Map source values to Twenty Select API values.
+ *
+ * Twenty quoteRequests.source Select options:
+ *   WEBSITE, PHONE, EMAIL, SMS, REFERRAL, SOCIAL_MEDIA, OTHER
+ */
+const SOURCE_MAP: Record<string, string> = {
+  website: "WEBSITE",
+  phone: "PHONE",
+  email: "EMAIL",
+  sms: "SMS",
+  referral: "REFERRAL",
+  "social media": "SOCIAL_MEDIA",
+  other: "OTHER",
+};
+
+/**
+ * Map website form pet hair values to Twenty Select API values.
+ *
+ * Twenty quoteRequests.petHair Select options:
+ *   NONE, LIGHT, HEAVY
+ */
+const PET_HAIR_MAP: Record<string, string> = {
+  none: "NONE",
+  light: "LIGHT",
+  heavy: "HEAVY",
+};
+
+/**
+ * Map website form condition values to Twenty Select API values.
+ *
+ * Twenty quoteRequests.condition Select options:
+ *   MAINTENANCE, LIGHT, DEEP, TRASHED
+ */
+const CONDITION_MAP: Record<string, string> = {
+  maintenance: "MAINTENANCE",
+  light: "LIGHT",
+  deep: "DEEP",
+  trashed: "TRASHED",
+};
+
+/**
  * Create a Quote Request custom object in Twenty, linked to a Person.
+ * POST /rest/api/quoteRequests
+ *
+ * Available fields on quoteRequests:
+ *   - name (Text)
+ *   - serviceType (Select: STANDARD | DEEP | MOVE_IN_OUT | TURNOVER)
+ *   - frequency (Select: WEEKLY | BIWEEKLY | MONTHLY | ONE_TIME)
+ *   - estimatedPrice (Currency: { amountMicros, currencyCode })
+ *   - requestDate (DateTime)
+ *   - desiredStartDate (DateTime)
+ *   - notes (Text)
+ *   - source (Select: WEBSITE | PHONE | EMAIL | SMS | REFERRAL | SOCIAL_MEDIA | OTHER)
+ *   - stage (Select)
+ *   - contactId (Relation to Contacts/People)
+ *   - address (Address: { addressStreet1, addressCity, addressState, addressPostcode, addressCountry })
+ *   - squareFootage (Number)
+ *   - bathrooms (Number)
+ *   - petHair (Select: NONE | LIGHT | HEAVY)
+ *   - condition (Select: MAINTENANCE | LIGHT | DEEP | TRASHED)
+ *   - photos (Links: { primaryLinkUrl, primaryLinkLabel })
  */
 async function createQuoteRequest(
   personId: string | null,
   body: QuoteRequestBody,
 ): Promise<string | null> {
-  const freqMap: Record<string, string> = {
-    weekly: "Weekly",
-    biweekly: "Biweekly",
-    monthly: "Monthly",
-    "one-time": "One-Time",
-  };
+  // Build a descriptive name for the quote request
+  const displayName = body.name
+    ? `${body.name} — ${body.serviceType || "Cleaning"} Request`
+    : `New Quote Request`;
 
-  const serviceMap: Record<string, string> = {
-    standard: "Standard Clean",
-    deep: "Deep Clean",
-    str: "Vacation Rental",
-    "vacation-rental": "Vacation Rental",
-    commercial: "Commercial",
-    "move-in-out": "Move In/Out",
-  };
+  // Notes now only holds free-text notes + overflow info (distance, contact)
+  const notesParts: string[] = [];
+  if (body.notes) notesParts.push(body.notes);
+  if (body.distanceMiles) notesParts.push(`Distance: ${body.distanceMiles} mi`);
+  if (body.email) notesParts.push(`Email: ${body.email}`);
+  if (body.phone) notesParts.push(`Phone: ${body.phone}`);
 
   const payload: Record<string, any> = {
-    serviceType: serviceMap[body.serviceType || ""] || body.serviceType || "",
-    frequency: freqMap[body.frequency || ""] || body.frequency || "",
-    estimatedPrice:
-      body.estimateMin && body.estimateMax
-        ? `$${body.estimateMin}–$${body.estimateMax}`
-        : null,
-    address: body.address || "",
-    squareFeet: body.sqft ?? null,
-    bathrooms: body.bathrooms ?? null,
-    petHair: body.petHair || null,
-    condition: body.condition || null,
-    notes: body.notes || null,
-    source: body.source || "Website",
+    name: displayName,
+    serviceType: SERVICE_TYPE_MAP[(body.serviceType || "").toLowerCase()] || null,
+    frequency: FREQUENCY_MAP[(body.frequency || "").toLowerCase()] || null,
+    notes: notesParts.join("\n") || null,
+    source: SOURCE_MAP[(body.source || "website").toLowerCase()] || "WEBSITE",
+    requestDate: new Date().toISOString(),
   };
 
+  // ── New dedicated fields ──
+
+  // Address (Twenty Address composite field)
+  if (body.address || body.zip) {
+    payload.address = {
+      addressStreet1: body.address || "",
+      addressPostcode: body.zip || "",
+      addressCountry: "US",
+    };
+  }
+
+  // Square Footage (Number)
+  if (body.sqft) {
+    payload.squareFootage = body.sqft;
+  }
+
+  // Bathrooms (Number)
+  if (body.bathrooms) {
+    payload.bathrooms = body.bathrooms;
+  }
+
+  // Pet Hair (Select: NONE | LIGHT | HEAVY)
+  if (body.petHair) {
+    payload.petHair = PET_HAIR_MAP[(body.petHair || "").toLowerCase()] || null;
+  }
+
+  // Condition (Select: MAINTENANCE | LIGHT | DEEP | TRASHED)
+  if (body.condition) {
+    payload.condition = CONDITION_MAP[(body.condition || "").toLowerCase()] || null;
+  }
+
+  // Photos (Links field — store first photo URL as primary link)
+  if (body.photoUrls && body.photoUrls.length > 0) {
+    payload.photos = {
+      primaryLinkUrl: body.photoUrls[0],
+      primaryLinkLabel: "Photo 1",
+    };
+    // If more than one photo, add extra URLs to notes
+    if (body.photoUrls.length > 1) {
+      const extraPhotos = body.photoUrls.slice(1).map((url, i) => `Photo ${i + 2}: ${url}`);
+      const currentNotes = payload.notes || "";
+      payload.notes = [currentNotes, ...extraPhotos].filter(Boolean).join("\n");
+    }
+  }
+
+  // Estimated Price — Twenty Currency field uses amountMicros (integer in millionths)
+  if (body.estimateMin && body.estimateMax) {
+    const avgCents = Math.round(((body.estimateMin + body.estimateMax) / 2) * 100);
+    payload.estimatedPrice = {
+      amountMicros: avgCents * 10000, // cents → micros
+      currencyCode: "USD",
+    };
+  }
+
+  // Desired Start Date
   if (body.requestedDate) {
-    payload.requestedDate = body.requestedDate;
+    payload.desiredStartDate = new Date(body.requestedDate).toISOString();
   }
 
+  // Link to person/contact if we have one
   if (personId) {
-    payload.personId = personId;
+    payload.contactId = personId;
   }
 
-  const res = await fetch(`${TWENTY_API_URL}/api/objects/quoteRequests`, {
+  console.log(`[twenty] Creating quote request with payload:`, JSON.stringify(payload).slice(0, 500));
+
+  const res = await fetch(`${restBase()}/quoteRequests`, {
     method: "POST",
     headers: twentyHeaders(),
     body: JSON.stringify(payload),
@@ -167,12 +326,12 @@ async function createQuoteRequest(
 
   if (!res.ok) {
     const text = await res.text().catch(() => "");
-    console.error(`[twenty] Failed to create quote request: ${res.status} ${text.slice(0, 300)}`);
+    console.error(`[twenty] Failed to create quote request: ${res.status} ${text.slice(0, 500)}`);
     return null;
   }
 
   const json = await res.json();
-  return json?.data?.id ?? null;
+  return json?.data?.id ?? json?.id ?? null;
 }
 
 /**
