@@ -8,6 +8,7 @@ import { intakeSubmitSchema } from "./lib/validators";
 import { normalizeIntakePayload } from "./lib/normalize";
 import { createQuoteRequestInTwenty } from "./lib/twenty";
 import { generateApprovalToken, buildApprovalLink } from "./lib/approval";
+import { sendApprovalQuoteSMS, parseTwilioWebhook, isApprovalResponse, isRejectionResponse, isTwilioConfigured } from "./lib/twilio";
 import crypto from "crypto";
 import { setupAuth, hashPassword, comparePassword, requireAuth, requireAdmin } from "./auth";
 import OpenAI from "openai";
@@ -483,6 +484,29 @@ export async function registerRoutes(
           console.error(`[intake] Email notification failed for INT-${submission.id}:`, err);
           storage.updateIntakeSubmissionEmail(submission.id, "failed").catch(() => {});
         });
+
+      // Send SMS approval request (if phone and Twilio configured)
+      if (normalized.phone && isTwilioConfigured()) {
+        sendApprovalQuoteSMS(
+          normalized.phone,
+          normalized.name || "there",
+          normalized.estimateRange || `$${normalized.estimateMin || "?"}–$${normalized.estimateMax || "?"}`,
+          approvalLink
+        )
+          .then((messageSid) => {
+            log("INFO", "sms", "Approval quote SMS sent", {
+              submissionId: submission.id,
+              phone: normalized.phone,
+              messageSid,
+            });
+          })
+          .catch((err) => {
+            log("ERROR", "sms", "Failed to send approval SMS", {
+              submissionId: submission.id,
+              error: String(err),
+            });
+          });
+      }
 
       // Forward to CRM webhook (fire-and-forget)
       const freqMap: Record<string, string> = { weekly: "Weekly", biweekly: "Biweekly", monthly: "Monthly", "one-time": "One-Time" };
@@ -1275,6 +1299,180 @@ Rules:
       res.json(booking);
     } catch (error) {
       res.status(500).json({ message: "Failed to update booking" });
+    }
+  });
+
+  // ============================================================
+  // SMS / Twilio Integration
+  // ============================================================
+
+  /**
+   * GET /api/sms/approval-link/:token
+   * Verify and approve submission via token (for email/SMS links)
+   * Renders a simple success page
+   */
+  app.get("/api/sms/approval-link/:token", async (req, res) => {
+    try {
+      const token = req.params.token;
+      if (!token) {
+        return res.status(400).json({ success: false, message: "Invalid approval token" });
+      }
+
+      // Find submission by approval token
+      const submissions = await storage.getIntakeSubmissions(1000);
+      const submission = submissions.find((s) => s.approvalToken === token);
+
+      if (!submission) {
+        return res.status(404).json({ success: false, message: "Approval link not found or already used" });
+      }
+
+      // Check if token is expired
+      if (submission.approvalTokenExpires && new Date(submission.approvalTokenExpires) < new Date()) {
+        return res.status(410).json({ success: false, message: "Approval link has expired (24 hours)" });
+      }
+
+      // Check if already approved
+      if (submission.approvalStatus === "approved") {
+        return res.status(400).json({ success: false, message: "This request has already been approved" });
+      }
+
+      // Mark as approved
+      await storage.updateIntakeSubmissionApprovalStatus(submission.id, "approved", "link");
+
+      log("INFO", "sms", "Request approved via link", { submissionId: submission.id });
+
+      // Return success response (frontend can handle the UI)
+      return res.status(200).json({
+        success: true,
+        id: submission.id,
+        message: "Your request has been approved! We'll send you payment and scheduling info shortly.",
+      });
+    } catch (error) {
+      log("ERROR", "sms", "Approval link verification failed", { error: String(error) });
+      return res.status(500).json({ success: false, message: "Failed to process approval" });
+    }
+  });
+
+  /**
+   * POST /api/sms/send-approval/:submissionId
+   * Manually send approval SMS to a submission
+   * Can be called by admin or after intake capture
+   */
+  app.post("/api/sms/send-approval/:submissionId", async (req, res) => {
+    try {
+      const submissionId = parseInt(req.params.submissionId);
+      if (!submissionId) {
+        return res.status(400).json({ success: false, message: "Invalid submission ID" });
+      }
+
+      if (!isTwilioConfigured()) {
+        return res.status(503).json({ success: false, message: "SMS not configured" });
+      }
+
+      const submissions = await storage.getIntakeSubmissions(1000);
+      const submission = submissions.find((s) => s.id === submissionId);
+
+      if (!submission) {
+        return res.status(404).json({ success: false, message: "Submission not found" });
+      }
+
+      const normalized = submission.normalizedPayload as any;
+      if (!normalized.phone) {
+        return res.status(400).json({ success: false, message: "No phone number on file" });
+      }
+
+      // Build approval link
+      const host = req.headers.host || "maine-clean.co";
+      const protocol = (req.headers["x-forwarded-proto"] as string) || req.protocol || "https";
+      const approvalLink = buildApprovalLink(submission.approvalToken!, `${protocol}://${host}`);
+
+      // Send SMS
+      const estimateRange = normalized.estimateRange || `$${normalized.estimateMin || "?"}–$${normalized.estimateMax || "?"}`;
+      const messageSid = await sendApprovalQuoteSMS(normalized.phone, normalized.name || "there", estimateRange, approvalLink);
+
+      if (!messageSid) {
+        return res.status(500).json({ success: false, message: "Failed to send SMS" });
+      }
+
+      log("INFO", "sms", "Approval SMS sent", { submissionId, phone: normalized.phone, messageSid });
+
+      return res.json({
+        success: true,
+        submissionId,
+        messageSid,
+        message: "Approval SMS sent successfully",
+      });
+    } catch (error) {
+      log("ERROR", "sms", "Failed to send approval SMS", { error: String(error) });
+      return res.status(500).json({ success: false, message: "Failed to send SMS" });
+    }
+  });
+
+  /**
+   * POST /api/webhooks/twilio/sms
+   * Webhook to receive inbound SMS from Twilio
+   * Handles approval responses via SMS replies
+   */
+  app.post("/api/webhooks/twilio/sms", async (req, res) => {
+    try {
+      // Parse Twilio webhook
+      const inboundSMS = parseTwilioWebhook(req.body as Record<string, string | string[]>);
+      if (!inboundSMS) {
+        return res.status(400).json({ error: "Invalid Twilio webhook" });
+      }
+
+      log("INFO", "sms-webhook", "Inbound SMS received", {
+        from: inboundSMS.from,
+        body: inboundSMS.body,
+        messageSid: inboundSMS.messageSid,
+      });
+
+      // Check if it's an approval response
+      if (isApprovalResponse(inboundSMS.body)) {
+        // Find submission by phone number (most recent pending approval)
+        const submissions = await storage.getIntakeSubmissions(1000);
+        const submission = submissions.find(
+          (s) =>
+            (s.normalizedPayload as any).phone === inboundSMS.from &&
+            s.approvalStatus === "pending" &&
+            s.approvalTokenExpires &&
+            new Date(s.approvalTokenExpires) > new Date()
+        );
+
+        if (submission) {
+          await storage.updateIntakeSubmissionApprovalStatus(submission.id, "approved", "sms");
+          log("INFO", "sms-webhook", "Request auto-approved via SMS reply", {
+            submissionId: submission.id,
+            from: inboundSMS.from,
+          });
+
+          // TODO: Send payment link SMS
+          // TODO: Create booking/calendar event
+        } else {
+          log("WARN", "sms-webhook", "No pending approval found for phone", { from: inboundSMS.from });
+        }
+      } else if (isRejectionResponse(inboundSMS.body)) {
+        // Find and mark as rejected
+        const submissions = await storage.getIntakeSubmissions(1000);
+        const submission = submissions.find(
+          (s) => (s.normalizedPayload as any).phone === inboundSMS.from && s.approvalStatus === "pending"
+        );
+
+        if (submission) {
+          await storage.updateIntakeSubmissionApprovalStatus(submission.id, "rejected", "sms");
+          log("INFO", "sms-webhook", "Request rejected via SMS reply", {
+            submissionId: submission.id,
+            from: inboundSMS.from,
+          });
+        }
+      }
+
+      // Return 200 OK to Twilio (webhook must succeed)
+      res.status(200).send();
+    } catch (error) {
+      log("ERROR", "sms-webhook", "Webhook processing failed", { error: String(error) });
+      // Still return 200 to prevent Twilio retries
+      res.status(200).send();
     }
   });
 
