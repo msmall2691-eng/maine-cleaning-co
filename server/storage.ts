@@ -24,6 +24,7 @@ export interface IStorage {
   updateIntakeSubmissionApprovalToken(id: number, token: string, expiresAt: Date): Promise<void>;
   updateIntakeSubmissionApprovalStatus(id: number, status: "approved" | "rejected", method?: string): Promise<void>;
   updateIntakeSubmissionTwentySyncStatus(id: number, syncStatus: "pending" | "synced" | "failed", companyId?: string, contactId?: string, quoteRequestId?: string, error?: string): Promise<void>;
+  updateIntakeSubmissionPaymentInfo(id: number, stripeCustomerId?: string, stripeSessionId?: string, invoiceId?: string): Promise<void>;
   getIntakeSubmissions(limit?: number, offset?: number): Promise<IntakeSubmission[]>;
   getUser(id: string): Promise<User | undefined>;
   getUserByUsername(username: string): Promise<User | undefined>;
@@ -333,6 +334,22 @@ export class DatabaseStorage implements IStorage {
     if (contactId) updates.twentyContactId = contactId;
     if (quoteRequestId) updates.twentyQuoteRequestId = quoteRequestId;
     if (error) updates.twentySyncError = error;
+    await db.update(intakeSubmissions)
+      .set(updates)
+      .where(eq(intakeSubmissions.id, id));
+  }
+
+  async updateIntakeSubmissionPaymentInfo(
+    id: number,
+    stripeCustomerId?: string,
+    stripeSessionId?: string,
+    invoiceId?: string
+  ): Promise<void> {
+    const updates: any = { updatedAt: new Date() };
+    if (stripeCustomerId) updates.stripeCustomerId = stripeCustomerId;
+    if (stripeSessionId) updates.stripeCheckoutSessionId = stripeSessionId;
+    if (invoiceId) updates.invoiceId = invoiceId;
+
     await db.update(intakeSubmissions)
       .set(updates)
       .where(eq(intakeSubmissions.id, id));

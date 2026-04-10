@@ -173,8 +173,10 @@ export const intakeSubmissions = pgTable("intake_submissions", {
 
   // Payment/Stripe tracking
   estimatedPrice: integer("estimated_price"),
+  stripeCustomerId: varchar("stripe_customer_id"),
   stripeCheckoutSessionId: varchar("stripe_checkout_session_id"),
   stripePriceId: varchar("stripe_price_id"),
+  invoiceId: varchar("invoice_id"),
 
   // Job completion tracking
   bookingId: integer("booking_id"),

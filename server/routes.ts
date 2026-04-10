@@ -1311,7 +1311,7 @@ Rules:
   /**
    * GET /api/sms/approval-link/:token
    * Verify and approve submission via token (for email/SMS links)
-   * Renders a simple success page
+   * CRITICAL: Only works if status is still "pending"
    */
   app.get("/api/sms/approval-link/:token", async (req, res) => {
     try {
@@ -1333,17 +1333,24 @@ Rules:
         return res.status(410).json({ success: false, message: "Approval link has expired (24 hours)" });
       }
 
-      // Check if already approved
-      if (submission.approvalStatus === "approved") {
-        return res.status(400).json({ success: false, message: "This request has already been approved" });
+      // CRITICAL: Check if already approved (prevent multi-use)
+      if (submission.approvalStatus !== "pending") {
+        const status = submission.approvalStatus || "unknown";
+        return res.status(400).json({
+          success: false,
+          message: `This request has already been ${status}. Each quote can only be approved once.`,
+        });
       }
 
       // Mark as approved
       await storage.updateIntakeSubmissionApprovalStatus(submission.id, "approved", "link");
 
-      log("INFO", "sms", "Request approved via link", { submissionId: submission.id });
+      log("INFO", "sms", "Request approved via link", {
+        submissionId: submission.id,
+        phone: (submission.normalizedPayload as any).phone,
+      });
 
-      // Return success response (frontend can handle the UI)
+      // Return success response
       return res.status(200).json({
         success: true,
         id: submission.id,
@@ -1359,6 +1366,7 @@ Rules:
    * POST /api/sms/send-approval/:submissionId
    * Manually send approval SMS to a submission
    * Can be called by admin or after intake capture
+   * CRITICAL: Validates phone format before sending
    */
   app.post("/api/sms/send-approval/:submissionId", async (req, res) => {
     try {
@@ -1381,6 +1389,18 @@ Rules:
       const normalized = submission.normalizedPayload as any;
       if (!normalized.phone) {
         return res.status(400).json({ success: false, message: "No phone number on file" });
+      }
+
+      // CRITICAL: Validate phone is in E.164 format before sending
+      if (!/^\+\d{10,15}$/.test(normalized.phone)) {
+        log("ERROR", "sms", "Invalid phone format for SMS", {
+          submissionId,
+          phone: normalized.phone,
+        });
+        return res.status(400).json({
+          success: false,
+          message: "Invalid phone number format. Please verify the phone number.",
+        });
       }
 
       // Build approval link
@@ -1431,9 +1451,13 @@ Rules:
 
       // Check if it's an approval response
       if (isApprovalResponse(inboundSMS.body)) {
-        // Find submission by phone number (most recent pending approval)
+        // Find submission by:
+        // 1. Phone number matches
+        // 2. Status is pending
+        // 3. Token not expired
+        // 4. OLDEST pending (if multiple, approve the first one)
         const submissions = await storage.getIntakeSubmissions(1000);
-        const submission = submissions.find(
+        const matchingPending = submissions.filter(
           (s) =>
             (s.normalizedPayload as any).phone === inboundSMS.from &&
             s.approvalStatus === "pending" &&
@@ -1441,11 +1465,16 @@ Rules:
             new Date(s.approvalTokenExpires) > new Date()
         );
 
+        // Sort by created date - get oldest pending request
+        matchingPending.sort((a, b) => new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime());
+        const submission = matchingPending[0];
+
         if (submission) {
           await storage.updateIntakeSubmissionApprovalStatus(submission.id, "approved", "sms");
           log("INFO", "sms-webhook", "Request auto-approved via SMS reply", {
             submissionId: submission.id,
             from: inboundSMS.from,
+            matchingCount: matchingPending.length,
           });
 
           // Send payment link SMS if Stripe is configured
@@ -1465,14 +1494,24 @@ Rules:
             );
           }
         } else {
-          log("WARN", "sms-webhook", "No pending approval found for phone", { from: inboundSMS.from });
+          log("WARN", "sms-webhook", "No valid pending approval found for phone", {
+            from: inboundSMS.from,
+            reason: matchingPending.length === 0 ? "no_pending" : "token_expired",
+          });
         }
       } else if (isRejectionResponse(inboundSMS.body)) {
-        // Find and mark as rejected
+        // Find and mark as rejected (oldest pending, same logic)
         const submissions = await storage.getIntakeSubmissions(1000);
-        const submission = submissions.find(
-          (s) => (s.normalizedPayload as any).phone === inboundSMS.from && s.approvalStatus === "pending"
+        const matchingPending = submissions.filter(
+          (s) =>
+            (s.normalizedPayload as any).phone === inboundSMS.from &&
+            s.approvalStatus === "pending" &&
+            s.approvalTokenExpires &&
+            new Date(s.approvalTokenExpires) > new Date()
         );
+
+        matchingPending.sort((a, b) => new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime());
+        const submission = matchingPending[0];
 
         if (submission) {
           await storage.updateIntakeSubmissionApprovalStatus(submission.id, "rejected", "sms");
@@ -1544,10 +1583,27 @@ Rules:
       const cancelUrl = `${baseUrl}/payment-canceled?submission=${submissionId}`;
 
       // Create checkout session
+      // CRITICAL: Amount MUST be in cents
+      // estimatedPrice is already in cents from normalization
+      // estimateMin/Max are in dollars, so multiply by 100
+      let amountCents = submission.estimatedPrice;
+      if (!amountCents && normalized.estimateMin && normalized.estimateMax) {
+        const avgDollars = (normalized.estimateMin + normalized.estimateMax) / 2;
+        amountCents = Math.round(avgDollars * 100);
+      }
+
+      if (!amountCents || amountCents < 50) {
+        // Stripe minimum is $0.50
+        return res.status(400).json({
+          success: false,
+          message: "Invalid amount. Minimum charge is $0.50",
+        });
+      }
+
       const checkoutUrl = await createCheckoutSession(
         customerId,
         submissionId,
-        submission.estimatedPrice || Math.round(((normalized.estimateMin + normalized.estimateMax) / 2) * 100),
+        amountCents,
         `${normalized.serviceType || "Cleaning"} Service - ${normalized.frequency || "One-time"}`,
         successUrl,
         cancelUrl
@@ -1557,16 +1613,17 @@ Rules:
         return res.status(500).json({ success: false, message: "Failed to create checkout session" });
       }
 
-      // Save Stripe session reference
-      await storage.updateIntakeSubmissionTwentySyncStatus(
-        submissionId,
-        submission.twentySyncStatus as any,
-        submission.twentyCompanyId || undefined,
-        submission.twentyContactId || undefined,
-        submission.twentyQuoteRequestId || undefined
-      );
+      // Extract session ID from Stripe URL for idempotency checking
+      const sessionId = checkoutUrl.split("/pay/")[1]?.split("?")[0] || "";
 
-      log("INFO", "payment", "Checkout session created", { submissionId, customerId });
+      // Save Stripe payment references
+      await storage.updateIntakeSubmissionPaymentInfo(submissionId, customerId, sessionId);
+
+      log("INFO", "payment", "Checkout session created", {
+        submissionId,
+        customerId,
+        sessionId,
+      });
 
       return res.json({
         success: true,
@@ -1616,11 +1673,31 @@ Rules:
           return res.json({ received: true });
         }
 
+        // CRITICAL: Check payment_status to ensure payment actually succeeded
+        // checkout.session.completed fires even if payment fails in some cases
+        if (session.payment_status !== "paid") {
+          log("WARN", "stripe-webhook", "Session completed but payment not paid", {
+            submissionId,
+            paymentStatus: session.payment_status,
+            sessionId: session.id,
+          });
+          return res.json({ received: true });
+        }
+
         const submissions = await storage.getIntakeSubmissions(1000);
         const submission = submissions.find((s) => s.id === submissionId);
 
         if (!submission) {
           log("WARN", "stripe-webhook", "Submission not found", { submissionId });
+          return res.json({ received: true });
+        }
+
+        // CRITICAL: Idempotency check - don't process if already handled
+        if (submission.stripeCheckoutSessionId === session.id) {
+          log("WARN", "stripe-webhook", "Duplicate webhook - already processed", {
+            submissionId,
+            sessionId: session.id,
+          });
           return res.json({ received: true });
         }
 
@@ -1642,18 +1719,23 @@ Rules:
           normalized.notes
         );
 
-        // Store invoice reference
+        // Store invoice reference in database
+        await storage.updateIntakeSubmissionPaymentInfo(submissionId, undefined, session.id, invoice.id);
+
         const invoiceText = formatInvoiceAsText(invoice);
-        log("INFO", "payment", "Payment completed - invoice created", {
+
+        log("INFO", "payment", "Payment completed - invoice generated", {
           submissionId,
           invoiceId: invoice.id,
-          amount: normalized.estimateMax,
+          amount: (submission.estimatedPrice || 0) / 100,
+          sessionId: session.id,
+          customerId: session.customer,
         });
 
         // Send invoice SMS if phone configured
         if (normalized.phone && isTwilioConfigured()) {
           const invoiceUrl = `${req.headers.host || "maine-clean.co"}/invoices/${invoice.id}`;
-          const amountDisplay = formatAmountForDisplay((normalized.estimateMax || 0) * 100);
+          const amountDisplay = formatAmountForDisplay(submission.estimatedPrice || 50000);
 
           sendInvoiceSMS(normalized.phone, normalized.name || "there", amountDisplay, invoiceUrl).catch(
             (err) => log("ERROR", "sms", "Failed to send invoice SMS", { error: String(err) })
@@ -1668,6 +1750,9 @@ Rules:
           chargeId: charge.id,
           amount: charge.refunded,
         });
+      } else {
+        // Log unexpected events
+        log("WARN", "stripe-webhook", "Unhandled event type", { type: event.type, id: event.id });
       }
 
       res.json({ received: true });
