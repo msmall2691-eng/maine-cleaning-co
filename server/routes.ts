@@ -7,6 +7,7 @@ import { sendLeadNotification, sendCustomerConfirmation, sendPasswordResetEmail,
 import { intakeSubmitSchema } from "./lib/validators";
 import { normalizeIntakePayload } from "./lib/normalize";
 import { createQuoteRequestInTwenty } from "./lib/twenty";
+import { forwardLeadToBrightBase } from "./lib/brightbase";
 import crypto from "crypto";
 import { setupAuth, hashPassword, comparePassword, requireAuth, requireAdmin } from "./auth";
 import OpenAI from "openai";
@@ -479,6 +480,25 @@ export async function registerRoutes(
 
       // Sync to Twenty CRM (non-blocking)
       createQuoteRequestInTwenty({
+        name: normalized.name,
+        email: normalized.email,
+        phone: normalized.phone,
+        address: normalized.address,
+        zip: normalized.zip,
+        serviceType: normalized.serviceType,
+        frequency: normalized.frequency,
+        sqft: normalized.sqft,
+        bathrooms: normalized.bathrooms,
+        petHair: normalized.petHair,
+        condition: normalized.condition,
+        estimateMin: normalized.estimateMin,
+        estimateMax: normalized.estimateMax,
+        notes: normalized.notes,
+        source: "Website",
+      });
+
+      // Forward to BrightBase Ops (non-blocking) — lands in Requests page
+      forwardLeadToBrightBase({
         name: normalized.name,
         email: normalized.email,
         phone: normalized.phone,
@@ -1183,6 +1203,25 @@ Rules:
 
       // Sync to Twenty CRM (non-blocking)
       createQuoteRequestInTwenty({
+        name: data.name,
+        email: data.email,
+        phone: data.phone,
+        address: data.address,
+        zip: data.zip,
+        serviceType: data.serviceType,
+        frequency: data.frequency,
+        sqft: data.sqft,
+        bathrooms: data.bathrooms,
+        petHair: data.petHair,
+        condition: data.condition,
+        estimateMin: data.estimateMin,
+        estimateMax: data.estimateMax,
+        requestedDate: data.requestedDate,
+        source: "Website",
+      });
+
+      // Forward to BrightBase Ops (non-blocking) — lands in Requests page
+      forwardLeadToBrightBase({
         name: data.name,
         email: data.email,
         phone: data.phone,
