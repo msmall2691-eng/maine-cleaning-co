@@ -9,6 +9,7 @@ export const intakeSubmitSchema = z.object({
   serviceType: z.enum(["standard", "deep", "str", "vacation-rental", "commercial", "move-in-out"]).optional().nullable(),
   frequency: z.enum(["weekly", "biweekly", "monthly", "one-time"]).optional().nullable(),
   sqft: z.number().int().min(100).max(20000).optional().nullable(),
+  bedrooms: z.number().int().min(0).max(20).optional().nullable(),
   bathrooms: z.number().int().min(1).max(20).optional().nullable(),
   petHair: z.enum(["none", "some", "heavy"]).optional().nullable(),
   condition: z.enum(["maintenance", "moderate", "heavy"]).optional().nullable(),

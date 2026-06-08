@@ -31,6 +31,7 @@ interface BrightBaseLead {
   serviceType?: string | null;
   frequency?: string | null;
   sqft?: number | null;
+  bedrooms?: number | null;
   bathrooms?: number | null;
   petHair?: string | null;
   condition?: string | null;
@@ -82,6 +83,7 @@ export async function forwardLeadToBrightBase(body: BrightBaseLead): Promise<voi
   // Optional / extra fields — only include if we have a value, to keep
   // the payload tidy in logs.
   if (body.bathrooms != null) payload.bathrooms = Number(body.bathrooms);
+  if (body.bedrooms != null) payload.bedrooms = Number(body.bedrooms);
   if (body.sqft != null) payload.squareFeet = Number(body.sqft);
   if (body.notes) payload.notes = body.notes;
   if (body.zip) payload.zip = body.zip;

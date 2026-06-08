@@ -37,6 +37,12 @@ type Frequency = "weekly" | "biweekly" | "monthly" | "one-time";
 type HomeCondition = "maintenance" | "moderate" | "heavy";
 type PetHair = "none" | "some" | "heavy";
 
+// BrightBase's public instant-quote endpoint — the operator's canonical
+// pricing engine and the single source of truth for estimates. We call it
+// directly instead of computing price client-side so the widget, the
+// generated quote, and the CRM all show the same numbers.
+const BRIGHTBASE_QUOTE_URL = "https://brightbase-production.up.railway.app/api/booking/instant-quote";
+
 function fmt(n: number) {
   return n.toLocaleString("en-US", { style: "currency", currency: "USD", maximumFractionDigits: 0 });
 }
@@ -218,6 +224,7 @@ export function InstantEstimate({ defaultCategory }: InstantEstimateProps = {}) 
   const [petHair, setPetHair] = useState<PetHair>("none");
   const [condition, setCondition] = useState<HomeCondition>("maintenance");
   const [bathrooms, setBathrooms] = useState(2);
+  const [bedrooms, setBedrooms] = useState(3);
   const [zip, setZip] = useState("");
 
   const [contactName, setContactName] = useState("");
@@ -271,51 +278,75 @@ export function InstantEstimate({ defaultCategory }: InstantEstimateProps = {}) 
     setPhotos((prev) => prev.filter((_, i) => i !== idx));
   };
 
-  const engine = useMemo(() => {
-    if (isCustomQuote) return { min: 0, max: 0, labor: 0, deep: 1 };
+  // Estimate range comes from BrightBase's canonical pricing endpoint — not
+  // local math. We refetch (debounced) whenever a priced input changes and
+  // render the returned range verbatim.
+  const [estimate, setEstimate] = useState<{ min: number; max: number } | null>(null);
+  const [estimateLoading, setEstimateLoading] = useState(false);
+  const [estimateError, setEstimateError] = useState(false);
+  const estimateTimer = useRef<ReturnType<typeof setTimeout>>();
 
-    const RATE = 60; // $ per labor-unit
-    const minJob = cleanType === "standard" ? 130 : 225;
-    const sf = sqft[0];
+  useEffect(() => {
+    // STR / commercial go through the custom-quote flow — no instant range.
+    if (isCustomQuote) {
+      setEstimate(null);
+      setEstimateError(false);
+      setEstimateLoading(false);
+      return;
+    }
 
-    // Piecewise sqft → labor units (three-tier, decreasing marginal rate)
-    //   ≤1500 sqft:  steep (small homes priced higher per sqft)
-    //   1500–3000:   medium
-    //   3000+:       flatter (large homes, slower marginal cost)
-    const sqftUnits =
-      sf <= 1500
-        ? sf / 680
-        : sf <= 3000
-          ? 1500 / 680 + (sf - 1500) / 1050
-          : 1500 / 680 + 1500 / 1050 + (sf - 3000) / 1400;
-
-    // Bathroom adj — supports half-baths in 0.5 steps; each increment = 0.40 units
-    const bathAdj = Math.max(0, (bathrooms - 1) * 0.40);
-
-    // Condition & pet addons
-    const condUnits: Record<HomeCondition, number> = { maintenance: 0, moderate: 0.50, heavy: 1.00 };
-    const petUnits: Record<PetHair, number>        = { none: 0, some: 0.30, heavy: 0.60 };
-
-    // Deep-clean multiplier — scales up with home size (more complexity in larger spaces)
-    const deepMult =
-      cleanType === "deep"
-        ? sf <= 1200 ? 1.60 : sf <= 2000 ? 1.65 : sf <= 3000 ? 1.75 : 1.80
-        : 1.0;
-
-    const labor = (sqftUnits + bathAdj + condUnits[condition] + petUnits[petHair]) * deepMult;
-
-    const freqMap: Record<Frequency, number> = { weekly: 0.85, biweekly: 1.0, monthly: 1.15, "one-time": 1.50 };
-    const raw     = labor * freqMap[frequency] * RATE;
-    const rounded = Math.round(raw / 5) * 5;
-    const final   = Math.max(minJob, rounded);
-
-    return {
-      min:  Math.round((final * 0.96) / 5) * 5,
-      max:  Math.round((final * 1.04) / 5) * 5,
-      labor,
-      deep: deepMult,
+    // BrightBase frequency enum uses snake_case for one-time.
+    const freqMap: Record<Frequency, string> = {
+      weekly: "weekly",
+      biweekly: "biweekly",
+      monthly: "monthly",
+      "one-time": "one_time",
     };
-  }, [bathrooms, condition, frequency, petHair, sqft, cleanType, isCustomQuote]);
+
+    const controller = new AbortController();
+    if (estimateTimer.current) clearTimeout(estimateTimer.current);
+    setEstimateLoading(true);
+    setEstimateError(false);
+
+    // Debounce so dragging the slider doesn't fire a request per step.
+    estimateTimer.current = setTimeout(async () => {
+      try {
+        const res = await fetch(BRIGHTBASE_QUOTE_URL, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          signal: controller.signal,
+          body: JSON.stringify({
+            serviceType: "residential",
+            squareFeet: sqft[0],
+            bedrooms,
+            // Match the integer bathrooms value we submit on the lead so the
+            // widget's range and the CRM's recomputed quote stay in agreement.
+            bathrooms: Math.round(bathrooms),
+            frequency: freqMap[frequency],
+            message: "",
+          }),
+        });
+        if (!res.ok) throw new Error(`HTTP ${res.status}`);
+        const data = await res.json();
+        if (typeof data?.estimate_min !== "number" || typeof data?.estimate_max !== "number") {
+          throw new Error("Malformed response");
+        }
+        setEstimate({ min: data.estimate_min, max: data.estimate_max });
+        setEstimateError(false);
+      } catch (err) {
+        if ((err as any)?.name === "AbortError") return;
+        setEstimate(null);
+        setEstimateError(true);
+      } finally {
+        if (!controller.signal.aborted) setEstimateLoading(false);
+      }
+    }, 400);
+
+    return () => {
+      controller.abort();
+      if (estimateTimer.current) clearTimeout(estimateTimer.current);
+    };
+  }, [isCustomQuote, sqft, bedrooms, bathrooms, frequency]);
 
   const freqLabel: Record<Frequency, string> = { weekly: "Weekly", biweekly: "Biweekly", monthly: "Monthly", "one-time": "One-Time" };
   const typeLabel = cleanType === "standard" ? "Standard" : "Deep Clean";
@@ -338,8 +369,9 @@ export function InstantEstimate({ defaultCategory }: InstantEstimateProps = {}) 
           petHair: isCustomQuote ? undefined : petHair,
           condition: isCustomQuote ? undefined : condition,
           bathrooms: isCustomQuote ? undefined : Math.round(bathrooms),
-          estimateMin: engine.min || undefined,
-          estimateMax: engine.max || undefined,
+          bedrooms: isCustomQuote ? undefined : bedrooms,
+          estimateMin: estimate?.min || undefined,
+          estimateMax: estimate?.max || undefined,
           name: contactName || null,
           email: contactEmail || null,
           phone: contactPhone || null,
@@ -385,10 +417,11 @@ export function InstantEstimate({ defaultCategory }: InstantEstimateProps = {}) 
           frequency: isCustomQuote ? null : frequency,
           sqft: isCustomQuote ? null : sqft[0],
           bathrooms: isCustomQuote ? null : Math.round(bathrooms),
+          bedrooms: isCustomQuote ? null : bedrooms,
           petHair: isCustomQuote ? null : petHair,
           condition: isCustomQuote ? null : condition,
-          estimateMin: engine.min || null,
-          estimateMax: engine.max || null,
+          estimateMin: estimate?.min || null,
+          estimateMax: estimate?.max || null,
           requestedDate: bookingDate,
           distanceMiles: addressDistance,
         }),
@@ -521,6 +554,41 @@ export function InstantEstimate({ defaultCategory }: InstantEstimateProps = {}) 
 
               <div>
                 <div className="flex justify-between items-baseline mb-1.5">
+                  <label className="label-sm !mb-0">Bedrooms</label>
+                  <span className="text-base font-bold text-foreground" data-testid="value-bedrooms">{bedrooms}</span>
+                </div>
+                <div className="flex items-center gap-2">
+                  <button
+                    type="button"
+                    className="stepper-btn"
+                    onClick={() => setBedrooms(v => Math.max(1, v - 1))}
+                    data-testid="button-bed-minus"
+                    aria-label="Fewer bedrooms"
+                  >&minus;</button>
+                  <div className="flex-1 h-10 rounded-lg bg-muted/40 flex items-center justify-center gap-1.5">
+                    {[1, 2, 3, 4, 5, 6].map(n => (
+                      <div
+                        key={n}
+                        className={`w-2 h-2 rounded-full transition-colors ${n <= bedrooms ? "bg-primary" : "bg-muted-foreground/20"}`}
+                      />
+                    ))}
+                    {bedrooms > 6 && <span className="text-xs font-semibold text-primary ml-0.5">{bedrooms}</span>}
+                  </div>
+                  <button
+                    type="button"
+                    className="stepper-btn"
+                    onClick={() => setBedrooms(v => Math.min(8, v + 1))}
+                    data-testid="button-bed-plus"
+                    aria-label="More bedrooms"
+                  >+</button>
+                </div>
+                <div className="flex justify-between mt-1 text-[10px] text-muted-foreground px-0.5">
+                  <span>1</span><span>8</span>
+                </div>
+              </div>
+
+              <div>
+                <div className="flex justify-between items-baseline mb-1.5">
                   <label className="label-sm !mb-0">Bathrooms <span className="font-normal text-muted-foreground text-[11px]">(inc. half baths)</span></label>
                   <span className="text-base font-bold text-foreground" data-testid="value-bathrooms">
                     {bathrooms % 1 === 0.5 ? `${Math.floor(bathrooms)}½` : bathrooms}
@@ -612,12 +680,26 @@ export function InstantEstimate({ defaultCategory }: InstantEstimateProps = {}) 
 
               <div className="rounded-xl bg-gradient-to-br from-emerald-500/10 to-blue-500/10 border border-emerald-500/20 p-5">
                 <div className="text-xs font-semibold tracking-wide text-muted-foreground uppercase mb-1.5" data-testid="label-range">Estimated range</div>
-                <div className="text-3xl sm:text-4xl font-bold text-foreground tracking-tight" data-testid="text-range">
-                  {fmt(engine.min)}<span className="text-muted-foreground font-normal mx-1.5 text-xl sm:text-2xl">–</span>{fmt(engine.max)}
+                <div className="text-3xl sm:text-4xl font-bold text-foreground tracking-tight min-h-[2.5rem] flex items-center" data-testid="text-range">
+                  {estimateLoading ? (
+                    <span className="inline-flex items-center gap-2 text-muted-foreground" data-testid="estimate-loading">
+                      <Loader2 className="w-6 h-6 animate-spin" />
+                      <span className="text-lg font-medium">Calculating…</span>
+                    </span>
+                  ) : estimate ? (
+                    <>{fmt(estimate.min)}<span className="text-muted-foreground font-normal mx-1.5 text-xl sm:text-2xl">–</span>{fmt(estimate.max)}</>
+                  ) : (
+                    <span className="text-base font-medium text-muted-foreground" data-testid="estimate-error">
+                      Couldn't load a live estimate — submit your details and we'll send your quote.
+                    </span>
+                  )}
                 </div>
                 <div className="flex flex-wrap gap-1.5 mt-2.5" data-testid="text-summary">
                   <span className="text-[11px] font-medium bg-muted/60 border border-border/40 text-muted-foreground rounded-full px-2 py-0.5">
                     {sqft[0].toLocaleString()} sq ft
+                  </span>
+                  <span className="text-[11px] font-medium bg-muted/60 border border-border/40 text-muted-foreground rounded-full px-2 py-0.5">
+                    {bedrooms} bd
                   </span>
                   <span className="text-[11px] font-medium bg-muted/60 border border-border/40 text-muted-foreground rounded-full px-2 py-0.5">
                     {bathrooms % 1 === 0.5 ? `${Math.floor(bathrooms)}½` : bathrooms} bath
@@ -746,10 +828,12 @@ export function InstantEstimate({ defaultCategory }: InstantEstimateProps = {}) 
               <div className="bg-gradient-to-br from-emerald-500/10 to-blue-500/10 border border-emerald-500/20 p-5 rounded-xl text-center">
                 <div className="text-xs font-semibold uppercase tracking-widest text-muted-foreground mb-1.5">Your estimate</div>
                 <div className="text-3xl sm:text-4xl font-bold text-foreground tracking-tight" data-testid="text-review-range">
-                  {fmt(engine.min)}<span className="text-muted-foreground font-normal mx-1.5 text-lg sm:text-xl">–</span>{fmt(engine.max)}
+                  {estimate
+                    ? <>{fmt(estimate.min)}<span className="text-muted-foreground font-normal mx-1.5 text-lg sm:text-xl">–</span>{fmt(estimate.max)}</>
+                    : <span className="text-lg font-medium text-muted-foreground">Estimate sent with your request</span>}
                 </div>
                 <p className="text-[13px] text-muted-foreground mt-1">
-                  {sqft[0].toLocaleString()} sq ft · {bathrooms % 1 === 0.5 ? `${Math.floor(bathrooms)}½` : bathrooms} bath · {typeLabel}{category === "residential" ? ` · ${freqLabel[frequency]}` : ""}
+                  {sqft[0].toLocaleString()} sq ft · {bedrooms} bd · {bathrooms % 1 === 0.5 ? `${Math.floor(bathrooms)}½` : bathrooms} bath · {typeLabel}{category === "residential" ? ` · ${freqLabel[frequency]}` : ""}
                 </p>
                 <p className="text-xs text-muted-foreground mt-1 italic">Non-binding. Final price confirmed after review.</p>
               </div>
@@ -839,9 +923,9 @@ export function InstantEstimate({ defaultCategory }: InstantEstimateProps = {}) 
                 <h3 className="text-2xl font-bold text-foreground" data-testid="text-success-title">
                   {isCustomQuote ? "Quote Request Sent!" : "Request Sent!"}
                 </h3>
-                {!isCustomQuote && (
+                {!isCustomQuote && estimate && (
                   <p className="text-foreground text-lg mt-2 font-medium">
-                    Estimate range: <span className="font-bold text-foreground">{fmt(engine.min)} – {fmt(engine.max)}</span>
+                    Estimate range: <span className="font-bold text-foreground">{fmt(estimate.min)} – {fmt(estimate.max)}</span>
                   </p>
                 )}
                 {contactEmail && emailSent ? (
@@ -935,7 +1019,7 @@ export function InstantEstimate({ defaultCategory }: InstantEstimateProps = {}) 
                 <div className="rounded-xl bg-muted/30 border border-border/40 px-4 py-3 space-y-1.5 text-[13px]" data-testid="block-submission-summary">
                   <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground mb-2">Your Submission</p>
                   <div className="flex justify-between"><span className="text-muted-foreground">Service</span><span className="font-medium text-foreground">{typeLabel}{category === "residential" ? ` · ${freqLabel[frequency]}` : ""}</span></div>
-                  <div className="flex justify-between"><span className="text-muted-foreground">Property</span><span className="font-medium text-foreground">{sqft[0].toLocaleString()} sq ft · {bathrooms % 1 === 0.5 ? `${Math.floor(bathrooms)}½` : bathrooms} bath</span></div>
+                  <div className="flex justify-between"><span className="text-muted-foreground">Property</span><span className="font-medium text-foreground">{sqft[0].toLocaleString()} sq ft · {bedrooms} bd · {bathrooms % 1 === 0.5 ? `${Math.floor(bathrooms)}½` : bathrooms} bath</span></div>
                   {contactName && <div className="flex justify-between"><span className="text-muted-foreground">Name</span><span className="font-medium text-foreground">{contactName}</span></div>}
                   {contactPhone && <div className="flex justify-between"><span className="text-muted-foreground">Phone</span><span className="font-medium text-foreground">{contactPhone}</span></div>}
                   {contactEmail && <div className="flex justify-between"><span className="text-muted-foreground">Email</span><span className="font-medium text-foreground">{contactEmail}</span></div>}
@@ -996,9 +1080,9 @@ export function InstantEstimate({ defaultCategory }: InstantEstimateProps = {}) 
                 <p className="text-foreground text-lg mt-2 font-medium">
                   {new Date(bookingDate + "T12:00:00").toLocaleDateString("en-US", { weekday: "long", month: "long", day: "numeric", year: "numeric" })}
                 </p>
-                {!isCustomQuote && (
+                {!isCustomQuote && estimate && (
                   <p className="text-muted-foreground text-sm mt-1">
-                    Estimate: <span className="font-semibold text-foreground">{fmt(engine.min)} – {fmt(engine.max)}</span>
+                    Estimate: <span className="font-semibold text-foreground">{fmt(estimate.min)} – {fmt(estimate.max)}</span>
                   </p>
                 )}
               </div>

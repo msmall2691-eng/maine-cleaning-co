@@ -9,6 +9,7 @@ export interface NormalizedIntakePayload {
   serviceType: string | null;
   frequency: string | null;
   sqft: number | null;
+  bedrooms: number | null;
   bathrooms: number | null;
   petHair: string | null;
   condition: string | null;
@@ -46,6 +47,7 @@ export function normalizeIntakePayload(raw: IntakeSubmitPayload): NormalizedInta
     serviceType: raw.serviceType ?? null,
     frequency: raw.frequency ?? null,
     sqft: raw.sqft ?? null,
+    bedrooms: raw.bedrooms ?? null,
     bathrooms: raw.bathrooms ?? null,
     petHair: raw.petHair ?? null,
     condition: raw.condition ?? null,
