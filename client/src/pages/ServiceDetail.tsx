@@ -78,14 +78,31 @@ export default function ServiceDetail() {
               <p className="text-muted-foreground text-sm sm:text-base">{service.shortDesc}</p>
               {showEstimate && (
                 <div className="mt-4 flex flex-wrap items-center gap-2">
-                  <Link href={`/book?service=${estimateCategory}`}>
-                    <Button
-                      className="rounded-full px-5 shadow-sm gap-1.5"
-                      data-testid="button-book-service"
-                    >
-                      <Calendar className="w-4 h-4" /> Book This Cleaning
-                    </Button>
-                  </Link>
+                  {/* STR + Commercial go through a custom-quote conversation
+                      (they hit `isCustomQuote` in InstantEstimate — no
+                      instant price, no date picker). Route them to the same
+                      /book page so the pre-selected category is intact, but
+                      label the CTA "Request a Custom Quote" so we don't
+                      promise a booking flow the customer can't finish. */}
+                  {(estimateCategory === "str" || estimateCategory === "commercial") ? (
+                    <Link href={`/book?service=${estimateCategory}`}>
+                      <Button
+                        className="rounded-full px-5 shadow-sm gap-1.5"
+                        data-testid="button-request-quote"
+                      >
+                        <Calendar className="w-4 h-4" /> Request a Custom Quote
+                      </Button>
+                    </Link>
+                  ) : (
+                    <Link href={`/book?service=${estimateCategory}`}>
+                      <Button
+                        className="rounded-full px-5 shadow-sm gap-1.5"
+                        data-testid="button-book-service"
+                      >
+                        <Calendar className="w-4 h-4" /> Book This Cleaning
+                      </Button>
+                    </Link>
+                  )}
                   <Button
                     variant="outline"
                     className="rounded-full px-5 shadow-sm"

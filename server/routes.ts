@@ -1040,7 +1040,12 @@ Rules:
   const SERVICE_CENTER_LAT = 43.5712;
   const SERVICE_CENTER_LNG = -70.7287;
   const MAX_SERVICE_RADIUS_MILES = 30;
-  const MIN_LEAD_DAYS = 2;
+  // Was 2 (a hard "we need two calendar days" gate). Relaxed to 1 so
+  // the client's tomorrow-forward date picker matches — the client's
+  // minBookingDate = today+1 got customers all the way through the form
+  // before the server rejected them with "at least 2 days from today."
+  // Same-day requests still get pointed at the phone by the /book copy.
+  const MIN_LEAD_DAYS = 1;
 
   function haversineDistance(lat1: number, lng1: number, lat2: number, lng2: number): number {
     const R = 3959; // Earth radius in miles
