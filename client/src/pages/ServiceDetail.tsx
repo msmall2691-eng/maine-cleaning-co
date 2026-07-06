@@ -2,7 +2,7 @@ import { useEffect } from "react";
 import { useParams, Link } from "wouter";
 import { servicesData } from "@/lib/services-data";
 import { Button } from "@/components/ui/button";
-import { CheckCircle2, Phone, Mail, MessageSquare, ChevronRight } from "lucide-react";
+import { CheckCircle2, Phone, Mail, MessageSquare, ChevronRight, Calendar } from "lucide-react";
 import { motion } from "framer-motion";
 import { InstantEstimate } from "@/components/ui/InstantEstimate";
 import { CleaningChecklist } from "@/components/ui/CleaningChecklist";
@@ -77,13 +77,41 @@ export default function ServiceDetail() {
               <p className={`text-sm font-semibold tracking-wide uppercase ${service.iconAccent} mb-1`} data-testid="text-service-tagline">{service.tagline}</p>
               <p className="text-muted-foreground text-sm sm:text-base">{service.shortDesc}</p>
               {showEstimate && (
-                <Button
-                  className="mt-4 rounded-full px-6 shadow-sm"
-                  onClick={scrollToEstimate}
-                  data-testid="button-scroll-estimate"
-                >
-                  Get an Instant Estimate
-                </Button>
+                <div className="mt-4 flex flex-wrap items-center gap-2">
+                  {/* STR + Commercial go through a custom-quote conversation
+                      (they hit `isCustomQuote` in InstantEstimate — no
+                      instant price, no date picker). Route them to the same
+                      /book page so the pre-selected category is intact, but
+                      label the CTA "Request a Custom Quote" so we don't
+                      promise a booking flow the customer can't finish. */}
+                  {(estimateCategory === "str" || estimateCategory === "commercial") ? (
+                    <Link href={`/book?service=${estimateCategory}`}>
+                      <Button
+                        className="rounded-full px-5 shadow-sm gap-1.5"
+                        data-testid="button-request-quote"
+                      >
+                        <Calendar className="w-4 h-4" /> Request a Custom Quote
+                      </Button>
+                    </Link>
+                  ) : (
+                    <Link href={`/book?service=${estimateCategory}`}>
+                      <Button
+                        className="rounded-full px-5 shadow-sm gap-1.5"
+                        data-testid="button-book-service"
+                      >
+                        <Calendar className="w-4 h-4" /> Book This Cleaning
+                      </Button>
+                    </Link>
+                  )}
+                  <Button
+                    variant="outline"
+                    className="rounded-full px-5 shadow-sm"
+                    onClick={scrollToEstimate}
+                    data-testid="button-scroll-estimate"
+                  >
+                    Get an Estimate First
+                  </Button>
+                </div>
               )}
             </div>
           </div>

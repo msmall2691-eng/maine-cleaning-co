@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react";
 import { Link, useLocation } from "wouter";
 import { AnimatePresence, motion } from "framer-motion";
-import { Menu, X, Phone } from "lucide-react";
+import { Menu, X, Phone, Calendar } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { ThemeToggle } from "@/components/ui/ThemeToggle";
 import { companyInfo } from "@/lib/company-info";
@@ -122,12 +122,22 @@ export default function Navbar() {
           <ThemeToggle />
           <Button
             size="sm"
-            className="rounded-full px-6 h-9 text-[13px] font-semibold shadow-[0_2px_8px_rgba(0,0,0,0.15)] tracking-wide"
+            variant="outline"
+            className="rounded-full px-4 h-9 text-[13px] font-medium tracking-wide"
             onClick={scrollToEstimate}
             data-testid="button-nav-estimate"
           >
-            Get an Estimate
+            Get a Quote
           </Button>
+          <Link href="/book">
+            <Button
+              size="sm"
+              className="rounded-full px-5 h-9 text-[13px] font-semibold shadow-[0_2px_8px_rgba(0,0,0,0.15)] tracking-wide gap-1.5"
+              data-testid="button-nav-book"
+            >
+              <Calendar className="w-3.5 h-3.5" /> Book Now
+            </Button>
+          </Link>
         </div>
 
         {/* Mobile controls */}
@@ -217,12 +227,21 @@ export default function Navbar() {
                       <Phone className="w-4 h-4" /> {companyInfo.contact.phoneDisplay}
                     </Button>
                   </a>
+                  <Link href="/book">
+                    <Button
+                      className="rounded-full h-12 w-full text-[15px] font-semibold shadow-[0_2px_8px_rgba(0,0,0,0.1)] gap-2"
+                      data-testid="button-mobile-book"
+                    >
+                      <Calendar className="w-4 h-4" /> Book a Cleaning
+                    </Button>
+                  </Link>
                   <Button
-                    className="rounded-full h-12 w-full text-[15px] font-semibold shadow-[0_2px_8px_rgba(0,0,0,0.1)]"
+                    variant="ghost"
+                    className="rounded-full h-11 w-full text-[13px] font-medium text-muted-foreground"
                     onClick={scrollToEstimate}
                     data-testid="button-mobile-estimate"
                   >
-                    Get an Estimate
+                    Or just get an estimate
                   </Button>
                 </motion.div>
               </nav>
