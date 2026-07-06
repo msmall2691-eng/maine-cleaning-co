@@ -64,10 +64,10 @@ function FadeSection({ className = "", children, id, ...rest }: { className?: st
 
 function WaveDivider({ flip = false }: { flip?: boolean }) {
   return (
-    <div className={`w-full overflow-hidden leading-[0] ${flip ? "rotate-180" : ""}`} aria-hidden="true">
+    <div className={`w-full overflow-hidden leading-[0] wave-divider-cream ${flip ? "rotate-180" : ""}`} aria-hidden="true">
       <svg viewBox="0 0 1440 80" preserveAspectRatio="none" className="w-full h-[35px] sm:h-[50px] md:h-[70px]">
-        <path d="M0,50 C180,80 360,20 540,45 C720,70 900,15 1080,40 C1200,55 1350,25 1440,35 L1440,80 L0,80 Z" fill="hsl(220 20% 8%)" opacity="0.6" />
-        <path d="M0,55 C240,75 480,25 720,50 C960,75 1200,20 1440,45 L1440,80 L0,80 Z" fill="hsl(220 20% 8%)" />
+        <path d="M0,50 C180,80 360,20 540,45 C720,70 900,15 1080,40 C1200,55 1350,25 1440,35 L1440,80 L0,80 Z" fill="currentColor" opacity="0.6" />
+        <path d="M0,55 C240,75 480,25 720,50 C960,75 1200,20 1440,45 L1440,80 L0,80 Z" fill="currentColor" />
       </svg>
     </div>
   );
@@ -75,10 +75,10 @@ function WaveDivider({ flip = false }: { flip?: boolean }) {
 
 function WaveDividerCream({ flip = false }: { flip?: boolean }) {
   return (
-    <div className={`w-full overflow-hidden leading-[0] ${flip ? "rotate-180" : ""}`} aria-hidden="true">
+    <div className={`w-full overflow-hidden leading-[0] wave-divider-warm ${flip ? "rotate-180" : ""}`} aria-hidden="true">
       <svg viewBox="0 0 1440 80" preserveAspectRatio="none" className="w-full h-[35px] sm:h-[50px] md:h-[70px]">
-        <path d="M0,40 C180,70 360,10 540,35 C720,60 900,20 1080,50 C1260,70 1380,30 1440,40 L1440,80 L0,80 Z" fill="hsl(220 18% 10%)" opacity="0.5" />
-        <path d="M0,50 C240,75 480,15 720,45 C960,70 1200,25 1440,50 L1440,80 L0,80 Z" fill="hsl(220 18% 10%)" />
+        <path d="M0,40 C180,70 360,10 540,35 C720,60 900,20 1080,50 C1260,70 1380,30 1440,40 L1440,80 L0,80 Z" fill="currentColor" opacity="0.5" />
+        <path d="M0,50 C240,75 480,15 720,45 C960,70 1200,25 1440,50 L1440,80 L0,80 Z" fill="currentColor" />
       </svg>
     </div>
   );
