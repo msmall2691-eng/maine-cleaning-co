@@ -8,6 +8,9 @@ import Navbar from "@/components/layout/Navbar";
 import Footer from "@/components/layout/Footer";
 import Home from "@/pages/Home";
 import Book from "@/pages/Book";
+import Portal from "@/pages/Portal";
+import PortalLogin from "@/pages/PortalLogin";
+import ResetPassword from "@/pages/ResetPassword";
 import About from "@/pages/About";
 import HowItWorks from "@/pages/HowItWorks";
 import ServiceAreas from "@/pages/ServiceAreas";
@@ -48,6 +51,14 @@ function Router() {
     <Switch>
       <Route path="/" component={Home} />
       <Route path="/book" component={Book} />
+      {/* Customer portal — the components + all /api/portal/* server
+          handlers were already built and shipped in code; they just
+          weren't reachable via the router. Adding these three routes
+          wires the full "sign in → see my quotes / bookings / documents
+          / schedule / payments" experience the code already implements. */}
+      <Route path="/portal/login" component={PortalLogin} />
+      <Route path="/portal/reset-password" component={ResetPassword} />
+      <Route path="/portal" component={Portal} />
       <Route path="/about" component={About} />
       <Route path="/how-it-works" component={HowItWorks} />
       <Route path="/service-areas" component={ServiceAreas} />

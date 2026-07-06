@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react";
 import { Link, useLocation } from "wouter";
 import { AnimatePresence, motion } from "framer-motion";
-import { Menu, X, Phone, Calendar } from "lucide-react";
+import { Menu, X, Phone, Calendar, User } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { ThemeToggle } from "@/components/ui/ThemeToggle";
 import { companyInfo } from "@/lib/company-info";
@@ -119,6 +119,17 @@ export default function Navbar() {
             <Phone className="w-3.5 h-3.5 text-primary/70" />
             {companyInfo.contact.phoneDisplay}
           </a>
+          {/* Portal entry — every customer who books via /book gets an
+              account auto-created and a welcome email with a reset link.
+              This nav item is how a returning customer signs in later. */}
+          <Link
+            href="/portal/login"
+            className="flex items-center gap-1.5 text-[13px] font-medium text-muted-foreground hover:text-foreground transition-colors px-2"
+            data-testid="link-nav-portal"
+          >
+            <User className="w-3.5 h-3.5 text-primary/70" />
+            Sign In
+          </Link>
           <ThemeToggle />
           <Button
             size="sm"
@@ -227,6 +238,11 @@ export default function Navbar() {
                       <Phone className="w-4 h-4" /> {companyInfo.contact.phoneDisplay}
                     </Button>
                   </a>
+                  <Link href="/portal/login" data-testid="link-mobile-portal">
+                    <Button variant="ghost" className="rounded-full h-11 w-full text-[13px] font-medium text-muted-foreground gap-2">
+                      <User className="w-4 h-4" /> Sign in to your portal
+                    </Button>
+                  </Link>
                   <Link href="/book">
                     <Button
                       className="rounded-full h-12 w-full text-[15px] font-semibold shadow-[0_2px_8px_rgba(0,0,0,0.1)] gap-2"
