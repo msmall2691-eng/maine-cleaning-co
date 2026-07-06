@@ -271,6 +271,13 @@ export function InstantEstimate({ defaultCategory }: InstantEstimateProps = {}) 
     setPhotos((prev) => prev.filter((_, i) => i !== idx));
   };
 
+  // Labor-hour pricing engine. Bright-Space has a Python port of this
+  // formula in backend/modules/booking/pricing.py that MUST stay in
+  // lock-step — the customer sees the number this engine produces, then
+  // Bright-Space recomputes to sanity-check. If the two drift, the quote
+  // the operator sees will differ from the quote the customer was shown.
+  // Any change to RATE, minJob, sqftUnits, bathAdj, condUnits, petUnits,
+  // deepMult, or freqMap must be mirrored there.
   const engine = useMemo(() => {
     if (isCustomQuote) return { min: 0, max: 0, labor: 0, deep: 1 };
 
