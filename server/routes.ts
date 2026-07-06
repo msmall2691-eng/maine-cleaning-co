@@ -1098,6 +1098,7 @@ Rules:
     serviceType: z.string(),
     frequency: z.string().optional().nullable(),
     sqft: z.number().optional().nullable(),
+    bedrooms: z.number().optional().nullable(),
     bathrooms: z.number().optional().nullable(),
     petHair: z.string().optional().nullable(),
     condition: z.string().optional().nullable(),
@@ -1106,6 +1107,15 @@ Rules:
     requestedDate: z.string().min(1),
     distanceMiles: z.number().optional().nullable(),
     intakeId: z.number().optional().nullable(),
+    // Six "essentials" the /book flow collects so cleaners come prepared.
+    // Bright-Space stores anything not on the LeadIntake column list into
+    // LeadIntake.custom_fields (JSON), so these ride through the same
+    // /api/booking/submit call without a schema migration on that side.
+    entryMethod: z.string().optional().nullable(),
+    parkingNotes: z.string().optional().nullable(),
+    petsDetail: z.string().optional().nullable(),
+    focusAreas: z.array(z.string()).optional().nullable(),
+    specialInstructions: z.string().optional().nullable(),
   });
 
   app.post("/api/booking/submit", async (req, res) => {
@@ -1230,6 +1240,7 @@ Rules:
         serviceType: data.serviceType,
         frequency: data.frequency,
         sqft: data.sqft,
+        bedrooms: data.bedrooms,
         bathrooms: data.bathrooms,
         petHair: data.petHair,
         condition: data.condition,
@@ -1237,6 +1248,11 @@ Rules:
         estimateMax: data.estimateMax,
         requestedDate: data.requestedDate,
         source: "Website",
+        entryMethod: data.entryMethod,
+        parkingNotes: data.parkingNotes,
+        petsDetail: data.petsDetail,
+        focusAreas: data.focusAreas,
+        specialInstructions: data.specialInstructions,
       });
 
       return res.status(201).json({

@@ -36,6 +36,8 @@ type ServiceCategory = "residential" | "deep-clean" | "str" | "commercial";
 type Frequency = "weekly" | "biweekly" | "monthly" | "one-time";
 type HomeCondition = "maintenance" | "moderate" | "heavy";
 type PetHair = "none" | "some" | "heavy";
+type EntryMethod = "owner-home" | "lockbox" | "hidden-key" | "gate-code" | "other";
+type FocusArea = "kitchen" | "bathrooms" | "floors" | "dusting" | "laundry";
 
 function fmt(n: number) {
   return n.toLocaleString("en-US", { style: "currency", currency: "USD", maximumFractionDigits: 0 });
@@ -197,9 +199,14 @@ const categories: { id: ServiceCategory; label: string; sub: string; icon: any; 
 
 interface InstantEstimateProps {
   defaultCategory?: ServiceCategory;
+  // When true the component reframes itself for the /book route: header
+  // reads "Book Your Cleaning" instead of "Get Your Instant Estimate", and
+  // the step-3 booking panel opens auto-expanded so the customer isn't
+  // asked "want to book a date?" — they came here to book.
+  bookingIntent?: boolean;
 }
 
-export function InstantEstimate({ defaultCategory }: InstantEstimateProps = {}) {
+export function InstantEstimate({ defaultCategory, bookingIntent = false }: InstantEstimateProps = {}) {
   const [, navigate] = useLocation();
 
   // Determine initial category: prop > URL param > default "residential"
@@ -227,6 +234,19 @@ export function InstantEstimate({ defaultCategory }: InstantEstimateProps = {}) 
   const [contactAddress, setContactAddress] = useState("");
   const [photos, setPhotos] = useState<string[]>([]);
   const fileInputRef = useRef<HTMLInputElement>(null);
+
+  // "Essentials" for a real booking — the six fields cleaners actually
+  // need on-site that the estimator itself doesn't ask (bedrooms / entry /
+  // parking / pets specifics / focus areas / special instructions). Kept
+  // in one place so the payload builder can spread them.
+  const [bedrooms, setBedrooms] = useState(3);
+  const [entryMethod, setEntryMethod] = useState<EntryMethod>("owner-home");
+  const [parkingNotes, setParkingNotes] = useState("");
+  const [petsDetail, setPetsDetail] = useState("");
+  const [focusAreas, setFocusAreas] = useState<Record<FocusArea, boolean>>({
+    kitchen: false, bathrooms: false, floors: false, dusting: false, laundry: false,
+  });
+  const [specialInstructions, setSpecialInstructions] = useState("");
 
   const [step, setStep] = useState<1 | 2 | 3 | 4>(1);
   const [portalCreated, setPortalCreated] = useState(false);
@@ -379,6 +399,7 @@ export function InstantEstimate({ defaultCategory }: InstantEstimateProps = {}) 
         str: "str",
         commercial: "commercial",
       };
+      const selectedFocus = (Object.keys(focusAreas) as FocusArea[]).filter(k => focusAreas[k]);
       const res = await fetch("/api/booking/submit", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -391,6 +412,7 @@ export function InstantEstimate({ defaultCategory }: InstantEstimateProps = {}) 
           serviceType: serviceTypeMap[category],
           frequency: isCustomQuote ? null : frequency,
           sqft: isCustomQuote ? null : sqft[0],
+          bedrooms: isCustomQuote ? null : bedrooms,
           bathrooms: isCustomQuote ? null : Math.round(bathrooms),
           petHair: isCustomQuote ? null : petHair,
           condition: isCustomQuote ? null : condition,
@@ -398,6 +420,14 @@ export function InstantEstimate({ defaultCategory }: InstantEstimateProps = {}) 
           estimateMax: engine.max || null,
           requestedDate: bookingDate,
           distanceMiles: addressDistance,
+          // The six essentials the cleaner needs on-site. Sent as top-level
+          // fields; Bright-Space stores them in LeadIntake.custom_fields
+          // (JSON), so no schema migration is required to land them.
+          entryMethod: isCustomQuote ? null : entryMethod,
+          parkingNotes: parkingNotes.trim() || null,
+          petsDetail: petsDetail.trim() || null,
+          focusAreas: selectedFocus.length ? selectedFocus : null,
+          specialInstructions: specialInstructions.trim() || null,
         }),
       });
       const json = await res.json();
@@ -440,6 +470,23 @@ export function InstantEstimate({ defaultCategory }: InstantEstimateProps = {}) 
     d.setDate(d.getDate() + 2);
     return d.toISOString().split("T")[0];
   }, []);
+
+  // Auto-run the address check as soon as step 3 has a name+phone+address
+  // and hasn't been checked yet — one less click between the estimate and
+  // the booking form. Runs once per unique address so re-renders don't
+  // spam /validate-address.
+  useEffect(() => {
+    if (
+      step === 3 &&
+      !isCustomQuote &&
+      addressEligible === null &&
+      !checkingAddress &&
+      contactAddress && contactAddress.length >= 10 &&
+      contactName && contactPhone
+    ) {
+      checkAddressEligibility(contactAddress);
+    }
+  }, [step, isCustomQuote, addressEligible, checkingAddress, contactAddress, contactName, contactPhone, checkAddressEligibility]);
 
   const resetForm = () => {
     setStep(1);
@@ -870,15 +917,22 @@ export function InstantEstimate({ defaultCategory }: InstantEstimateProps = {}) 
                 )}
               </div>
 
-              {/* ── Book a Date Section ── */}
+              {/* ── Book This Cleaning ── */}
+              {/* Promoted from an optional "Want to book?" panel to the primary
+                  step-3 CTA. Customers who wanted an estimate + booking used to
+                  have to type name+phone+address FIRST just to see the panel;
+                  now the essentials + date sit right under the estimate. */}
               {!isCustomQuote && contactAddress && contactName && contactPhone && (
                 <div className="rounded-xl bg-gradient-to-br from-blue-500/10 to-primary/10 border border-blue-500/25 p-5 space-y-4">
                   <div className="flex items-center gap-2">
                     <Calendar className="w-5 h-5 text-blue-500" />
-                    <h4 className="text-sm font-bold text-foreground">Want to book a date?</h4>
+                    <h4 className="text-sm font-bold text-foreground">
+                      {bookingIntent ? "Book Your Cleaning" : "Book This Cleaning"}
+                    </h4>
                   </div>
                   <p className="text-xs text-muted-foreground leading-relaxed">
-                    Pick your preferred cleaning date below. We'll review and confirm within 1 business day. Must be at least 2 days out and within 30 miles of North Waterboro, ME.
+                    A few essentials so we come in ready — bookings must be at least 2 days out
+                    and within 30 miles of North Waterboro, ME.
                   </p>
 
                   {/* Address eligibility check */}
@@ -902,17 +956,124 @@ export function InstantEstimate({ defaultCategory }: InstantEstimateProps = {}) 
                         <CheckCircle2 className="w-4 h-4 text-green-500 mt-0.5 flex-shrink-0" />
                         <p className="text-xs text-green-400">{addressCheckMsg}</p>
                       </div>
+
+                      {/* Essentials: bedrooms, entry, parking, pets, focus, notes.
+                          Cleaners need these on-site — asking now, not after the
+                          booking is accepted, keeps the whole flow one step. */}
+                      <div className="grid grid-cols-2 gap-3">
+                        <div>
+                          <label className="text-xs font-medium text-muted-foreground mb-1.5 block">Bedrooms</label>
+                          <input
+                            type="number" min={1} max={10} step={1}
+                            value={bedrooms}
+                            onChange={(e) => setBedrooms(clamp(parseInt(e.target.value || "0", 10), 1, 10))}
+                            className="w-full h-11 rounded-xl border border-border bg-card px-3 text-sm text-foreground focus:outline-none focus:ring-2 focus:ring-primary/30"
+                            data-testid="input-bedrooms"
+                          />
+                        </div>
+                        <div>
+                          <label className="text-xs font-medium text-muted-foreground mb-1.5 block">Preferred date</label>
+                          <input
+                            type="date"
+                            min={minBookingDate}
+                            value={bookingDate}
+                            onChange={(e) => setBookingDate(e.target.value)}
+                            className="w-full h-11 rounded-xl border border-border bg-card px-3 text-sm text-foreground focus:outline-none focus:ring-2 focus:ring-primary/30"
+                            data-testid="input-booking-date"
+                          />
+                        </div>
+                      </div>
+
                       <div>
-                        <label className="text-xs font-medium text-muted-foreground mb-1.5 block">Preferred date</label>
-                        <input
-                          type="date"
-                          min={minBookingDate}
-                          value={bookingDate}
-                          onChange={(e) => setBookingDate(e.target.value)}
+                        <label className="text-xs font-medium text-muted-foreground mb-1.5 block">How will we get in?</label>
+                        <select
+                          value={entryMethod}
+                          onChange={(e) => setEntryMethod(e.target.value as EntryMethod)}
                           className="w-full h-11 rounded-xl border border-border bg-card px-3 text-sm text-foreground focus:outline-none focus:ring-2 focus:ring-primary/30"
-                          data-testid="input-booking-date"
+                          data-testid="select-entry-method"
+                        >
+                          <option value="owner-home">I'll be home</option>
+                          <option value="lockbox">Lockbox</option>
+                          <option value="hidden-key">Hidden key</option>
+                          <option value="gate-code">Gate / door code</option>
+                          <option value="other">Other (tell us below)</option>
+                        </select>
+                      </div>
+
+                      <div>
+                        <label className="text-xs font-medium text-muted-foreground mb-1.5 block">
+                          Parking & access <span className="text-muted-foreground/70">(optional)</span>
+                        </label>
+                        <Input
+                          value={parkingNotes}
+                          onChange={(e) => setParkingNotes(e.target.value)}
+                          placeholder="Driveway, street parking, stairs to unit…"
+                          className="h-11"
+                          data-testid="input-parking-notes"
                         />
                       </div>
+
+                      {petHair !== "none" && (
+                        <div>
+                          <label className="text-xs font-medium text-muted-foreground mb-1.5 block">
+                            Pets on site <span className="text-muted-foreground/70">(optional)</span>
+                          </label>
+                          <Input
+                            value={petsDetail}
+                            onChange={(e) => setPetsDetail(e.target.value)}
+                            placeholder="e.g. Friendly golden retriever, cat hides upstairs"
+                            className="h-11"
+                            data-testid="input-pets-detail"
+                          />
+                        </div>
+                      )}
+
+                      <div>
+                        <label className="text-xs font-medium text-muted-foreground mb-1.5 block">
+                          Anywhere you want us to focus? <span className="text-muted-foreground/70">(optional)</span>
+                        </label>
+                        <div className="flex flex-wrap gap-1.5">
+                          {([
+                            { id: "kitchen" as const,   label: "Kitchen deep" },
+                            { id: "bathrooms" as const, label: "Bathrooms" },
+                            { id: "floors" as const,    label: "Floors" },
+                            { id: "dusting" as const,   label: "Dusting" },
+                            { id: "laundry" as const,   label: "Laundry" },
+                          ]).map(({ id, label }) => {
+                            const on = focusAreas[id];
+                            return (
+                              <button
+                                key={id}
+                                type="button"
+                                onClick={() => setFocusAreas(f => ({ ...f, [id]: !f[id] }))}
+                                className={`px-3 py-1.5 rounded-full border text-xs font-medium transition-colors ${
+                                  on
+                                    ? "bg-primary text-primary-foreground border-primary"
+                                    : "bg-card text-muted-foreground border-border hover:border-primary/40"
+                                }`}
+                                data-testid={`chip-focus-${id}`}
+                              >
+                                {label}
+                              </button>
+                            );
+                          })}
+                        </div>
+                      </div>
+
+                      <div>
+                        <label className="text-xs font-medium text-muted-foreground mb-1.5 block">
+                          Anything else we should know? <span className="text-muted-foreground/70">(optional)</span>
+                        </label>
+                        <textarea
+                          value={specialInstructions}
+                          onChange={(e) => setSpecialInstructions(e.target.value)}
+                          placeholder="Allergies, fragile items, alarm code, product preferences…"
+                          rows={3}
+                          className="w-full rounded-xl border border-border bg-card px-3 py-2 text-sm text-foreground focus:outline-none focus:ring-2 focus:ring-primary/30 resize-none"
+                          data-testid="input-special-instructions"
+                        />
+                      </div>
+
                       <Button
                         className="w-full h-[52px] rounded-xl text-base font-bold shadow-md"
                         disabled={!bookingDate || bookingMutation.isPending}
@@ -921,11 +1082,11 @@ export function InstantEstimate({ defaultCategory }: InstantEstimateProps = {}) 
                       >
                         {bookingMutation.isPending
                           ? <><Loader2 className="w-4 h-4 animate-spin mr-2" /> Submitting...</>
-                          : <><Calendar className="w-4 h-4 mr-2" /> Request This Date</>
+                          : <><Calendar className="w-4 h-4 mr-2" /> Book This Cleaning</>
                         }
                       </Button>
                       <p className="text-[10px] text-muted-foreground text-center">
-                        Requires approval. You'll get a confirmation call/text.
+                        Requires approval. You'll get a confirmation call/text within 1 business day.
                       </p>
                     </>
                   )}

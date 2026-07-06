@@ -7,6 +7,7 @@ import { TooltipProvider } from "@/components/ui/tooltip";
 import Navbar from "@/components/layout/Navbar";
 import Footer from "@/components/layout/Footer";
 import Home from "@/pages/Home";
+import Book from "@/pages/Book";
 import About from "@/pages/About";
 import HowItWorks from "@/pages/HowItWorks";
 import ServiceAreas from "@/pages/ServiceAreas";
@@ -46,6 +47,7 @@ function Router() {
     <ScrollToTop />
     <Switch>
       <Route path="/" component={Home} />
+      <Route path="/book" component={Book} />
       <Route path="/about" component={About} />
       <Route path="/how-it-works" component={HowItWorks} />
       <Route path="/service-areas" component={ServiceAreas} />
