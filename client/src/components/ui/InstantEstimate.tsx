@@ -119,15 +119,29 @@ function AddressInput({ value, onChange, onZipDetected }: { value: string; onCha
       );
       if (!res.ok) return;
       const data = await res.json();
+      // Audit L2: OSM/Nominatim data for rural / new-build addresses often
+      // omits a house_number, so "155 Keystone Dr" collapses to "Keystone
+      // Drive" — a cleaner arriving at the customer's street with no house
+      // number can't find the right home. Preserve the number the customer
+      // typed (e.g. leading "155" or "155A") whenever the geocoder doesn't
+      // hand us one, and prepend it to the suggestion's display text so the
+      // number the customer sees matches what they typed.
+      const typedNumMatch = query.trim().match(/^(\d+[A-Za-z]?)\b/);
+      const typedNum = typedNumMatch ? typedNumMatch[1] : "";
       const mapped: AddressSuggestion[] = data
         .filter((r: any) => r.address?.state === "Maine" || r.address?.state === "ME")
         .map((r: any) => {
-          const houseNum = r.address?.house_number || r.address?.building || r.address?.house_name;
+          const osmNum = r.address?.house_number || r.address?.building || r.address?.house_name;
+          const houseNum = osmNum || typedNum;
+          const road = r.address?.road || r.display_name.split(",")[0].trim();
+          const street = houseNum ? `${houseNum} ${road}`.trim() : road;
+          const rawDisplay = (r.display_name?.split(", United States")[0] || r.display_name).trim();
+          const display = (!osmNum && typedNum && !rawDisplay.startsWith(typedNum))
+            ? `${typedNum} ${rawDisplay}`
+            : rawDisplay;
           return {
-            display: (r.display_name?.split(", United States")[0] || r.display_name).trim(),
-            street: houseNum
-              ? `${houseNum} ${r.address.road || ""}`.trim()
-              : r.display_name.split(",")[0].trim(),
+            display,
+            street,
             city: r.address?.city || r.address?.town || r.address?.village || "",
             state: "ME",
             zip: r.address?.postcode || "",
