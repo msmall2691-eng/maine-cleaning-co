@@ -3,6 +3,7 @@ import { Link, useLocation } from "wouter";
 import { AnimatePresence, motion } from "framer-motion";
 import { Menu, X, Phone } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { ThemeToggle } from "@/components/ui/ThemeToggle";
 import { companyInfo } from "@/lib/company-info";
 
 const navLinks = [
@@ -118,6 +119,7 @@ export default function Navbar() {
             <Phone className="w-3.5 h-3.5 text-primary/70" />
             {companyInfo.contact.phoneDisplay}
           </a>
+          <ThemeToggle />
           <Button
             size="sm"
             className="rounded-full px-6 h-9 text-[13px] font-semibold shadow-[0_2px_8px_rgba(0,0,0,0.15)] tracking-wide"
@@ -128,13 +130,15 @@ export default function Navbar() {
           </Button>
         </div>
 
-        {/* Mobile hamburger */}
-        <button
-          className="md:hidden p-2.5 -mr-1.5 text-foreground rounded-xl hover:bg-secondary/50 active:bg-secondary/70 transition-colors"
-          onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
-          aria-label="Toggle menu"
-          data-testid="button-mobile-menu"
-        >
+        {/* Mobile controls */}
+        <div className="md:hidden flex items-center gap-1">
+          <ThemeToggle />
+          <button
+            className="p-2.5 -mr-1.5 text-foreground rounded-xl hover:bg-secondary/50 active:bg-secondary/70 transition-colors"
+            onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
+            aria-label="Toggle menu"
+            data-testid="button-mobile-menu"
+          >
           <motion.div
             animate={{ rotate: mobileMenuOpen ? 90 : 0 }}
             transition={{ duration: 0.2, ease: [0.22, 1, 0.36, 1] }}
@@ -142,6 +146,7 @@ export default function Navbar() {
             {mobileMenuOpen ? <X className="w-5 h-5" /> : <Menu className="w-5 h-5" />}
           </motion.div>
         </button>
+        </div>
       </div>
 
       {/* Mobile drawer */}
