@@ -31,6 +31,7 @@ interface BrightBaseLead {
   serviceType?: string | null;
   frequency?: string | null;
   sqft?: number | null;
+  bedrooms?: number | null;
   bathrooms?: number | null;
   petHair?: string | null;
   condition?: string | null;
@@ -39,6 +40,14 @@ interface BrightBaseLead {
   notes?: string | null;
   requestedDate?: string | Date | null;
   source?: string | null;
+  // /book flow "essentials" — the six fields cleaners need on-site.
+  // Bright-Space's BookingSubmit accepts extras (extra="allow"), so these
+  // ride through and land in LeadIntake.custom_fields.
+  entryMethod?: string | null;
+  parkingNotes?: string | null;
+  petsDetail?: string | null;
+  focusAreas?: string[] | null;
+  specialInstructions?: string | null;
 }
 
 function isConfigured(): boolean {
@@ -82,6 +91,7 @@ export async function forwardLeadToBrightBase(body: BrightBaseLead): Promise<voi
   // Optional / extra fields — only include if we have a value, to keep
   // the payload tidy in logs.
   if (body.bathrooms != null) payload.bathrooms = Number(body.bathrooms);
+  if (body.bedrooms != null) payload.bedrooms = Number(body.bedrooms);
   if (body.sqft != null) payload.squareFeet = Number(body.sqft);
   if (body.notes) payload.notes = body.notes;
   if (body.zip) payload.zip = body.zip;
@@ -90,6 +100,14 @@ export async function forwardLeadToBrightBase(body: BrightBaseLead): Promise<voi
   if (body.condition) payload.condition = body.condition;
   if (body.estimateMin != null) payload.estimateMin = body.estimateMin;
   if (body.estimateMax != null) payload.estimateMax = body.estimateMax;
+  // /book essentials — forwarded as-is; Bright-Space's BookingSubmit
+  // accepts extras via extra="allow" and its intake normalizer will
+  // stash any un-columned fields into LeadIntake.custom_fields.
+  if (body.entryMethod) payload.entryMethod = body.entryMethod;
+  if (body.parkingNotes) payload.parkingNotes = body.parkingNotes;
+  if (body.petsDetail) payload.petsDetail = body.petsDetail;
+  if (body.focusAreas && body.focusAreas.length) payload.focusAreas = body.focusAreas;
+  if (body.specialInstructions) payload.specialInstructions = body.specialInstructions;
   payload.source = body.source || "Website";
 
   const base = (BRIGHTBASE_API_URL || "").replace(/\/+$/, "");

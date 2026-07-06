@@ -323,14 +323,14 @@ export default function Home() {
             transition={{ duration: 0.5, delay: 0.3 }}
             className="flex flex-col sm:flex-row justify-center gap-3 sm:gap-4 mb-12 sm:mb-14"
           >
-            <Button size="lg" className="h-13 sm:h-14 px-8 sm:px-10 rounded-full text-base sm:text-[17px] font-semibold shadow-[0_2px_12px_rgba(0,0,0,0.12)]" onClick={scrollToEstimate} data-testid="button-hero-estimate">
-              Get My Estimate <ArrowRight className="ml-2.5 w-4 h-4" />
-            </Button>
-            <Link href="/services">
-              <Button size="lg" variant="outline" className="w-full sm:w-auto h-13 sm:h-14 px-8 sm:px-10 rounded-full text-base border-border bg-card/80 backdrop-blur-sm shadow-[0_1px_4px_rgba(0,0,0,0.15)]" data-testid="button-hero-services">
-                View Services
+            <Link href="/book">
+              <Button size="lg" className="w-full sm:w-auto h-13 sm:h-14 px-8 sm:px-10 rounded-full text-base sm:text-[17px] font-semibold shadow-[0_2px_12px_rgba(0,0,0,0.12)]" data-testid="button-hero-book">
+                <Calendar className="mr-2 w-4 h-4" /> Book a Cleaning
               </Button>
             </Link>
+            <Button size="lg" variant="outline" className="w-full sm:w-auto h-13 sm:h-14 px-8 sm:px-10 rounded-full text-base border-border bg-card/80 backdrop-blur-sm shadow-[0_1px_4px_rgba(0,0,0,0.15)]" onClick={scrollToEstimate} data-testid="button-hero-estimate">
+              Get an Instant Quote <ArrowRight className="ml-2.5 w-4 h-4" />
+            </Button>
           </motion.div>
 
           {/* Trust signals */}
