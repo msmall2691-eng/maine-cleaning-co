@@ -126,17 +126,26 @@ function AddressInput({ value, onChange, onZipDetected }: { value: string; onCha
       // typed (e.g. leading "155" or "155A") whenever the geocoder doesn't
       // hand us one, and prepend it to the suggestion's display text so the
       // number the customer sees matches what they typed.
+      //
+      // Codex #5: only apply the typed-number fallback when the OSM result
+      // has a real `road` field. Otherwise a town/POI fallback for an
+      // unresolved address would commit a fabricated street like
+      // "155 Waterboro, Waterboro, ME".
       const typedNumMatch = query.trim().match(/^(\d+[A-Za-z]?)\b/);
       const typedNum = typedNumMatch ? typedNumMatch[1] : "";
       const mapped: AddressSuggestion[] = data
         .filter((r: any) => r.address?.state === "Maine" || r.address?.state === "ME")
         .map((r: any) => {
           const osmNum = r.address?.house_number || r.address?.building || r.address?.house_name;
-          const houseNum = osmNum || typedNum;
-          const road = r.address?.road || r.display_name.split(",")[0].trim();
-          const street = houseNum ? `${houseNum} ${road}`.trim() : road;
+          const road = r.address?.road || "";
+          // Only synthesize a house number when we actually have a road to
+          // put in front of it; otherwise fall back to the raw display name.
+          const canUseTyped = !!road && !!typedNum;
+          const houseNum = osmNum || (canUseTyped ? typedNum : "");
+          const streetLine = road || r.display_name.split(",")[0].trim();
+          const street = houseNum ? `${houseNum} ${streetLine}`.trim() : streetLine;
           const rawDisplay = (r.display_name?.split(", United States")[0] || r.display_name).trim();
-          const display = (!osmNum && typedNum && !rawDisplay.startsWith(typedNum))
+          const display = (!osmNum && canUseTyped && !rawDisplay.startsWith(typedNum))
             ? `${typedNum} ${rawDisplay}`
             : rawDisplay;
           return {
