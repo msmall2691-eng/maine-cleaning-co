@@ -1,9 +1,11 @@
 import { useState, useEffect } from "react";
-import { Calculator, MessageSquare, Phone } from "lucide-react";
+import { Link, useLocation } from "wouter";
+import { Calendar, MessageSquare, Phone } from "lucide-react";
 import { companyInfo } from "@/lib/company-info";
 
 export function StickyMobileBar() {
   const [visible, setVisible] = useState(false);
+  const [location] = useLocation();
 
   useEffect(() => {
     const onScroll = () => {
@@ -14,13 +16,10 @@ export function StickyMobileBar() {
     return () => window.removeEventListener("scroll", onScroll);
   }, []);
 
-  const scrollToEstimate = () => {
-    const el = document.getElementById("get-estimate");
-    if (el) el.scrollIntoView({ behavior: "smooth" });
-    else window.location.href = "/#get-estimate";
-  };
-
-  if (!visible) return null;
+  // On the /book page the estimator IS the whole page — the sticky bar's
+  // primary CTA would just re-land the customer where they already are.
+  // Hide it there and let the page's own Book button own the flow.
+  if (!visible || location === "/book") return null;
 
   return (
     <div
@@ -28,14 +27,14 @@ export function StickyMobileBar() {
       data-testid="sticky-mobile-bar"
     >
       <div className="flex items-center gap-2 px-3 py-2.5">
-        <button
-          onClick={scrollToEstimate}
+        <Link
+          href="/book"
           className="flex-1 flex items-center justify-center gap-2 h-11 rounded-xl bg-primary text-primary-foreground text-sm font-semibold shadow-sm active:scale-[0.98] transition-transform"
-          data-testid="sticky-estimate"
+          data-testid="sticky-book"
         >
-          <Calculator className="w-4 h-4" />
-          Get Estimate
-        </button>
+          <Calendar className="w-4 h-4" />
+          Book Now
+        </Link>
         <a
           href={companyInfo.contact.smsHref}
           className="flex items-center justify-center gap-1.5 h-11 px-4 rounded-xl border border-border bg-card text-foreground text-sm font-medium active:scale-[0.98] transition-transform"

@@ -465,9 +465,14 @@ export function InstantEstimate({ defaultCategory, bookingIntent = false }: Inst
     }
   }, []);
 
+  // Minimum bookable date. Was today + 2 (a hard "we need lead time" gate);
+  // relaxed to tomorrow so customers can genuinely book anytime while we
+  // still get one calendar day to confirm and dispatch. Same-day requests
+  // that come in through this form would collide with the confirmation
+  // window; the copy on the panel points those callers at the phone.
   const minBookingDate = useMemo(() => {
     const d = new Date();
-    d.setDate(d.getDate() + 2);
+    d.setDate(d.getDate() + 1);
     return d.toISOString().split("T")[0];
   }, []);
 
@@ -931,8 +936,12 @@ export function InstantEstimate({ defaultCategory, bookingIntent = false }: Inst
                     </h4>
                   </div>
                   <p className="text-xs text-muted-foreground leading-relaxed">
-                    A few essentials so we come in ready — bookings must be at least 2 days out
-                    and within 30 miles of North Waterboro, ME.
+                    A few essentials so we come in ready — pick any date from tomorrow forward,
+                    anywhere within 30 miles of North Waterboro, ME. Need same-day?{" "}
+                    <a href={companyInfo.contact.phoneHref} className="underline underline-offset-2 hover:text-foreground">
+                      Give us a call
+                    </a>{" "}
+                    and we'll do our best.
                   </p>
 
                   {/* Address eligibility check */}
@@ -1085,8 +1094,13 @@ export function InstantEstimate({ defaultCategory, bookingIntent = false }: Inst
                           : <><Calendar className="w-4 h-4 mr-2" /> Book This Cleaning</>
                         }
                       </Button>
-                      <p className="text-[10px] text-muted-foreground text-center">
-                        Requires approval. You'll get a confirmation call/text within 1 business day.
+                      <p className="text-[11px] text-muted-foreground text-center leading-relaxed">
+                        Requires approval — we'll confirm by call or text within 1 business day.
+                        <br />
+                        <span className="inline-flex items-center gap-1 mt-1">
+                          <Calendar className="w-3 h-3" />
+                          Once confirmed, you'll get a Google Calendar invite that holds your spot automatically.
+                        </span>
                       </p>
                     </>
                   )}
@@ -1177,7 +1191,9 @@ export function InstantEstimate({ defaultCategory, bookingIntent = false }: Inst
                   <div>
                     <p className="text-sm font-medium text-foreground">Pending approval</p>
                     <p className="text-xs text-muted-foreground mt-0.5">
-                      We'll review your request and confirm via phone or text within 1 business day. Once approved, your cleaning will be added to our schedule.
+                      We'll review your request and confirm via phone or text within 1 business day.
+                      Once approved, you'll get a Google Calendar invite that adds the cleaning to your
+                      phone automatically — no app to install.
                     </p>
                   </div>
                 </div>
