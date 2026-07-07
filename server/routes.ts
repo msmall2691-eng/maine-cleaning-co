@@ -7,6 +7,7 @@ import { sendLeadNotification, sendCustomerConfirmation, sendPasswordResetEmail,
 import { intakeSubmitSchema } from "./lib/validators";
 import { normalizeIntakePayload } from "./lib/normalize";
 import { forwardLeadToBrightBase } from "./lib/brightbase";
+import { calculateQuote, estimatesDiverge } from "./lib/quoteEngine";
 import { runForward } from "./lib/leadForward";
 import { leadForwards } from "@shared/schema";
 import { db } from "./db";
@@ -1162,6 +1163,32 @@ Rules:
         return res.status(400).json({ success: false, message: `Sorry, ${distanceMiles} miles is outside our ${MAX_SERVICE_RADIUS_MILES}-mile service area.` });
       }
 
+      // Recompute the estimate server-side. The browser's numbers are not
+      // trusted for persistence — a tampered client could otherwise book
+      // at $0. When the server can't compute (custom-quote service types
+      // or incomplete inputs), fall back to the client's numbers rather
+      // than nulling them out: for STR/commercial the "estimate" is a
+      // placeholder anyway, and the operator will requote.
+      const serverQuote = calculateQuote({
+        serviceType: data.serviceType,
+        sqft: data.sqft ?? null,
+        bathrooms: data.bathrooms ?? null,
+        frequency: data.frequency ?? null,
+        petHair: data.petHair ?? null,
+        condition: data.condition ?? null,
+      });
+      const estimateMin = serverQuote.estimateMin ?? data.estimateMin ?? null;
+      const estimateMax = serverQuote.estimateMax ?? data.estimateMax ?? null;
+      if (estimatesDiverge(data.estimateMin, data.estimateMax, serverQuote.estimateMin, serverQuote.estimateMax)) {
+        log("WARN", "booking", "Client-supplied estimate diverged from server recompute", {
+          clientMin: data.estimateMin,
+          clientMax: data.estimateMax,
+          serverMin: serverQuote.estimateMin,
+          serverMax: serverQuote.estimateMax,
+          serviceType: data.serviceType,
+        });
+      }
+
       const booking = await storage.createBookingRequest({
         intakeId: data.intakeId ?? null,
         name: data.name,
@@ -1175,8 +1202,8 @@ Rules:
         bathrooms: data.bathrooms ?? null,
         petHair: data.petHair ?? null,
         condition: data.condition ?? null,
-        estimateMin: data.estimateMin ?? null,
-        estimateMax: data.estimateMax ?? null,
+        estimateMin,
+        estimateMax,
         requestedDate: requestedDate,
         distanceMiles: distanceMiles ?? null,
       });
@@ -1199,8 +1226,10 @@ Rules:
         bathrooms: data.bathrooms,
         petHair: data.petHair,
         condition: data.condition,
-        estimateMin: data.estimateMin,
-        estimateMax: data.estimateMax,
+        // Forward the trusted, server-computed range (falls back to the
+        // client's when the service is custom-quoted).
+        estimateMin,
+        estimateMax,
         requestedDate: data.requestedDate,
         distanceMiles: distanceMiles,
         source: "Website",
@@ -1257,8 +1286,8 @@ Rules:
         bathrooms: data.bathrooms,
         petHair: data.petHair,
         condition: data.condition,
-        estimateMin: data.estimateMin,
-        estimateMax: data.estimateMax,
+        estimateMin,
+        estimateMax,
         requestedDate: data.requestedDate,
         source: "Website",
         entryMethod: data.entryMethod,
