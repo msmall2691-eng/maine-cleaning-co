@@ -422,6 +422,10 @@ export async function registerRoutes(
 
   app.post("/api/intake/submit", async (req, res) => {
     try {
+      const ip = req.ip || req.socket.remoteAddress || "unknown";
+      if (!checkRateLimit(ip)) {
+        return res.status(429).json({ success: false, message: "Too many requests. Please try again later." });
+      }
       const parseResult = intakeSubmitSchema.safeParse(req.body);
       if (!parseResult.success) {
         return res.status(422).json({
