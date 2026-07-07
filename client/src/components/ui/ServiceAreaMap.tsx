@@ -13,11 +13,11 @@ const serviceTypeLabels: Record<ServiceType, string> = {
 };
 
 const serviceTypeColors: Record<ServiceType, { h: number; s: number; l: number }> = {
-  residential: { h: 208, s: 70, l: 60 },
-  commercial: { h: 145, s: 60, l: 50 },
-  janitorial: { h: 35, s: 80, l: 55 },
-  vacation: { h: 280, s: 55, l: 60 },
-  moveinout: { h: 350, s: 65, l: 58 },
+  residential: { h: 192, s: 72, l: 62 },  // shallow-water teal
+  commercial: { h: 158, s: 55, l: 52 },   // seagrass
+  janitorial: { h: 38, s: 78, l: 58 },    // sand
+  vacation: { h: 260, s: 55, l: 65 },     // dusk
+  moveinout: { h: 350, s: 60, l: 62 },    // buoy
 };
 
 const customerCities: { name: string; lat: number; lng: number; visits: number; services: ServiceType[] }[] = [
@@ -267,11 +267,11 @@ function NetworkGraph({ hoveredName, onHover }: {
           ctx.setLineDash([]);
         } else {
           const maxDist = Math.min(w, h) * 0.28;
-          const alpha = isHighlighted ? 0.2 : Math.max(0.02, 0.08 * (1 - edge.dist / maxDist));
+          const alpha = isHighlighted ? 0.22 : Math.max(0.02, 0.09 * (1 - edge.dist / maxDist));
           ctx.beginPath();
           ctx.moveTo(a.x, a.y);
           ctx.lineTo(b.x, b.y);
-          ctx.strokeStyle = `hsla(208, 50%, 55%, ${alpha})`;
+          ctx.strokeStyle = `hsla(192, 60%, 60%, ${alpha})`;
           ctx.lineWidth = isHighlighted ? 1.2 : 0.4;
           ctx.stroke();
         }
@@ -318,7 +318,7 @@ function NetworkGraph({ hoveredName, onHover }: {
           if (city.visits >= 100 || isHovered) {
             const glowR = r * (isHovered ? 4 : 2.5);
             const glow = ctx.createRadialGradient(city.x, city.y, 0, city.x, city.y, glowR);
-            glow.addColorStop(0, `hsla(208, 80%, 65%, ${isHovered ? 0.3 : 0.08})`);
+            glow.addColorStop(0, `hsla(190, 85%, 68%, ${isHovered ? 0.32 : 0.10})`);
             glow.addColorStop(1, "transparent");
             ctx.fillStyle = glow;
             ctx.beginPath();
@@ -345,7 +345,7 @@ function NetworkGraph({ hoveredName, onHover }: {
           } else {
             ctx.beginPath();
             ctx.arc(city.x, city.y, r, 0, Math.PI * 2);
-            ctx.fillStyle = `hsla(208, 70%, 60%, ${intensity})`;
+            ctx.fillStyle = `hsla(192, 72%, 62%, ${intensity})`;
             ctx.fill();
           }
 
@@ -413,19 +413,43 @@ function NetworkGraph({ hoveredName, onHover }: {
   }, [onHover]);
 
   return (
-    <div ref={containerRef} className="relative w-full bg-[hsl(208,22%,14%)] rounded-2xl overflow-hidden border border-white/[0.06] shadow-[0_4px_24px_rgba(0,0,0,0.2)]" style={{ aspectRatio: "16/9" }}>
+    <div
+      ref={containerRef}
+      className="service-area-ocean relative w-full rounded-2xl overflow-hidden border border-white/[0.06] shadow-[0_4px_24px_rgba(0,0,0,0.25)]"
+      style={{ aspectRatio: "21/9" }}
+    >
+      <div className="ocean-glow" aria-hidden="true" />
       <canvas
         ref={canvasRef}
         className="absolute inset-0 cursor-crosshair"
         onMouseMove={handleMouseMove}
         onMouseLeave={handleMouseLeave}
       />
-      <div className="absolute bottom-3 left-3 right-3 flex items-center justify-between pointer-events-none">
-        <div className="flex items-center gap-1.5 text-white/40">
+      <svg
+        className="pointer-events-none absolute inset-x-0 bottom-0 w-full h-[38%]"
+        viewBox="0 0 1440 160"
+        preserveAspectRatio="none"
+        aria-hidden="true"
+      >
+        <defs>
+          <linearGradient id="tide-fade" x1="0" x2="0" y1="0" y2="1">
+            <stop offset="0%" stopColor="hsl(192, 60%, 55%)" stopOpacity="0" />
+            <stop offset="100%" stopColor="hsl(200, 65%, 40%)" stopOpacity="0.35" />
+          </linearGradient>
+        </defs>
+        <path className="ocean-wave ocean-wave-back" fill="hsl(198, 55%, 45%)" fillOpacity="0.12"
+          d="M0,90 C240,130 480,50 720,80 C960,110 1200,60 1440,90 L1440,160 L0,160 Z" />
+        <path className="ocean-wave ocean-wave-mid" fill="hsl(196, 60%, 50%)" fillOpacity="0.18"
+          d="M0,110 C180,140 360,80 540,110 C720,140 900,90 1080,120 C1260,145 1380,105 1440,120 L1440,160 L0,160 Z" />
+        <path className="ocean-wave ocean-wave-front" fill="url(#tide-fade)"
+          d="M0,130 C240,155 480,105 720,125 C960,150 1200,115 1440,135 L1440,160 L0,160 Z" />
+      </svg>
+      <div className="absolute bottom-3 left-3 right-3 flex items-center justify-between pointer-events-none z-10">
+        <div className="flex items-center gap-1.5 text-white/50">
           <MapPin className="w-3 h-3" />
           <span className="text-[10px] font-medium">{totalCities} communities</span>
         </div>
-        <div className="flex items-center gap-3 text-[10px] text-white/30 flex-wrap justify-end">
+        <div className="flex items-center gap-3 text-[10px] text-white/40 flex-wrap justify-end">
           {(Object.keys(serviceTypeColors) as ServiceType[]).map(st => {
             const col = serviceTypeColors[st];
             return (
@@ -458,7 +482,7 @@ export function ServiceAreaMap() {
 
   return (
     <div className="max-w-4xl mx-auto" data-testid="card-service-area-map">
-      <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 sm:gap-4 mb-6 sm:mb-8">
+      <div className="grid grid-cols-2 sm:grid-cols-4 gap-2.5 sm:gap-3 mb-5 sm:mb-6">
         {kpiCards.map((kpi, i) => {
           const Icon = kpi.icon;
           return (
@@ -468,7 +492,7 @@ export function ServiceAreaMap() {
               whileInView={{ opacity: 1, y: 0 }}
               viewport={{ once: true }}
               transition={{ delay: i * 0.08 }}
-              className="bg-card rounded-xl border border-border p-3 sm:p-4 text-center shadow-sm"
+              className="bg-card rounded-xl border border-border p-2.5 sm:p-3 text-center shadow-sm"
               data-testid={`kpi-${kpi.label.toLowerCase().replace(/\s+/g, '-')}`}
             >
               <Icon className={`w-4 h-4 sm:w-5 sm:h-5 ${kpi.color} mx-auto mb-1.5`} />
@@ -536,8 +560,8 @@ export function ServiceAreaMap() {
         )}
       </div>
 
-      <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-2 sm:gap-3">
-        {customerCities.slice(0, 10).map((city, i) => {
+      <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-2 sm:gap-2.5">
+        {customerCities.slice(0, 6).map((city, i) => {
           const pct = (city.visits / customerCities[0].visits) * 100;
           return (
             <motion.div
@@ -546,14 +570,14 @@ export function ServiceAreaMap() {
               whileInView={{ opacity: 1, y: 0 }}
               viewport={{ once: true }}
               transition={{ delay: i * 0.04 }}
-              className="bg-card rounded-xl border border-border px-3 py-2.5 shadow-sm"
+              className="bg-card rounded-lg border border-border px-2.5 py-2 shadow-sm"
               data-testid={`rank-city-${i}`}
             >
-              <div className="flex items-center gap-2 mb-1.5">
+              <div className="flex items-center gap-1.5 mb-1">
                 <span className="text-[10px] font-bold text-muted-foreground w-4 text-right">#{i + 1}</span>
                 <span className="text-[11px] font-semibold text-foreground truncate flex-1">{city.name}</span>
               </div>
-              <div className="flex items-center gap-2">
+              <div className="flex items-center gap-1.5">
                 <div className="h-1 bg-secondary rounded-full overflow-hidden flex-1">
                   <motion.div
                     initial={{ width: 0 }}
@@ -563,14 +587,14 @@ export function ServiceAreaMap() {
                     className="h-full bg-primary/50 rounded-full"
                   />
                 </div>
-                <span className="text-[10px] text-muted-foreground font-semibold tabular-nums w-8 text-right">{city.visits}</span>
+                <span className="text-[10px] text-muted-foreground font-semibold tabular-nums w-7 text-right">{city.visits}</span>
               </div>
             </motion.div>
           );
         })}
       </div>
       <p className="text-[10px] text-muted-foreground text-center mt-3">
-        + {totalCities - 10} more communities served across Southern Maine
+        + {totalCities - 6} more communities across Southern Maine
       </p>
     </div>
   );

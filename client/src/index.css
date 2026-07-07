@@ -659,6 +659,39 @@
   100% { background-position: 20px 120%, 50px calc(120% + 40px), 90px calc(120% + 20px); }
 }
 
+/* Service-area network graph — coastal ocean surface */
+.service-area-ocean {
+  background:
+    radial-gradient(ellipse 70% 55% at 50% 30%, hsl(198 60% 22% / 0.55) 0%, transparent 70%),
+    linear-gradient(180deg, hsl(210 50% 10%) 0%, hsl(200 55% 8%) 55%, hsl(198 65% 6%) 100%);
+}
+.service-area-ocean .ocean-glow {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  background:
+    radial-gradient(ellipse 40% 60% at 12% 15%, hsl(190 80% 55% / 0.10) 0%, transparent 60%),
+    radial-gradient(ellipse 45% 55% at 88% 20%, hsl(200 70% 50% / 0.08) 0%, transparent 60%);
+  mix-blend-mode: screen;
+}
+.ocean-wave {
+  transform-origin: center bottom;
+  will-change: transform;
+}
+.ocean-wave-back {
+  animation: ocean-drift 14s ease-in-out infinite;
+}
+.ocean-wave-mid {
+  animation: ocean-drift 10s ease-in-out infinite reverse;
+}
+.ocean-wave-front {
+  animation: ocean-drift 7s ease-in-out infinite;
+}
+@keyframes ocean-drift {
+  0%, 100% { transform: translateX(-2%) scaleY(1); }
+  50% { transform: translateX(2%) scaleY(1.04); }
+}
+
 @media (prefers-reduced-motion: reduce) {
   .hero-aurora::before,
   .hero-aurora::after {
@@ -680,7 +713,10 @@
   .weather-fog,
   .weather-rain,
   .weather-snow,
-  .weather-storm-flash {
+  .weather-storm-flash,
+  .ocean-wave-back,
+  .ocean-wave-mid,
+  .ocean-wave-front {
     animation: none;
   }
 }
