@@ -42,7 +42,7 @@ export interface IStorage {
   getContract(clientId: string, quoteId: number): Promise<Contract | undefined>;
   getContractsByClient(clientId: string): Promise<Contract[]>;
   createContract(data: InsertContract): Promise<Contract>;
-  signContract(id: number, signedName: string): Promise<Contract | undefined>;
+  signContract(id: number, signedName: string, clientId?: string): Promise<Contract | undefined>;
   getScheduledCleanings(clientId: string): Promise<ScheduledCleaning[]>;
   createScheduledCleaning(data: Partial<ScheduledCleaning>): Promise<ScheduledCleaning>;
   updateScheduledCleaning(id: number, clientId: string, data: Partial<ScheduledCleaning>): Promise<ScheduledCleaning | undefined>;
@@ -198,10 +198,13 @@ export class DatabaseStorage implements IStorage {
     return contract;
   }
 
-  async signContract(id: number, signedName: string): Promise<Contract | undefined> {
+  async signContract(id: number, signedName: string, clientId?: string): Promise<Contract | undefined> {
+    const whereClause = clientId
+      ? and(eq(contracts.id, id), eq(contracts.clientId, clientId))
+      : eq(contracts.id, id);
     const [contract] = await db.update(contracts)
       .set({ signedName, signedAt: new Date(), status: "signed" })
-      .where(eq(contracts.id, id))
+      .where(whereClause)
       .returning();
     return contract;
   }

@@ -200,7 +200,7 @@ export async function registerRoutes(
         const host = req.headers.host || "maine-clean.co";
         const protocol = (req.headers["x-forwarded-proto"] as string) || req.protocol || "https";
         const resetLink = `${protocol}://${host}/portal/reset-password?token=${token}`;
-        log("INFO", "auth", "Sending reset email", { to: user.email || normalizedEmail, link: resetLink });
+        log("INFO", "auth", "Sending reset email", { to: user.email || normalizedEmail });
         try {
           await sendPasswordResetEmail(user.email || normalizedEmail, user.name, resetLink);
           log("INFO", "auth", "Reset email sent successfully", { to: user.email || normalizedEmail });
@@ -322,7 +322,7 @@ export async function registerRoutes(
         res.status(400).json({ message: "Signature name is required" });
         return;
       }
-      const contract = await storage.signContract(id, signedName);
+      const contract = await storage.signContract(id, signedName, req.session.userId!);
       if (!contract) {
         res.status(404).json({ message: "Contract not found" });
         return;
