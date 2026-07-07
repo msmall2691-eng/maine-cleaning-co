@@ -76,35 +76,6 @@ function SignalMap({ animate }: { animate: boolean }) {
     const canvas = canvasRef.current;
     if (!container || !canvas) return;
 
-    const resize = () => {
-      const rect = container.getBoundingClientRect();
-      const dpr = window.devicePixelRatio || 1;
-      const w = rect.width;
-      const h = rect.height;
-      canvas.width = w * dpr;
-      canvas.height = h * dpr;
-      canvas.style.width = `${w}px`;
-      canvas.style.height = `${h}px`;
-      const ctx = canvas.getContext("2d");
-      if (ctx) {
-        ctx.setTransform(1, 0, 0, 1, 0, 0);
-        ctx.scale(dpr, dpr);
-      }
-      // Scale so the outer ring sits at ~42% of the shorter dimension.
-      const ppm = (Math.min(w, h) * 0.42) / MAX_MILES;
-      sizeRef.current = { w, h, ppm, cx: w / 2, cy: h * 0.52 };
-    };
-    resize();
-
-    const io = new IntersectionObserver(
-      ([entry]) => {
-        visibleRef.current = entry.isIntersecting;
-      },
-      { threshold: 0.05 }
-    );
-    io.observe(container);
-    window.addEventListener("resize", resize);
-
     const ctx = canvas.getContext("2d");
     if (!ctx) return;
 
@@ -209,7 +180,37 @@ function SignalMap({ animate }: { animate: boolean }) {
       }
     };
 
-    rafRef.current = requestAnimationFrame(draw);
+    const resize = () => {
+      const rect = container.getBoundingClientRect();
+      const dpr = window.devicePixelRatio || 1;
+      const w = rect.width;
+      const h = rect.height;
+      canvas.width = w * dpr;
+      canvas.height = h * dpr;
+      canvas.style.width = `${w}px`;
+      canvas.style.height = `${h}px`;
+      ctx.setTransform(1, 0, 0, 1, 0, 0);
+      ctx.scale(dpr, dpr);
+      // Scale so the outer ring sits at ~42% of the shorter dimension.
+      const ppm = (Math.min(w, h) * 0.42) / MAX_MILES;
+      sizeRef.current = { w, h, ppm, cx: w / 2, cy: h * 0.52 };
+      // Setting canvas.width/height above wipes the bitmap. Always kick
+      // a fresh paint — without this, Reduce Motion users see a blank
+      // map after a phone rotation because the RAF loop already exited.
+      cancelAnimationFrame(rafRef.current);
+      rafRef.current = requestAnimationFrame(draw);
+    };
+
+    const io = new IntersectionObserver(
+      ([entry]) => {
+        visibleRef.current = entry.isIntersecting;
+      },
+      { threshold: 0.05 }
+    );
+    io.observe(container);
+    window.addEventListener("resize", resize);
+
+    resize();
 
     return () => {
       cancelAnimationFrame(rafRef.current);
