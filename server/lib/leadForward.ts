@@ -24,6 +24,7 @@
 import { db } from "../db";
 import { leadForwards } from "@shared/schema";
 import { eq } from "drizzle-orm";
+import { sendForwardFailureAlert } from "../email";
 
 export type ForwardSourceType = "booking" | "intake" | "quote";
 export type ForwardDestination = "brightbase" | "crm_intake" | "crm_booking";
@@ -135,6 +136,15 @@ export async function runForward(opts: RunForwardOpts): Promise<number | null> {
   console.error(
     `[leadForward] FAILED ${destination} for ${sourceType}#${sourceId} after ${attempts} attempt(s): ${msg}`,
   );
+  // Best-effort admin alert — never blocks and never bubbles up.
+  sendForwardFailureAlert({
+    destination,
+    sourceType,
+    sourceId,
+    attempts,
+    lastStatusCode: lastResult?.statusCode ?? null,
+    lastError: msg,
+  }).catch(() => {});
   return id;
 }
 
