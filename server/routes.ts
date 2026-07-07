@@ -1049,7 +1049,7 @@ Rules:
   // North Waterboro, ME coordinates
   const SERVICE_CENTER_LAT = 43.5712;
   const SERVICE_CENTER_LNG = -70.7287;
-  const MAX_SERVICE_RADIUS_MILES = 30;
+  const MAX_SERVICE_RADIUS_MILES = 60;
   // Was 2 (a hard "we need two calendar days" gate). Relaxed to 1 so
   // the client's tomorrow-forward date picker matches — the client's
   // minBookingDate = today+1 got customers all the way through the form

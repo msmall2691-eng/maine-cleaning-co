@@ -951,7 +951,7 @@ export function InstantEstimate({ defaultCategory, bookingIntent = false }: Inst
                   </div>
                   <p className="text-xs text-muted-foreground leading-relaxed">
                     A few essentials so we come in ready — pick any date from tomorrow forward,
-                    anywhere within 30 miles of North Waterboro, ME. Need same-day?{" "}
+                    anywhere within 60 miles of North Waterboro, ME. Need same-day?{" "}
                     <a href={companyInfo.contact.phoneHref} className="underline underline-offset-2 hover:text-foreground">
                       Give us a call
                     </a>{" "}
