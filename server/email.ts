@@ -322,3 +322,52 @@ export async function sendCustomerConfirmation(lead: QuoteLead, tempPassword?: s
     console.error(`[email] Failed to send customer confirmation for QT-${lead.id}:`, error);
   }
 }
+
+// Throttle per-destination alerts so a downed sink doesn't burst the inbox.
+// Key: destination string. Value: ms timestamp of last send.
+const _alertLastSent = new Map<string, number>();
+const ALERT_THROTTLE_MS = parseInt(process.env.LEAD_FORWARD_ALERT_THROTTLE_MS || String(15 * 60 * 1000), 10);
+
+/**
+ * Notify the office that a lead forward has failed after all retries.
+ * Skipped when SMTP or NOTIFY_EMAIL is not configured. Throttled per
+ * destination — see LEAD_FORWARD_ALERT_THROTTLE_MS (default 15 min).
+ */
+export async function sendForwardFailureAlert(params: {
+  destination: string;
+  sourceType: string;
+  sourceId: number | null;
+  attempts: number;
+  lastStatusCode: number | null;
+  lastError: string | null;
+}): Promise<void> {
+  const to = process.env.LEAD_FORWARD_ALERT_EMAIL || NOTIFY_ADDRESS;
+  if (!to) return;
+  const now = Date.now();
+  const prev = _alertLastSent.get(params.destination) || 0;
+  if (now - prev < ALERT_THROTTLE_MS) {
+    console.log(`[email] Skipping forward-failure alert for ${params.destination} — throttled (last sent ${Math.round((now - prev) / 1000)}s ago)`);
+    return;
+  }
+  _alertLastSent.set(params.destination, now);
+
+  const subject = `[Maine Cleaning] Lead forward FAILED → ${params.destination}`;
+  const html = `<!DOCTYPE html><html><body style="font-family:system-ui,sans-serif;color:#111;max-width:640px;margin:24px auto;padding:0 20px;">
+    <h2 style="color:#b91c1c;margin:0 0 12px;">Lead forward failed</h2>
+    <p style="margin:0 0 16px;">A lead did not reach <strong>${params.destination}</strong> after ${params.attempts} attempt(s).</p>
+    <table style="border-collapse:collapse;width:100%;font-size:14px;">
+      <tr><td style="padding:6px 8px;color:#555;">Source</td><td style="padding:6px 8px;"><code>${params.sourceType}#${params.sourceId ?? "?"}</code></td></tr>
+      <tr><td style="padding:6px 8px;color:#555;">Destination</td><td style="padding:6px 8px;"><code>${params.destination}</code></td></tr>
+      <tr><td style="padding:6px 8px;color:#555;">Attempts</td><td style="padding:6px 8px;">${params.attempts}</td></tr>
+      <tr><td style="padding:6px 8px;color:#555;">Last status</td><td style="padding:6px 8px;">${params.lastStatusCode ?? "network error"}</td></tr>
+      <tr><td style="padding:6px 8px;color:#555;">Error</td><td style="padding:6px 8px;"><code>${(params.lastError || "unknown").slice(0, 300)}</code></td></tr>
+    </table>
+    <p style="margin-top:20px;font-size:13px;color:#555;">See the ledger at <code>GET /api/admin/lead-forwards?status=failed</code>. Further alerts for this destination are throttled for ${Math.round(ALERT_THROTTLE_MS / 60000)} min.</p>
+  </body></html>`;
+  try {
+    await sendEmail(to, subject, html);
+    console.log(`[email] Forward-failure alert sent to ${to} for ${params.destination}`);
+  } catch (err) {
+    console.error(`[email] Failed to send forward-failure alert:`, err);
+  }
+}

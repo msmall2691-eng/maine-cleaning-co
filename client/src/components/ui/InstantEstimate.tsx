@@ -378,7 +378,14 @@ export function InstantEstimate({ defaultCategory, bookingIntent = false }: Inst
         }),
       });
       const json = await res.json();
-      if (!res.ok) throw new Error(json?.message || "Failed");
+      if (!res.ok) {
+        const fieldErrors = json?.errors && typeof json.errors === "object"
+          ? Object.entries(json.errors)
+              .map(([field, msgs]) => `${field}: ${Array.isArray(msgs) ? msgs.join(", ") : msgs}`)
+              .join("; ")
+          : "";
+        throw new Error(fieldErrors ? `${json?.message || "Failed"} — ${fieldErrors}` : (json?.message || "Failed"));
+      }
       return json;
     },
     onSuccess: (data) => {
@@ -431,7 +438,14 @@ export function InstantEstimate({ defaultCategory, bookingIntent = false }: Inst
         }),
       });
       const json = await res.json();
-      if (!res.ok) throw new Error(json?.message || "Failed");
+      if (!res.ok) {
+        const fieldErrors = json?.errors && typeof json.errors === "object"
+          ? Object.entries(json.errors)
+              .map(([field, msgs]) => `${field}: ${Array.isArray(msgs) ? msgs.join(", ") : msgs}`)
+              .join("; ")
+          : "";
+        throw new Error(fieldErrors ? `${json?.message || "Booking failed"} — ${fieldErrors}` : (json?.message || "Failed"));
+      }
       return json;
     },
     onSuccess: () => {
@@ -981,12 +995,16 @@ export function InstantEstimate({ defaultCategory, bookingIntent = false }: Inst
                           />
                         </div>
                         <div>
-                          <label className="text-xs font-medium text-muted-foreground mb-1.5 block">Preferred date</label>
+                          <label className="text-xs font-medium text-muted-foreground mb-1.5 block">
+                            Preferred date <span className="text-destructive">*</span>
+                          </label>
                           <input
                             type="date"
                             min={minBookingDate}
                             value={bookingDate}
                             onChange={(e) => setBookingDate(e.target.value)}
+                            required
+                            aria-required="true"
                             className="w-full h-11 rounded-xl border border-border bg-card px-3 text-sm text-foreground focus:outline-none focus:ring-2 focus:ring-primary/30"
                             data-testid="input-booking-date"
                           />
@@ -1094,6 +1112,12 @@ export function InstantEstimate({ defaultCategory, bookingIntent = false }: Inst
                           : <><Calendar className="w-4 h-4 mr-2" /> Book This Cleaning</>
                         }
                       </Button>
+                      {!bookingDate && !bookingMutation.isPending && (
+                        <p className="text-[11px] text-amber-600 dark:text-amber-400 text-center leading-relaxed flex items-center justify-center gap-1">
+                          <AlertCircle className="w-3 h-3 flex-shrink-0" />
+                          Pick a preferred date above to enable booking.
+                        </p>
+                      )}
                       <p className="text-[11px] text-muted-foreground text-center leading-relaxed">
                         Requires approval — we'll confirm by call or text within 1 business day.
                         <br />

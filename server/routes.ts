@@ -6,8 +6,12 @@ import { z } from "zod";
 import { sendLeadNotification, sendCustomerConfirmation, sendPasswordResetEmail, sendIntakeNotification } from "./email";
 import { intakeSubmitSchema } from "./lib/validators";
 import { normalizeIntakePayload } from "./lib/normalize";
-import { createQuoteRequestInTwenty } from "./lib/twenty";
 import { forwardLeadToBrightBase } from "./lib/brightbase";
+import { calculateQuote, estimatesDiverge } from "./lib/quoteEngine";
+import { runForward } from "./lib/leadForward";
+import { leadForwards } from "@shared/schema";
+import { db } from "./db";
+import { desc, eq } from "drizzle-orm";
 import crypto from "crypto";
 import { setupAuth, hashPassword, comparePassword, requireAuth, requireAdmin } from "./auth";
 import OpenAI from "openai";
@@ -200,7 +204,7 @@ export async function registerRoutes(
         const host = req.headers.host || "maine-clean.co";
         const protocol = (req.headers["x-forwarded-proto"] as string) || req.protocol || "https";
         const resetLink = `${protocol}://${host}/portal/reset-password?token=${token}`;
-        log("INFO", "auth", "Sending reset email", { to: user.email || normalizedEmail, link: resetLink });
+        log("INFO", "auth", "Sending reset email", { to: user.email || normalizedEmail });
         try {
           await sendPasswordResetEmail(user.email || normalizedEmail, user.name, resetLink);
           log("INFO", "auth", "Reset email sent successfully", { to: user.email || normalizedEmail });
@@ -322,7 +326,7 @@ export async function registerRoutes(
         res.status(400).json({ message: "Signature name is required" });
         return;
       }
-      const contract = await storage.signContract(id, signedName);
+      const contract = await storage.signContract(id, signedName, req.session.userId!);
       if (!contract) {
         res.status(404).json({ message: "Contract not found" });
         return;
@@ -418,6 +422,10 @@ export async function registerRoutes(
 
   app.post("/api/intake/submit", async (req, res) => {
     try {
+      const ip = req.ip || req.socket.remoteAddress || "unknown";
+      if (!checkRateLimit(ip)) {
+        return res.status(429).json({ success: false, message: "Too many requests. Please try again later." });
+      }
       const parseResult = intakeSubmitSchema.safeParse(req.body);
       if (!parseResult.success) {
         return res.status(422).json({
@@ -467,35 +475,37 @@ export async function registerRoutes(
         source: "Website",
       };
       log("INFO", "crm", "Forwarding intake to CRM", { payload: crmPayload, intakeId: submission.id });
-      fetch(CRM_WEBHOOK_URL, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(crmPayload),
-      })
-        .then(async r => {
-          const body = await r.text().catch(() => "");
-          log("INFO", "crm", `CRM response`, { status: r.status, body: body.slice(0, 300), intakeId: submission.id });
-        })
-        .catch(err => log("ERROR", "crm", `CRM forward failed`, { error: String(err), intakeId: submission.id }));
-
-      // Sync to Twenty CRM (non-blocking)
-      createQuoteRequestInTwenty({
-        name: normalized.name,
-        email: normalized.email,
-        phone: normalized.phone,
-        address: normalized.address,
-        zip: normalized.zip,
-        serviceType: normalized.serviceType,
-        frequency: normalized.frequency,
-        sqft: normalized.sqft,
-        bathrooms: normalized.bathrooms,
-        petHair: normalized.petHair,
-        condition: normalized.condition,
-        estimateMin: normalized.estimateMin,
-        estimateMax: normalized.estimateMax,
-        notes: normalized.notes,
-        source: "Website",
-      });
+      runForward({
+        sourceType: "intake",
+        sourceId: submission.id,
+        destination: "crm_intake",
+        attempt: async () => {
+          try {
+            const controller = new AbortController();
+            const timer = setTimeout(() => controller.abort(), 15_000);
+            let r: Response;
+            try {
+              r = await fetch(CRM_WEBHOOK_URL, {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify(crmPayload),
+                signal: controller.signal,
+              });
+            } finally {
+              clearTimeout(timer);
+            }
+            const body = await r.text().catch(() => "");
+            log("INFO", "crm", `CRM response`, { status: r.status, body: body.slice(0, 300), intakeId: submission.id });
+            if (!r.ok) {
+              const fatal = r.status >= 400 && r.status < 500;
+              return { ok: false, statusCode: r.status, error: `HTTP ${r.status}: ${body.slice(0, 200)}`, fatal };
+            }
+            return { ok: true, statusCode: r.status };
+          } catch (err) {
+            return { ok: false, error: err instanceof Error ? err.message : String(err) };
+          }
+        },
+      }).catch(() => {});  // runForward never rejects, guard defensively
 
       // Forward to BrightBase Ops (non-blocking) — lands in Requests page
       forwardLeadToBrightBase({
@@ -514,7 +524,7 @@ export async function registerRoutes(
         estimateMax: normalized.estimateMax,
         notes: normalized.notes,
         source: "Website",
-      });
+      }, { sourceType: "intake", sourceId: submission.id });
 
       return res.status(201).json({
         success: true,
@@ -1157,6 +1167,32 @@ Rules:
         return res.status(400).json({ success: false, message: `Sorry, ${distanceMiles} miles is outside our ${MAX_SERVICE_RADIUS_MILES}-mile service area.` });
       }
 
+      // Recompute the estimate server-side. The browser's numbers are not
+      // trusted for persistence — a tampered client could otherwise book
+      // at $0. When the server can't compute (custom-quote service types
+      // or incomplete inputs), fall back to the client's numbers rather
+      // than nulling them out: for STR/commercial the "estimate" is a
+      // placeholder anyway, and the operator will requote.
+      const serverQuote = calculateQuote({
+        serviceType: data.serviceType,
+        sqft: data.sqft ?? null,
+        bathrooms: data.bathrooms ?? null,
+        frequency: data.frequency ?? null,
+        petHair: data.petHair ?? null,
+        condition: data.condition ?? null,
+      });
+      const estimateMin = serverQuote.estimateMin ?? data.estimateMin ?? null;
+      const estimateMax = serverQuote.estimateMax ?? data.estimateMax ?? null;
+      if (estimatesDiverge(data.estimateMin, data.estimateMax, serverQuote.estimateMin, serverQuote.estimateMax)) {
+        log("WARN", "booking", "Client-supplied estimate diverged from server recompute", {
+          clientMin: data.estimateMin,
+          clientMax: data.estimateMax,
+          serverMin: serverQuote.estimateMin,
+          serverMax: serverQuote.estimateMax,
+          serviceType: data.serviceType,
+        });
+      }
+
       const booking = await storage.createBookingRequest({
         intakeId: data.intakeId ?? null,
         name: data.name,
@@ -1170,8 +1206,8 @@ Rules:
         bathrooms: data.bathrooms ?? null,
         petHair: data.petHair ?? null,
         condition: data.condition ?? null,
-        estimateMin: data.estimateMin ?? null,
-        estimateMax: data.estimateMax ?? null,
+        estimateMin,
+        estimateMax,
         requestedDate: requestedDate,
         distanceMiles: distanceMiles ?? null,
       });
@@ -1181,43 +1217,8 @@ Rules:
       // Forward to CRM for approval workflow (uses leads endpoint with booking- prefix)
       const CRM_BOOKING_URL = process.env.CRM_WEBHOOK_URL || "https://connecteam-proxy.vercel.app/api/leads";
 
-      fetch(CRM_BOOKING_URL + "?action=booking-create", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          websiteBookingId: booking.id,
-          name: data.name,
-          email: data.email,
-          phone: data.phone,
-          address: data.address,
-          zip: data.zip,
-          serviceType: data.serviceType,
-          frequency: data.frequency,
-          sqft: data.sqft,
-          bathrooms: data.bathrooms,
-          petHair: data.petHair,
-          condition: data.condition,
-          estimateMin: data.estimateMin,
-          estimateMax: data.estimateMax,
-          requestedDate: data.requestedDate,
-          distanceMiles: distanceMiles,
-          source: "Website",
-        }),
-      })
-        .then(async r => {
-          const body = await r.text().catch(() => "");
-          log("INFO", "booking", "CRM booking forward response", { status: r.status, body: body.slice(0, 300) });
-          try {
-            const json = JSON.parse(body);
-            if (json.bookingId) {
-              storage.updateBookingRequestExternalIds(booking.id, { crmBookingId: String(json.bookingId) }).catch(() => {});
-            }
-          } catch {}
-        })
-        .catch(err => log("ERROR", "booking", "CRM booking forward failed", { error: String(err) }));
-
-      // Sync to Twenty CRM (non-blocking)
-      createQuoteRequestInTwenty({
+      const crmBookingPayload = {
+        websiteBookingId: booking.id,
         name: data.name,
         email: data.email,
         phone: data.phone,
@@ -1229,11 +1230,51 @@ Rules:
         bathrooms: data.bathrooms,
         petHair: data.petHair,
         condition: data.condition,
-        estimateMin: data.estimateMin,
-        estimateMax: data.estimateMax,
+        // Forward the trusted, server-computed range (falls back to the
+        // client's when the service is custom-quoted).
+        estimateMin,
+        estimateMax,
         requestedDate: data.requestedDate,
+        distanceMiles: distanceMiles,
         source: "Website",
-      });
+      };
+      runForward({
+        sourceType: "booking",
+        sourceId: booking.id,
+        destination: "crm_booking",
+        attempt: async () => {
+          try {
+            const controller = new AbortController();
+            const timer = setTimeout(() => controller.abort(), 15_000);
+            let r: Response;
+            try {
+              r = await fetch(CRM_BOOKING_URL + "?action=booking-create", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify(crmBookingPayload),
+                signal: controller.signal,
+              });
+            } finally {
+              clearTimeout(timer);
+            }
+            const body = await r.text().catch(() => "");
+            log("INFO", "booking", "CRM booking forward response", { status: r.status, body: body.slice(0, 300) });
+            if (!r.ok) {
+              const fatal = r.status >= 400 && r.status < 500;
+              return { ok: false, statusCode: r.status, error: `HTTP ${r.status}: ${body.slice(0, 200)}`, fatal };
+            }
+            try {
+              const json = JSON.parse(body);
+              if (json.bookingId) {
+                storage.updateBookingRequestExternalIds(booking.id, { crmBookingId: String(json.bookingId) }).catch(() => {});
+              }
+            } catch {}
+            return { ok: true, statusCode: r.status };
+          } catch (err) {
+            return { ok: false, error: err instanceof Error ? err.message : String(err) };
+          }
+        },
+      }).catch(() => {});
 
       // Forward to BrightBase Ops (non-blocking) — lands in Requests page
       forwardLeadToBrightBase({
@@ -1249,8 +1290,8 @@ Rules:
         bathrooms: data.bathrooms,
         petHair: data.petHair,
         condition: data.condition,
-        estimateMin: data.estimateMin,
-        estimateMax: data.estimateMax,
+        estimateMin,
+        estimateMax,
         requestedDate: data.requestedDate,
         source: "Website",
         entryMethod: data.entryMethod,
@@ -1258,7 +1299,7 @@ Rules:
         petsDetail: data.petsDetail,
         focusAreas: data.focusAreas,
         specialInstructions: data.specialInstructions,
-      });
+      }, { sourceType: "booking", sourceId: booking.id });
 
       return res.status(201).json({
         success: true,
@@ -1269,6 +1310,34 @@ Rules:
     } catch (error) {
       log("ERROR", "booking", "Booking submission failed", { error: String(error) });
       return res.status(500).json({ success: false, message: "Failed to submit booking request. Please try again." });
+    }
+  });
+
+  // Admin: list lead-forward delivery ledger — visibility for the fire-and-forget
+  // downstream syncs. Filter by ?status=failed to surface anything that never
+  // reached BrightBase or the legacy CRM webhook after retries.
+  app.get("/api/admin/lead-forwards", requireAdmin, async (req, res) => {
+    try {
+      if (!db) {
+        return res.status(503).json({ message: "Database not configured" });
+      }
+      const status = req.query.status as string | undefined;
+      const destination = req.query.destination as string | undefined;
+      const limit = Math.min(Math.max(parseInt(String(req.query.limit || "100"), 10) || 100, 1), 500);
+      const conditions = [] as any[];
+      if (status) conditions.push(eq(leadForwards.status, status));
+      if (destination) conditions.push(eq(leadForwards.destination, destination));
+      let query = db.select().from(leadForwards).orderBy(desc(leadForwards.createdAt)).limit(limit) as any;
+      if (conditions.length === 1) query = query.where(conditions[0]);
+      else if (conditions.length > 1) {
+        const { and } = await import("drizzle-orm");
+        query = query.where(and(...conditions));
+      }
+      const rows = await query;
+      res.json({ rows, total: rows.length });
+    } catch (error) {
+      log("ERROR", "admin", "lead-forwards fetch failed", { error: String(error) });
+      res.status(500).json({ message: "Failed to fetch lead forwards" });
     }
   });
 
