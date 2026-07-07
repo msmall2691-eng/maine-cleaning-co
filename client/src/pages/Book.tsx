@@ -43,7 +43,7 @@ export default function Book() {
     <div className="min-h-screen bg-background">
       {/* Hero */}
       <section className="relative overflow-hidden border-b border-border/40">
-        <div className="max-w-4xl mx-auto px-4 sm:px-6 py-10 sm:py-14">
+        <div className="max-w-4xl mx-auto px-4 sm:px-6 pt-28 sm:pt-32 pb-10 sm:pb-14">
           <div className="flex items-center gap-2 text-xs font-semibold uppercase tracking-wider text-primary mb-3">
             <Sparkles className="w-3.5 h-3.5" /> Book in Minutes
           </div>
@@ -53,7 +53,7 @@ export default function Book() {
           <p className="mt-3 text-base text-muted-foreground max-w-2xl leading-relaxed">
             Get an instant estimate, tell us a few essentials, and pick a date — we confirm within
             one business day. Serving {companyInfo.serviceArea?.center || "Southern Maine"} and the
-            surrounding communities within 30 miles.
+            surrounding communities within 60 miles.
           </p>
 
           <div className="mt-6 grid grid-cols-1 sm:grid-cols-3 gap-3 max-w-3xl">
@@ -72,7 +72,7 @@ export default function Book() {
               </div>
               <div>
                 <p className="text-sm font-semibold text-foreground">Pick your date</p>
-                <p className="text-xs text-muted-foreground mt-0.5">2+ days out, within 30 miles</p>
+                <p className="text-xs text-muted-foreground mt-0.5">2+ days out, within 60 miles</p>
               </div>
             </div>
             <div className="flex items-start gap-2.5 rounded-xl border border-border/40 bg-card px-3.5 py-3">
