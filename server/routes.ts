@@ -7,6 +7,10 @@ import { sendLeadNotification, sendCustomerConfirmation, sendPasswordResetEmail,
 import { intakeSubmitSchema } from "./lib/validators";
 import { normalizeIntakePayload } from "./lib/normalize";
 import { forwardLeadToBrightBase } from "./lib/brightbase";
+import { runForward } from "./lib/leadForward";
+import { leadForwards } from "@shared/schema";
+import { db } from "./db";
+import { desc, eq } from "drizzle-orm";
 import crypto from "crypto";
 import { setupAuth, hashPassword, comparePassword, requireAuth, requireAdmin } from "./auth";
 import OpenAI from "openai";
@@ -466,16 +470,37 @@ export async function registerRoutes(
         source: "Website",
       };
       log("INFO", "crm", "Forwarding intake to CRM", { payload: crmPayload, intakeId: submission.id });
-      fetch(CRM_WEBHOOK_URL, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(crmPayload),
-      })
-        .then(async r => {
-          const body = await r.text().catch(() => "");
-          log("INFO", "crm", `CRM response`, { status: r.status, body: body.slice(0, 300), intakeId: submission.id });
-        })
-        .catch(err => log("ERROR", "crm", `CRM forward failed`, { error: String(err), intakeId: submission.id }));
+      runForward({
+        sourceType: "intake",
+        sourceId: submission.id,
+        destination: "crm_intake",
+        attempt: async () => {
+          try {
+            const controller = new AbortController();
+            const timer = setTimeout(() => controller.abort(), 15_000);
+            let r: Response;
+            try {
+              r = await fetch(CRM_WEBHOOK_URL, {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify(crmPayload),
+                signal: controller.signal,
+              });
+            } finally {
+              clearTimeout(timer);
+            }
+            const body = await r.text().catch(() => "");
+            log("INFO", "crm", `CRM response`, { status: r.status, body: body.slice(0, 300), intakeId: submission.id });
+            if (!r.ok) {
+              const fatal = r.status >= 400 && r.status < 500;
+              return { ok: false, statusCode: r.status, error: `HTTP ${r.status}: ${body.slice(0, 200)}`, fatal };
+            }
+            return { ok: true, statusCode: r.status };
+          } catch (err) {
+            return { ok: false, error: err instanceof Error ? err.message : String(err) };
+          }
+        },
+      }).catch(() => {});  // runForward never rejects, guard defensively
 
       // Forward to BrightBase Ops (non-blocking) — lands in Requests page
       forwardLeadToBrightBase({
@@ -494,7 +519,7 @@ export async function registerRoutes(
         estimateMax: normalized.estimateMax,
         notes: normalized.notes,
         source: "Website",
-      });
+      }, { sourceType: "intake", sourceId: submission.id });
 
       return res.status(201).json({
         success: true,
@@ -1161,40 +1186,62 @@ Rules:
       // Forward to CRM for approval workflow (uses leads endpoint with booking- prefix)
       const CRM_BOOKING_URL = process.env.CRM_WEBHOOK_URL || "https://connecteam-proxy.vercel.app/api/leads";
 
-      fetch(CRM_BOOKING_URL + "?action=booking-create", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          websiteBookingId: booking.id,
-          name: data.name,
-          email: data.email,
-          phone: data.phone,
-          address: data.address,
-          zip: data.zip,
-          serviceType: data.serviceType,
-          frequency: data.frequency,
-          sqft: data.sqft,
-          bathrooms: data.bathrooms,
-          petHair: data.petHair,
-          condition: data.condition,
-          estimateMin: data.estimateMin,
-          estimateMax: data.estimateMax,
-          requestedDate: data.requestedDate,
-          distanceMiles: distanceMiles,
-          source: "Website",
-        }),
-      })
-        .then(async r => {
-          const body = await r.text().catch(() => "");
-          log("INFO", "booking", "CRM booking forward response", { status: r.status, body: body.slice(0, 300) });
+      const crmBookingPayload = {
+        websiteBookingId: booking.id,
+        name: data.name,
+        email: data.email,
+        phone: data.phone,
+        address: data.address,
+        zip: data.zip,
+        serviceType: data.serviceType,
+        frequency: data.frequency,
+        sqft: data.sqft,
+        bathrooms: data.bathrooms,
+        petHair: data.petHair,
+        condition: data.condition,
+        estimateMin: data.estimateMin,
+        estimateMax: data.estimateMax,
+        requestedDate: data.requestedDate,
+        distanceMiles: distanceMiles,
+        source: "Website",
+      };
+      runForward({
+        sourceType: "booking",
+        sourceId: booking.id,
+        destination: "crm_booking",
+        attempt: async () => {
           try {
-            const json = JSON.parse(body);
-            if (json.bookingId) {
-              storage.updateBookingRequestExternalIds(booking.id, { crmBookingId: String(json.bookingId) }).catch(() => {});
+            const controller = new AbortController();
+            const timer = setTimeout(() => controller.abort(), 15_000);
+            let r: Response;
+            try {
+              r = await fetch(CRM_BOOKING_URL + "?action=booking-create", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify(crmBookingPayload),
+                signal: controller.signal,
+              });
+            } finally {
+              clearTimeout(timer);
             }
-          } catch {}
-        })
-        .catch(err => log("ERROR", "booking", "CRM booking forward failed", { error: String(err) }));
+            const body = await r.text().catch(() => "");
+            log("INFO", "booking", "CRM booking forward response", { status: r.status, body: body.slice(0, 300) });
+            if (!r.ok) {
+              const fatal = r.status >= 400 && r.status < 500;
+              return { ok: false, statusCode: r.status, error: `HTTP ${r.status}: ${body.slice(0, 200)}`, fatal };
+            }
+            try {
+              const json = JSON.parse(body);
+              if (json.bookingId) {
+                storage.updateBookingRequestExternalIds(booking.id, { crmBookingId: String(json.bookingId) }).catch(() => {});
+              }
+            } catch {}
+            return { ok: true, statusCode: r.status };
+          } catch (err) {
+            return { ok: false, error: err instanceof Error ? err.message : String(err) };
+          }
+        },
+      }).catch(() => {});
 
       // Forward to BrightBase Ops (non-blocking) — lands in Requests page
       forwardLeadToBrightBase({
@@ -1219,7 +1266,7 @@ Rules:
         petsDetail: data.petsDetail,
         focusAreas: data.focusAreas,
         specialInstructions: data.specialInstructions,
-      });
+      }, { sourceType: "booking", sourceId: booking.id });
 
       return res.status(201).json({
         success: true,
@@ -1230,6 +1277,34 @@ Rules:
     } catch (error) {
       log("ERROR", "booking", "Booking submission failed", { error: String(error) });
       return res.status(500).json({ success: false, message: "Failed to submit booking request. Please try again." });
+    }
+  });
+
+  // Admin: list lead-forward delivery ledger — visibility for the fire-and-forget
+  // downstream syncs. Filter by ?status=failed to surface anything that never
+  // reached BrightBase or the legacy CRM webhook after retries.
+  app.get("/api/admin/lead-forwards", requireAdmin, async (req, res) => {
+    try {
+      if (!db) {
+        return res.status(503).json({ message: "Database not configured" });
+      }
+      const status = req.query.status as string | undefined;
+      const destination = req.query.destination as string | undefined;
+      const limit = Math.min(Math.max(parseInt(String(req.query.limit || "100"), 10) || 100, 1), 500);
+      const conditions = [] as any[];
+      if (status) conditions.push(eq(leadForwards.status, status));
+      if (destination) conditions.push(eq(leadForwards.destination, destination));
+      let query = db.select().from(leadForwards).orderBy(desc(leadForwards.createdAt)).limit(limit) as any;
+      if (conditions.length === 1) query = query.where(conditions[0]);
+      else if (conditions.length > 1) {
+        const { and } = await import("drizzle-orm");
+        query = query.where(and(...conditions));
+      }
+      const rows = await query;
+      res.json({ rows, total: rows.length });
+    } catch (error) {
+      log("ERROR", "admin", "lead-forwards fetch failed", { error: String(error) });
+      res.status(500).json({ message: "Failed to fetch lead forwards" });
     }
   });
 

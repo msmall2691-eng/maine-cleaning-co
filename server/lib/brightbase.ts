@@ -10,15 +10,20 @@
  * /api/booking/submit is on BrightBase's public-path allowlist (see
  * backend/auth.py), so no API key or JWT is needed for this call.
  *
- * Fire-and-forget — logs errors, never throws, never blocks the
- * customer-facing response.
+ * Reliability: the actual HTTP call is wrapped by runForward
+ * (server/lib/leadForward.ts) — retries with backoff on 5xx / network
+ * errors, records per-attempt outcome in the lead_forwards ledger,
+ * exits without retry on 4xx. Still returns void to the caller so the
+ * request thread doesn't wait on it.
  *
  * Required env var:
  *   BRIGHTBASE_API_URL — e.g. https://brightbase-production.up.railway.app
  *
- * To disable temporarily, unset BRIGHTBASE_API_URL — the function logs
- * "Skipping forward" and returns immediately.
+ * To disable temporarily, unset BRIGHTBASE_API_URL — the forward is
+ * marked "skipped" in the ledger and returns immediately.
  */
+
+import { runForward, recordSkipped, type ForwardSourceType } from "./leadForward";
 
 const BRIGHTBASE_API_URL = process.env.BRIGHTBASE_API_URL;
 
@@ -41,8 +46,7 @@ interface BrightBaseLead {
   requestedDate?: string | Date | null;
   source?: string | null;
   // /book flow "essentials" — the six fields cleaners need on-site.
-  // Bright-Space's BookingSubmit accepts extras (extra="allow"), so these
-  // ride through and land in LeadIntake.custom_fields.
+  // BrightBase's BookingSubmit has native columns for these five.
   entryMethod?: string | null;
   parkingNotes?: string | null;
   petsDetail?: string | null;
@@ -50,27 +54,38 @@ interface BrightBaseLead {
   specialInstructions?: string | null;
 }
 
+interface ForwardContext {
+  sourceType: ForwardSourceType;
+  sourceId: number | null;
+}
+
 function isConfigured(): boolean {
   return Boolean(BRIGHTBASE_API_URL);
 }
 
 /**
- * Fire-and-forget lead forward to BrightBase.
- *
- * Maps the website's intake/booking payload to BrightBase's
+ * Fire-and-forget lead forward to BrightBase with retry + delivery
+ * ledger. Maps the website's intake/booking payload to BrightBase's
  * /api/booking/submit BookingSubmit schema. Field renames:
  *   sqft       → squareFeet
- *   (zip / frequency / petHair / condition / estimateMin / estimateMax)
- *   are passed through as extras — BrightBase accepts them via
- *   `class Config: extra = "allow"` even though they aren't stored
- *   on the LeadIntake row.
+ * Other optional fields (bedrooms, notes, frequency, petHair, condition,
+ * estimateMin/Max, and the five /book essentials) are all first-class
+ * columns on BrightBase's BookingSubmit schema now that it's set to
+ * extra="ignore" — no reliance on schema laxity.
  *
  * If requestedDate is missing (intake form may not collect it),
  * defaults to today's ISO string. BrightBase requires the field.
+ *
+ * ctx describes the source row so a failure lands in lead_forwards
+ * with enough info for the admin to look it up.
  */
-export async function forwardLeadToBrightBase(body: BrightBaseLead): Promise<void> {
+export async function forwardLeadToBrightBase(
+  body: BrightBaseLead,
+  ctx: ForwardContext,
+): Promise<void> {
   if (!isConfigured()) {
     console.log("[brightbase] Skipping forward — BRIGHTBASE_API_URL not set");
+    await recordSkipped(ctx.sourceType, ctx.sourceId, "brightbase", "BRIGHTBASE_API_URL not set");
     return;
   }
 
@@ -88,21 +103,15 @@ export async function forwardLeadToBrightBase(body: BrightBaseLead): Promise<voi
     requestedDate,
   };
 
-  // Optional / extra fields — only include if we have a value, to keep
-  // the payload tidy in logs.
   if (body.bathrooms != null) payload.bathrooms = Number(body.bathrooms);
   if (body.bedrooms != null) payload.bedrooms = Number(body.bedrooms);
   if (body.sqft != null) payload.squareFeet = Number(body.sqft);
   if (body.notes) payload.notes = body.notes;
-  if (body.zip) payload.zip = body.zip;
   if (body.frequency) payload.frequency = body.frequency;
   if (body.petHair) payload.petHair = body.petHair;
   if (body.condition) payload.condition = body.condition;
   if (body.estimateMin != null) payload.estimateMin = body.estimateMin;
   if (body.estimateMax != null) payload.estimateMax = body.estimateMax;
-  // /book essentials — forwarded as-is; Bright-Space's BookingSubmit
-  // accepts extras via extra="allow" and its intake normalizer will
-  // stash any un-columned fields into LeadIntake.custom_fields.
   if (body.entryMethod) payload.entryMethod = body.entryMethod;
   if (body.parkingNotes) payload.parkingNotes = body.parkingNotes;
   if (body.petsDetail) payload.petsDetail = body.petsDetail;
@@ -114,19 +123,41 @@ export async function forwardLeadToBrightBase(body: BrightBaseLead): Promise<voi
   const url = `${base}/api/booking/submit`;
   console.log(`[brightbase] Forwarding lead to ${url}`, JSON.stringify(payload).slice(0, 400));
 
-  try {
-    const res = await fetch(url, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(payload),
-    });
-    const text = await res.text().catch(() => "");
-    if (!res.ok) {
-      console.error(`[brightbase] Forward failed: ${res.status} ${text.slice(0, 300)}`);
-      return;
-    }
-    console.log(`[brightbase] Forward succeeded: ${res.status} ${text.slice(0, 300)}`);
-  } catch (err) {
-    console.error("[brightbase] Forward failed:", err);
-  }
+  await runForward({
+    sourceType: ctx.sourceType,
+    sourceId: ctx.sourceId,
+    destination: "brightbase",
+    attempt: async () => {
+      try {
+        const controller = new AbortController();
+        const timer = setTimeout(() => controller.abort(), 15_000);
+        let res: Response;
+        try {
+          res = await fetch(url, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify(payload),
+            signal: controller.signal,
+          });
+        } finally {
+          clearTimeout(timer);
+        }
+        const text = await res.text().catch(() => "");
+        if (!res.ok) {
+          // 4xx = fatal (won't fix by retrying), 5xx = retryable.
+          const fatal = res.status >= 400 && res.status < 500;
+          return {
+            ok: false,
+            statusCode: res.status,
+            responseSnippet: text.slice(0, 300),
+            error: `HTTP ${res.status}: ${text.slice(0, 200)}`,
+            fatal,
+          };
+        }
+        return { ok: true, statusCode: res.status, responseSnippet: text.slice(0, 300) };
+      } catch (err) {
+        return { ok: false, error: err instanceof Error ? err.message : String(err) };
+      }
+    },
+  });
 }
