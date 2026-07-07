@@ -35,12 +35,13 @@
       (function () {
         try {
           var stored = localStorage.getItem('mcc-theme');
-          var theme = stored === 'light' || stored === 'dark'
-            ? stored
-            : (window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light');
+          var theme = stored === 'light' || stored === 'dark' ? stored : 'dark';
           if (theme === 'dark') document.documentElement.classList.add('dark');
           document.documentElement.style.colorScheme = theme;
-        } catch (e) {}
+        } catch (e) {
+          document.documentElement.classList.add('dark');
+          document.documentElement.style.colorScheme = 'dark';
+        }
       })();
     </script>
     <link rel="preconnect" href="https://fonts.googleapis.com">

@@ -19,7 +19,7 @@ function readInitialTheme(): Theme {
   } catch {
     // ignore storage errors (private mode, etc.)
   }
-  return window.matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light";
+  return "dark";
 }
 
 function applyTheme(theme: Theme) {
@@ -40,19 +40,8 @@ export function ThemeProvider({ children }: { children: React.ReactNode }) {
     }
   }, [theme]);
 
-  useEffect(() => {
-    const mq = window.matchMedia("(prefers-color-scheme: dark)");
-    const listener = (e: MediaQueryListEvent) => {
-      try {
-        if (window.localStorage.getItem(STORAGE_KEY)) return;
-      } catch {
-        // ignore
-      }
-      setThemeState(e.matches ? "dark" : "light");
-    };
-    mq.addEventListener("change", listener);
-    return () => mq.removeEventListener("change", listener);
-  }, []);
+  // Dark is the default; we intentionally don't sync to the OS preference
+  // so first-time visitors always land on the coastal dark palette.
 
   const setTheme = useCallback((t: Theme) => setThemeState(t), []);
   const toggle = useCallback(() => setThemeState((t) => (t === "dark" ? "light" : "dark")), []);
