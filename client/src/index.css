@@ -144,12 +144,17 @@
      <textarea> / <select> with text-sm = 14px). Force 16px at <md so those
      raw controls don't trigger zoom; md+ lets Tailwind classes size normally.
      The shared <Input> component already does `text-base md:text-sm` and is
-     unaffected by this rule. */
+     unaffected by this rule.
+
+     `!important` is required because type-selector specificity (0,0,1) loses
+     to Tailwind's `.text-sm` utility (0,1,0); without it, Home.tsx's
+     contact-message textarea and InstantEstimate's special-instructions
+     textarea stayed at 14px on mobile and still triggered iOS zoom. */
   @media (max-width: 767px) {
     input:not([type="checkbox"]):not([type="radio"]):not([type="file"]),
     textarea,
     select {
-      font-size: 16px;
+      font-size: 16px !important;
     }
   }
 }
