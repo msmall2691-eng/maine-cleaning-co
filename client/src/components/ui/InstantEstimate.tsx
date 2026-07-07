@@ -680,6 +680,8 @@ export function InstantEstimate({ defaultCategory, bookingIntent = false }: Inst
                   className="h-10 rounded-xl border-border bg-card mt-1"
                   data-testid="input-zip"
                   inputMode="numeric"
+                  autoComplete="postal-code"
+                  pattern="\d{5}(-\d{4})?"
                 />
               </div>
 
@@ -750,9 +752,9 @@ export function InstantEstimate({ defaultCategory, bookingIntent = false }: Inst
 
               <div className="space-y-3">
                 <p className="label-sm">Your contact info</p>
-                <Input placeholder="Your name *" value={contactName} onChange={e => setContactName(e.target.value)} className="input-field" data-testid="input-name" />
-                <Input placeholder="Phone number *" type="tel" value={contactPhone} onChange={e => setContactPhone(e.target.value)} className="input-field" data-testid="input-phone" />
-                <Input placeholder="Email address" type="email" value={contactEmail} onChange={e => setContactEmail(e.target.value)} className="input-field" data-testid="input-email" />
+                <Input placeholder="Your name *" value={contactName} onChange={e => setContactName(e.target.value)} className="input-field" data-testid="input-name" autoComplete="name" />
+                <Input placeholder="Phone number *" type="tel" value={contactPhone} onChange={e => setContactPhone(e.target.value)} className="input-field" data-testid="input-phone" autoComplete="tel" inputMode="tel" />
+                <Input placeholder="Email address" type="email" value={contactEmail} onChange={e => setContactEmail(e.target.value)} className="input-field" data-testid="input-email" autoComplete="email" inputMode="email" />
                 <AddressInput value={contactAddress} onChange={setContactAddress} onZipDetected={setZip} />
                 <Input
                   placeholder={
@@ -831,15 +833,15 @@ export function InstantEstimate({ defaultCategory, bookingIntent = false }: Inst
                 <p className="label-sm">Contact info <span className="font-normal text-muted-foreground">(all optional)</span></p>
                 <div>
                   <label className="text-xs font-medium text-muted-foreground mb-1 block">Name</label>
-                  <Input placeholder="Your name" value={contactName} onChange={e => setContactName(e.target.value)} className="input-field !h-11" data-testid="input-name" />
+                  <Input placeholder="Your name" value={contactName} onChange={e => setContactName(e.target.value)} className="input-field !h-11" data-testid="input-name" autoComplete="name" />
                 </div>
                 <div>
                   <label className="text-xs font-medium text-muted-foreground mb-1 block">Phone</label>
-                  <Input placeholder="Phone number" type="tel" value={contactPhone} onChange={e => setContactPhone(e.target.value)} className="input-field !h-11" data-testid="input-phone" />
+                  <Input placeholder="Phone number" type="tel" value={contactPhone} onChange={e => setContactPhone(e.target.value)} className="input-field !h-11" data-testid="input-phone" autoComplete="tel" inputMode="tel" />
                 </div>
                 <div>
                   <label className="text-xs font-medium text-muted-foreground mb-1 block">Email</label>
-                  <Input placeholder="Email address" type="email" value={contactEmail} onChange={e => setContactEmail(e.target.value)} className="input-field !h-11" data-testid="input-email" />
+                  <Input placeholder="Email address" type="email" value={contactEmail} onChange={e => setContactEmail(e.target.value)} className="input-field !h-11" data-testid="input-email" autoComplete="email" inputMode="email" />
                   <p className="text-[11px] text-muted-foreground mt-1 ml-1">Enter your email to receive a copy of this request.</p>
                 </div>
                 <div>

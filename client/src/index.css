@@ -137,6 +137,21 @@
     -moz-osx-font-smoothing: grayscale;
     transition: background-color 0.35s ease, color 0.35s ease;
   }
+
+  /* iOS Safari zooms the page whenever a form control's font-size drops below
+     16px on focus — a UX regression that shows up in the booking flow, the
+     home-page contact form, and the AI chat input (all use raw <input> /
+     <textarea> / <select> with text-sm = 14px). Force 16px at <md so those
+     raw controls don't trigger zoom; md+ lets Tailwind classes size normally.
+     The shared <Input> component already does `text-base md:text-sm` and is
+     unaffected by this rule. */
+  @media (max-width: 767px) {
+    input:not([type="checkbox"]):not([type="radio"]):not([type="file"]),
+    textarea,
+    select {
+      font-size: 16px;
+    }
+  }
 }
 
 .label-sm {

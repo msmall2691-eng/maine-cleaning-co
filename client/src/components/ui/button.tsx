@@ -28,11 +28,14 @@ const buttonVariants = cva(
         link: "text-primary underline-offset-4 hover:underline",
       },
       size: {
-        // @replit changed sizes
-        default: "min-h-9 px-4 py-2",
-        sm: "min-h-8 rounded-md px-3 text-xs",
-        lg: "min-h-10 rounded-md px-8",
-        icon: "h-9 w-9",
+        // Mobile bumps every size to a 44×44 minimum tap target (WCAG SC 2.5.5
+        // recommendation; also matches Apple HIG). Desktop keeps the tighter
+        // Replit densities via md: overrides so table rows and dense toolbars
+        // don't get gaunt buttons.
+        default: "min-h-11 md:min-h-9 px-4 py-2",
+        sm: "min-h-11 md:min-h-8 rounded-md px-3 text-xs",
+        lg: "min-h-12 md:min-h-10 rounded-md px-8",
+        icon: "h-11 w-11 md:h-9 md:w-9",
       },
     },
     defaultVariants: {

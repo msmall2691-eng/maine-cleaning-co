@@ -165,6 +165,7 @@ function ContactForm() {
             id="contact-name"
             type="text"
             required
+            autoComplete="name"
             value={form.name}
             onChange={(e) => setForm({ ...form, name: e.target.value })}
             className="w-full rounded-xl border border-border bg-background px-4 py-2.5 text-sm text-foreground placeholder:text-muted-foreground/50 focus:outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary/50 transition-all"
@@ -176,6 +177,8 @@ function ContactForm() {
           <input
             id="contact-email"
             type="email"
+            autoComplete="email"
+            inputMode="email"
             value={form.email}
             onChange={(e) => setForm({ ...form, email: e.target.value })}
             className="w-full rounded-xl border border-border bg-background px-4 py-2.5 text-sm text-foreground placeholder:text-muted-foreground/50 focus:outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary/50 transition-all"
@@ -188,6 +191,8 @@ function ContactForm() {
         <input
           id="contact-phone"
           type="tel"
+          autoComplete="tel"
+          inputMode="tel"
           value={form.phone}
           onChange={(e) => setForm({ ...form, phone: e.target.value })}
           className="w-full rounded-xl border border-border bg-background px-4 py-2.5 text-sm text-foreground placeholder:text-muted-foreground/50 focus:outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary/50 transition-all"
