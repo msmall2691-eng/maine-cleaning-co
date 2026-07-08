@@ -239,6 +239,18 @@ export async function sendPasswordResetEmail(email: string, name: string | null,
   }
 }
 
+// Strip formatting from a phone number so tel:/sms: hrefs work regardless of
+// how the customer typed it. `(207) 572-0502`, `207-572-0502`, and
+// `+1 207.572.0502` all normalize cleanly; returns null when there aren't
+// enough digits to be a real number (shortcode floor).
+function _phoneHref(raw: string | null | undefined): string | null {
+  if (!raw) return null;
+  const stripped = String(raw).replace(/[^\d+]/g, "");
+  const digits = stripped.replace(/\D/g, "");
+  if (digits.length < 7) return null;
+  return stripped.startsWith("+") ? stripped : digits;
+}
+
 export async function sendIntakeNotification(
   submissionId: number,
   normalized: Record<string, any>,
@@ -246,9 +258,12 @@ export async function sendIntakeNotification(
 ): Promise<void> {
   const to = NOTIFY_ADDRESS;
   const replyTo = normalized.email || undefined;
-  const serviceLabel = normalized.serviceType === "standard" ? "Standard Clean"
-    : normalized.serviceType === "deep" ? "Deep Clean"
-    : normalized.serviceType ? normalized.serviceType.replace(/-/g, " ") : "Not specified";
+  // Only surface a service label when the customer actually picked one —
+  // "Not specified" is admin noise the operator has to visually skip past.
+  const rawService = normalized.serviceType;
+  const serviceLabel = rawService === "standard" ? "Standard Clean"
+    : rawService === "deep" ? "Deep Clean"
+    : rawService ? String(rawService).replace(/-/g, " ") : null;
   const freqMap: Record<string, string> = {
     weekly: "Weekly", biweekly: "Biweekly", monthly: "Monthly", "one-time": "One-Time",
   };
@@ -256,8 +271,25 @@ export async function sendIntakeNotification(
   const row = (label: string, value: string | null | undefined) =>
     value ? `<tr><td style="padding:7px 0;color:#6b7280;width:140px;vertical-align:top;">${label}</td><td style="padding:7px 0;font-weight:600;color:#374151;">${value}</td></tr>` : "";
 
+  // Interactive CTAs — one-tap paths from the email to talking to the
+  // customer. Only render buttons for the channels the customer actually
+  // supplied so we don't ship dead buttons.
+  const emailAddr = normalized.email || "";
+  const phoneHref = _phoneHref(normalized.phone);
+  const mailtoHref = emailAddr ? `mailto:${emailAddr}?subject=${encodeURIComponent(
+    `Re: Your ${serviceLabel ? serviceLabel.toLowerCase() : "cleaning"} request`
+  )}` : null;
+  const cta = (href: string | null, label: string, primary = false) => href ? (
+    `<a href="${href}" style="display:inline-block;background:${primary ? "#1d4ed8" : "#ffffff"};color:${primary ? "#ffffff" : "#1d4ed8"};text-decoration:none;font-weight:600;font-size:14px;padding:11px 18px;border-radius:8px;border:1px solid #1d4ed8;margin:4px 6px 4px 0;">${label}</a>`
+  ) : "";
+  const ctaHtml = [
+    cta(phoneHref ? `tel:${phoneHref}` : null, "Call customer", true),
+    cta(phoneHref ? `sms:${phoneHref}` : null, "Text customer"),
+    cta(mailtoHref, "Reply by email"),
+  ].join("");
+
   const html = `<!DOCTYPE html>
-<html><head><meta charset="utf-8"></head>
+<html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="color-scheme" content="light"><meta name="supported-color-schemes" content="light"></head>
 <body style="margin:0;padding:0;font-family:'Helvetica Neue',Arial,sans-serif;background:#f8f8f6;">
 <div style="max-width:580px;margin:32px auto;background:#fff;border-radius:16px;overflow:hidden;border:1px solid #e8e8e6;">
   <div style="background:#1e3a5f;padding:28px 32px;">
@@ -281,6 +313,11 @@ export async function sendIntakeNotification(
         ${row("ZIP", normalized.zip)}
       </table>
     </div>
+
+    ${ctaHtml ? `
+    <div style="margin-bottom:22px;">
+      ${ctaHtml}
+    </div>` : ""}
 
     <div style="margin-bottom:20px;border-top:1px solid #e8e8e6;padding-top:20px;">
       <div style="font-size:12px;font-weight:700;text-transform:uppercase;letter-spacing:0.5px;color:#9ca3af;margin-bottom:10px;">Service Details</div>
