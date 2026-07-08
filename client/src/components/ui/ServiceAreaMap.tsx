@@ -3,21 +3,19 @@ import { motion, useReducedMotion } from "framer-motion";
 import { MapPin } from "lucide-react";
 
 /**
- * Serving-Southern-Maine section. Rewritten from a rotating multi-hub
- * network graph — labels stomped on each other on mobile, dots drifted
- * off their true geography, and the section swallowed ~1300px of scroll.
+ * Serving-Southern-Maine section — Obsidian-style knowledge-graph view.
  *
- * Current design is a static "signal map": every dot sits at its real
- * coordinate, concentric rings communicate the 60-mile service radius
- * out of North Waterboro, and a slow radar sweep keeps it alive without
- * disturbing the geography. The canvas takes touch-action: none out of
- * the equation entirely (pointer-events: none) so vertical scroll on
- * mobile is bulletproof.
+ * Every city sits at its real coordinate (projected relative to the
+ * North Waterboro HQ), and edges wire it to the HQ hub plus any
+ * neighbor within CROSSLINK_MILES. Nodes idly "breathe" around their
+ * anchor (a few px of sin/cos wobble) so the graph feels alive without
+ * shifting geography. Canvas stays pointer-events: none so vertical
+ * scroll on mobile is bulletproof.
  */
 
 const CENTER = { lat: 43.5712, lng: -70.7287, name: "North Waterboro" };
 const MAX_MILES = 60;
-const RING_MILES = [30, 60];
+const CROSSLINK_MILES = 14;
 
 const cities: { name: string; lat: number; lng: number; visits: number }[] = [
   { name: "Portland", lat: 43.6591, lng: -70.2568, visits: 848 },
@@ -79,6 +77,24 @@ function SignalMap({ animate }: { animate: boolean }) {
     const ctx = canvas.getContext("2d");
     if (!ctx) return;
 
+    // Per-node breathing phase — precomputed so drift is stable across frames.
+    const phases = cities.map((_, i) => ({
+      a: (i * 0.7) % (Math.PI * 2),
+      b: (i * 1.3 + 1) % (Math.PI * 2),
+      speed: 0.35 + (i % 5) * 0.05,
+      amp: 2.5 + ((i * 37) % 100) / 60,
+    }));
+
+    // City-to-city cross-links (bidirectional pairs within CROSSLINK_MILES).
+    const crossLinks: [number, number][] = [];
+    for (let i = 0; i < cities.length; i++) {
+      for (let j = i + 1; j < cities.length; j++) {
+        if (milesBetween(cities[i], cities[j]) <= CROSSLINK_MILES) {
+          crossLinks.push([i, j]);
+        }
+      }
+    }
+
     const project = (lat: number, lng: number) => {
       const { ppm, cx, cy } = sizeRef.current;
       const dyMi = (lat - CENTER.lat) * 69;
@@ -90,9 +106,9 @@ function SignalMap({ animate }: { animate: boolean }) {
     const draw = (now: number) => {
       if (!startRef.current) startRef.current = now;
       const t = (now - startRef.current) / 1000;
-      const { w, h, ppm, cx, cy } = sizeRef.current;
+      const { w, h, cx, cy } = sizeRef.current;
       // Off-screen: skip the paint but keep the loop alive so the
-      // sweep resumes seamlessly when the section scrolls back into
+      // drift resumes seamlessly when the section scrolls back into
       // view. Cheaper than a fresh RAF start-up per intersection.
       if (!w || !h || !visibleRef.current) {
         if (animate) rafRef.current = requestAnimationFrame(draw);
@@ -101,77 +117,94 @@ function SignalMap({ animate }: { animate: boolean }) {
 
       ctx.clearRect(0, 0, w, h);
 
-      // Static reference rings — subtle.
-      RING_MILES.forEach((mi, i) => {
-        const r = mi * ppm;
-        ctx.beginPath();
-        ctx.arc(cx, cy, r, 0, Math.PI * 2);
-        ctx.strokeStyle = `hsla(192, 60%, 65%, ${i === RING_MILES.length - 1 ? 0.28 : 0.14})`;
-        ctx.lineWidth = 1;
-        ctx.setLineDash(i === RING_MILES.length - 1 ? [] : [3, 5]);
-        ctx.stroke();
-        ctx.setLineDash([]);
-
-        // Ring label — mileage on the eastern edge.
-        ctx.fillStyle = `hsla(192, 55%, 75%, 0.5)`;
-        ctx.font = "500 9px Inter, system-ui, sans-serif";
-        ctx.textAlign = "left";
-        ctx.textBaseline = "middle";
-        ctx.fillText(`${mi} mi`, cx + r + 4, cy);
+      // Live positions with a slow per-node breathing wobble around the
+      // geographic anchor — this is the Obsidian "living graph" feel.
+      const positions = cities.map((city, i) => {
+        const p = project(city.lat, city.lng);
+        const ph = phases[i];
+        const dx = animate ? Math.sin(t * ph.speed + ph.a) * ph.amp : 0;
+        const dy = animate ? Math.cos(t * ph.speed + ph.b) * ph.amp : 0;
+        return { x: p.x + dx, y: p.y + dy };
       });
 
-      // Radar-sweep pulse — one ring expanding from 0 → MAX_MILES over 4s.
-      if (animate) {
-        const period = 4;
-        const phase = (t % period) / period;
-        const pulseR = phase * MAX_MILES * ppm;
-        const alpha = (1 - phase) * 0.35;
+      // Curved edges from HQ to each city — the spine of the graph.
+      cities.forEach((city, i) => {
+        const p = positions[i];
+        // Quadratic bezier bowed perpendicular to the HQ→city vector
+        // for that Obsidian curved-link look.
+        const midX = (cx + p.x) / 2;
+        const midY = (cy + p.y) / 2;
+        const nx = -(p.y - cy);
+        const ny = p.x - cx;
+        const len = Math.max(1, Math.sqrt(nx * nx + ny * ny));
+        const bow = 0.14; // relative to HQ→city distance
+        const cpX = midX + (nx / len) * len * bow;
+        const cpY = midY + (ny / len) * len * bow;
+        const alpha = 0.10 + (city.visits / maxVisits) * 0.22;
         ctx.beginPath();
-        ctx.arc(cx, cy, pulseR, 0, Math.PI * 2);
-        ctx.strokeStyle = `hsla(190, 85%, 68%, ${alpha})`;
-        ctx.lineWidth = 1.2;
+        ctx.moveTo(cx, cy);
+        ctx.quadraticCurveTo(cpX, cpY, p.x, p.y);
+        ctx.strokeStyle = `hsla(190, 60%, 70%, ${alpha})`;
+        ctx.lineWidth = 0.55 + (city.visits / maxVisits) * 0.55;
         ctx.stroke();
-      }
+      });
 
-      // City dots — geographic, one color, size by visit count.
-      cities.forEach((city) => {
-        const { x, y } = project(city.lat, city.lng);
-        const intensity = 0.4 + (city.visits / maxVisits) * 0.6;
-        const r = 2.5 + (city.visits / maxVisits) * 6.5;
+      // Cross-links between geographically close cities — knowledge-graph flavor.
+      crossLinks.forEach(([i, j]) => {
+        const a = positions[i];
+        const b = positions[j];
+        ctx.beginPath();
+        ctx.moveTo(a.x, a.y);
+        ctx.lineTo(b.x, b.y);
+        ctx.strokeStyle = `hsla(192, 55%, 65%, 0.10)`;
+        ctx.lineWidth = 0.4;
+        ctx.stroke();
+      });
 
-        if (city.visits >= 200) {
-          const glowR = r * 3;
-          const g = ctx.createRadialGradient(x, y, 0, x, y, glowR);
-          g.addColorStop(0, `hsla(190, 90%, 70%, 0.22)`);
-          g.addColorStop(1, "transparent");
-          ctx.fillStyle = g;
-          ctx.beginPath();
-          ctx.arc(x, y, glowR, 0, Math.PI * 2);
-          ctx.fill();
-        }
+      // City nodes.
+      cities.forEach((city, i) => {
+        const { x, y } = positions[i];
+        const intensity = 0.55 + (city.visits / maxVisits) * 0.45;
+        const r = 3 + (city.visits / maxVisits) * 6;
 
+        // Outer soft glow for every node — cheap, gives the Obsidian shimmer.
+        const glowR = r * 2.8;
+        const g = ctx.createRadialGradient(x, y, 0, x, y, glowR);
+        g.addColorStop(0, `hsla(190, 90%, 72%, ${0.10 + intensity * 0.14})`);
+        g.addColorStop(1, "transparent");
+        ctx.fillStyle = g;
+        ctx.beginPath();
+        ctx.arc(x, y, glowR, 0, Math.PI * 2);
+        ctx.fill();
+
+        // Node body.
         ctx.beginPath();
         ctx.arc(x, y, r, 0, Math.PI * 2);
-        ctx.fillStyle = `hsla(190, 78%, 68%, ${intensity})`;
+        ctx.fillStyle = `hsla(190, 78%, 70%, ${intensity})`;
         ctx.fill();
+
+        // Rim highlight — Obsidian nodes have that faint bright edge.
+        ctx.strokeStyle = `hsla(190, 95%, 88%, 0.35)`;
+        ctx.lineWidth = 0.75;
+        ctx.stroke();
       });
 
-      // Center beacon — North Waterboro.
-      const beaconPulse = animate ? 0.7 + Math.sin(t * 2.5) * 0.3 : 1;
-      const beaconR = 4;
-      const bg = ctx.createRadialGradient(cx, cy, 0, cx, cy, beaconR * 5);
-      bg.addColorStop(0, `hsla(45, 100%, 75%, ${0.35 * beaconPulse})`);
+      // HQ hub — bigger, gold, gently pulsing.
+      const beaconPulse = animate ? 0.75 + Math.sin(t * 2.2) * 0.25 : 1;
+      const beaconR = 5.5;
+      const bg = ctx.createRadialGradient(cx, cy, 0, cx, cy, beaconR * 6);
+      bg.addColorStop(0, `hsla(45, 100%, 75%, ${0.4 * beaconPulse})`);
       bg.addColorStop(1, "transparent");
       ctx.fillStyle = bg;
       ctx.beginPath();
-      ctx.arc(cx, cy, beaconR * 5, 0, Math.PI * 2);
+      ctx.arc(cx, cy, beaconR * 6, 0, Math.PI * 2);
       ctx.fill();
 
       ctx.beginPath();
       ctx.arc(cx, cy, beaconR, 0, Math.PI * 2);
       ctx.fillStyle = `hsl(45, 100%, 78%)`;
       ctx.fill();
-      ctx.strokeStyle = `hsla(45, 100%, 90%, 0.7)`;
+      ctx.strokeStyle = `hsla(45, 100%, 92%, 0.8)`;
       ctx.lineWidth = 1;
       ctx.stroke();
 
@@ -240,7 +273,7 @@ function SignalMap({ animate }: { animate: boolean }) {
         <div className="flex items-center gap-1.5 text-white/50">
           <MapPin className="w-3 h-3" />
           <span className="text-[10px] font-medium">
-            {TOTAL_COMMUNITIES} communities · 60-mile radius
+            {TOTAL_COMMUNITIES} communities linked to HQ · 60-mile reach
           </span>
         </div>
       </div>
