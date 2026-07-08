@@ -239,6 +239,30 @@ export async function sendPasswordResetEmail(email: string, name: string | null,
   }
 }
 
+// Build tel:/sms: hrefs from a raw phone the customer typed. `(207) 572-0502`,
+// `207-572-0502`, `+1 207.572.0502` all normalize cleanly. Commercial intake
+// commonly includes an extension (`207-555-1212 x123`, `… ext 45`) — the tel:
+// href carries it via RFC3966's `;ext=` so the dialer knows to auto-play the
+// digits, but the sms: href drops it (SMS routes don't honor extensions and
+// including them would silently make the message fail). Returns null for
+// numbers too short to be real (shortcode floor).
+function _phoneHrefs(raw: string | null | undefined): { tel: string; sms: string } | null {
+  if (!raw) return null;
+  const trimmed = String(raw).trim();
+  // Split main number from an optional extension: `x`, `X`, or `ext`
+  // (case-insensitive, optionally preceded by punctuation/whitespace).
+  const [mainPart, ...extParts] = trimmed.split(/(?:[.,;\s]*(?:x|ext)\.?[.,;\s]*)/i);
+  const stripped = mainPart.replace(/[^\d+]/g, "");
+  const digits = stripped.replace(/\D/g, "");
+  if (digits.length < 7) return null;
+  const base = stripped.startsWith("+") ? stripped : digits;
+  const extDigits = extParts.join("").replace(/\D/g, "");
+  const tel = extDigits ? `${base};ext=${extDigits}` : base;
+  // SMS never carries an extension — MMS/SMS gateways ignore the ;ext= form
+  // and some drop the whole message. Send to the base number only.
+  return { tel, sms: base };
+}
+
 export async function sendIntakeNotification(
   submissionId: number,
   normalized: Record<string, any>,
@@ -246,9 +270,12 @@ export async function sendIntakeNotification(
 ): Promise<void> {
   const to = NOTIFY_ADDRESS;
   const replyTo = normalized.email || undefined;
-  const serviceLabel = normalized.serviceType === "standard" ? "Standard Clean"
-    : normalized.serviceType === "deep" ? "Deep Clean"
-    : normalized.serviceType ? normalized.serviceType.replace(/-/g, " ") : "Not specified";
+  // Only surface a service label when the customer actually picked one —
+  // "Not specified" is admin noise the operator has to visually skip past.
+  const rawService = normalized.serviceType;
+  const serviceLabel = rawService === "standard" ? "Standard Clean"
+    : rawService === "deep" ? "Deep Clean"
+    : rawService ? String(rawService).replace(/-/g, " ") : null;
   const freqMap: Record<string, string> = {
     weekly: "Weekly", biweekly: "Biweekly", monthly: "Monthly", "one-time": "One-Time",
   };
@@ -256,8 +283,25 @@ export async function sendIntakeNotification(
   const row = (label: string, value: string | null | undefined) =>
     value ? `<tr><td style="padding:7px 0;color:#6b7280;width:140px;vertical-align:top;">${label}</td><td style="padding:7px 0;font-weight:600;color:#374151;">${value}</td></tr>` : "";
 
+  // Interactive CTAs — one-tap paths from the email to talking to the
+  // customer. Only render buttons for the channels the customer actually
+  // supplied so we don't ship dead buttons.
+  const emailAddr = normalized.email || "";
+  const phoneHrefs = _phoneHrefs(normalized.phone);
+  const mailtoHref = emailAddr ? `mailto:${emailAddr}?subject=${encodeURIComponent(
+    `Re: Your ${serviceLabel ? serviceLabel.toLowerCase() : "cleaning"} request`
+  )}` : null;
+  const cta = (href: string | null, label: string, primary = false) => href ? (
+    `<a href="${href}" style="display:inline-block;background:${primary ? "#1d4ed8" : "#ffffff"};color:${primary ? "#ffffff" : "#1d4ed8"};text-decoration:none;font-weight:600;font-size:14px;padding:11px 18px;border-radius:8px;border:1px solid #1d4ed8;margin:4px 6px 4px 0;">${label}</a>`
+  ) : "";
+  const ctaHtml = [
+    cta(phoneHrefs ? `tel:${phoneHrefs.tel}` : null, "Call customer", true),
+    cta(phoneHrefs ? `sms:${phoneHrefs.sms}` : null, "Text customer"),
+    cta(mailtoHref, "Reply by email"),
+  ].join("");
+
   const html = `<!DOCTYPE html>
-<html><head><meta charset="utf-8"></head>
+<html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="color-scheme" content="light"><meta name="supported-color-schemes" content="light"></head>
 <body style="margin:0;padding:0;font-family:'Helvetica Neue',Arial,sans-serif;background:#f8f8f6;">
 <div style="max-width:580px;margin:32px auto;background:#fff;border-radius:16px;overflow:hidden;border:1px solid #e8e8e6;">
   <div style="background:#1e3a5f;padding:28px 32px;">
@@ -281,6 +325,11 @@ export async function sendIntakeNotification(
         ${row("ZIP", normalized.zip)}
       </table>
     </div>
+
+    ${ctaHtml ? `
+    <div style="margin-bottom:22px;">
+      ${ctaHtml}
+    </div>` : ""}
 
     <div style="margin-bottom:20px;border-top:1px solid #e8e8e6;padding-top:20px;">
       <div style="font-size:12px;font-weight:700;text-transform:uppercase;letter-spacing:0.5px;color:#9ca3af;margin-bottom:10px;">Service Details</div>
