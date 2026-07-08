@@ -239,16 +239,28 @@ export async function sendPasswordResetEmail(email: string, name: string | null,
   }
 }
 
-// Strip formatting from a phone number so tel:/sms: hrefs work regardless of
-// how the customer typed it. `(207) 572-0502`, `207-572-0502`, and
-// `+1 207.572.0502` all normalize cleanly; returns null when there aren't
-// enough digits to be a real number (shortcode floor).
-function _phoneHref(raw: string | null | undefined): string | null {
+// Build tel:/sms: hrefs from a raw phone the customer typed. `(207) 572-0502`,
+// `207-572-0502`, `+1 207.572.0502` all normalize cleanly. Commercial intake
+// commonly includes an extension (`207-555-1212 x123`, `… ext 45`) — the tel:
+// href carries it via RFC3966's `;ext=` so the dialer knows to auto-play the
+// digits, but the sms: href drops it (SMS routes don't honor extensions and
+// including them would silently make the message fail). Returns null for
+// numbers too short to be real (shortcode floor).
+function _phoneHrefs(raw: string | null | undefined): { tel: string; sms: string } | null {
   if (!raw) return null;
-  const stripped = String(raw).replace(/[^\d+]/g, "");
+  const trimmed = String(raw).trim();
+  // Split main number from an optional extension: `x`, `X`, or `ext`
+  // (case-insensitive, optionally preceded by punctuation/whitespace).
+  const [mainPart, ...extParts] = trimmed.split(/(?:[.,;\s]*(?:x|ext)\.?[.,;\s]*)/i);
+  const stripped = mainPart.replace(/[^\d+]/g, "");
   const digits = stripped.replace(/\D/g, "");
   if (digits.length < 7) return null;
-  return stripped.startsWith("+") ? stripped : digits;
+  const base = stripped.startsWith("+") ? stripped : digits;
+  const extDigits = extParts.join("").replace(/\D/g, "");
+  const tel = extDigits ? `${base};ext=${extDigits}` : base;
+  // SMS never carries an extension — MMS/SMS gateways ignore the ;ext= form
+  // and some drop the whole message. Send to the base number only.
+  return { tel, sms: base };
 }
 
 export async function sendIntakeNotification(
@@ -275,7 +287,7 @@ export async function sendIntakeNotification(
   // customer. Only render buttons for the channels the customer actually
   // supplied so we don't ship dead buttons.
   const emailAddr = normalized.email || "";
-  const phoneHref = _phoneHref(normalized.phone);
+  const phoneHrefs = _phoneHrefs(normalized.phone);
   const mailtoHref = emailAddr ? `mailto:${emailAddr}?subject=${encodeURIComponent(
     `Re: Your ${serviceLabel ? serviceLabel.toLowerCase() : "cleaning"} request`
   )}` : null;
@@ -283,8 +295,8 @@ export async function sendIntakeNotification(
     `<a href="${href}" style="display:inline-block;background:${primary ? "#1d4ed8" : "#ffffff"};color:${primary ? "#ffffff" : "#1d4ed8"};text-decoration:none;font-weight:600;font-size:14px;padding:11px 18px;border-radius:8px;border:1px solid #1d4ed8;margin:4px 6px 4px 0;">${label}</a>`
   ) : "";
   const ctaHtml = [
-    cta(phoneHref ? `tel:${phoneHref}` : null, "Call customer", true),
-    cta(phoneHref ? `sms:${phoneHref}` : null, "Text customer"),
+    cta(phoneHrefs ? `tel:${phoneHrefs.tel}` : null, "Call customer", true),
+    cta(phoneHrefs ? `sms:${phoneHrefs.sms}` : null, "Text customer"),
     cta(mailtoHref, "Reply by email"),
   ].join("");
 

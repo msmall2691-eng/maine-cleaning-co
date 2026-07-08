@@ -122,4 +122,38 @@ describe("sendIntakeNotification", () => {
     const html = mockSendMail.mock.calls[0][0].html as string;
     expect(html).toContain('href="tel:+12075720502"');
   });
+
+  it("carries an extension through the tel: href but strips it from sms:", async () => {
+    // Regression against Codex #34: extensions were previously smashed into
+    // the main number ("2075551212123") which produces a broken tel:. Now
+    // the tel: uses the RFC3966 `;ext=` suffix and the sms: goes to the
+    // base number only (SMS gateways drop the extension entirely, some
+    // outright refuse the message).
+    const { sendIntakeNotification } = await loadModule();
+    await sendIntakeNotification(90, {
+      phone: "207-555-1212 x123",
+      email: "x@y.co",
+    }, {});
+    const html = mockSendMail.mock.calls[0][0].html as string;
+    expect(html).toContain('href="tel:2075551212;ext=123"');
+    expect(html).toContain('href="sms:2075551212"');
+    // The bad flattened number must not appear anywhere.
+    expect(html).not.toContain("2075551212123");
+  });
+
+  it("accepts common extension separators (ext, ext., x, X)", async () => {
+    const { sendIntakeNotification } = await loadModule();
+    for (const phone of [
+      "207-555-1212 ext 45",
+      "207-555-1212 ext. 45",
+      "207-555-1212 X 45",
+      "207-555-1212x45",
+    ]) {
+      mockSendMail.mockClear();
+      await sendIntakeNotification(91, { phone, email: "x@y.co" }, {});
+      const html = mockSendMail.mock.calls[0][0].html as string;
+      expect(html).toContain('href="tel:2075551212;ext=45"');
+      expect(html).toContain('href="sms:2075551212"');
+    }
+  });
 });
