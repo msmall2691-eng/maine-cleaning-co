@@ -107,6 +107,13 @@ function AddressInput({ value, onChange, onZipDetected }: { value: string; onCha
   const fetchSuggestions = useCallback(async (query: string) => {
     if (query.length < 5) { setSuggestions([]); return; }
     setLoading(true);
+    // Nominatim frequently returns a road-level hit even when the customer
+    // typed a specific house number — because that OSM node lacks a building
+    // record on the road. Without this fallback we'd throw away the "155" in
+    // "155 Keystone Dr" and ship the quote to the wrong (road-only) address.
+    // Grab the leading number/unit off the raw query so we can graft it back
+    // onto a road-only Nominatim result (audit L2, July-2026).
+    const typedLeadingNumber = (query.trim().match(/^(\d+[a-zA-Z]?)\s+/)?.[1]) || "";
     try {
       const res = await fetch(
         `https://nominatim.openstreetmap.org/search?q=${encodeURIComponent(query + ", Maine, USA")}&format=json&countrycodes=us&addressdetails=1&limit=5`,
@@ -123,11 +130,21 @@ function AddressInput({ value, onChange, onZipDetected }: { value: string; onCha
         .filter((r: any) => r.address?.state === "Maine" || r.address?.state === "ME")
         .map((r: any) => {
           const houseNum = r.address?.house_number || r.address?.building || r.address?.house_name;
+          const road = r.address?.road || "";
+          let street: string;
+          if (houseNum) {
+            street = `${houseNum} ${road}`.trim();
+          } else if (road) {
+            // No house number in the OSM hit — reuse the number the customer
+            // just typed so the resulting street reads "155 Keystone Drive"
+            // instead of the plain "Keystone Drive" the old code shipped.
+            street = typedLeadingNumber ? `${typedLeadingNumber} ${road}` : road;
+          } else {
+            street = r.display_name.split(",")[0].trim();
+          }
           return {
             display: (r.display_name?.split(", United States")[0] || r.display_name).trim(),
-            street: houseNum
-              ? `${houseNum} ${r.address.road || ""}`.trim()
-              : r.display_name.split(",")[0].trim(),
+            street,
             city: r.address?.city || r.address?.town || r.address?.village || "",
             state: "ME",
             zip: r.address?.postcode || "",
@@ -261,6 +278,26 @@ export function InstantEstimate({ defaultCategory, bookingIntent = false }: Inst
   const [bookingSubmitted, setBookingSubmitted] = useState(false);
   const { toast } = useToast();
 
+  // Idempotency key for the current submission attempt. Same key on retries
+  // (React Query auto-retry, a double-click, or the Express layer's dual-
+  // forward to Bright-Space) so Bright-Space collapses them into ONE Lead
+  // via its unique-index short-circuit. Rotated after a successful submit
+  // so a fresh booking gets its own key. See Bright-Space PR #507.
+  const idempotencyKeyRef = useRef<string | null>(null);
+  const currentIdempotencyKey = () => {
+    if (!idempotencyKeyRef.current) {
+      idempotencyKeyRef.current =
+        typeof crypto !== "undefined" && typeof crypto.randomUUID === "function"
+          ? crypto.randomUUID()
+          // Fallback for legacy browsers without crypto.randomUUID — good
+          // enough for dedup purposes; the string never goes on the wire in
+          // a security-sensitive place.
+          : `k-${Date.now().toString(36)}-${Math.random().toString(36).slice(2, 12)}`;
+    }
+    return idempotencyKeyRef.current;
+  };
+  const rotateIdempotencyKey = () => { idempotencyKeyRef.current = null; };
+
   const isCustomQuote = category === "str" || category === "commercial";
   const cleanType = category === "deep-clean" ? "deep" : "standard";
 
@@ -375,6 +412,7 @@ export function InstantEstimate({ defaultCategory, bookingIntent = false }: Inst
           address: contactAddress || null,
           photos: photos.length > 0 ? photos : undefined,
           source: "website_form",
+          idempotencyKey: currentIdempotencyKey(),
         }),
       });
       const json = await res.json();
@@ -393,6 +431,7 @@ export function InstantEstimate({ defaultCategory, bookingIntent = false }: Inst
       if (data?.portalCreated) setPortalCreated(true);
       if (data?.existingAccount) setExistingAccount(true);
       if (data?.emailSent === false) setEmailSent(false);
+      rotateIdempotencyKey();
       toast({ title: "Request sent!", description: "We'll be in touch soon." });
     },
     onError: () => { toast({ title: "Something went wrong", description: "Please try again or call us directly.", variant: "destructive" }); },
@@ -435,6 +474,7 @@ export function InstantEstimate({ defaultCategory, bookingIntent = false }: Inst
           petsDetail: petsDetail.trim() || null,
           focusAreas: selectedFocus.length ? selectedFocus : null,
           specialInstructions: specialInstructions.trim() || null,
+          idempotencyKey: currentIdempotencyKey(),
         }),
       });
       const json = await res.json();
@@ -451,6 +491,7 @@ export function InstantEstimate({ defaultCategory, bookingIntent = false }: Inst
     onSuccess: () => {
       setBookingSubmitted(true);
       setStep(4);
+      rotateIdempotencyKey();
       toast({ title: "Booking request sent!", description: "We'll confirm within 1 business day." });
     },
     onError: (err: Error) => {

@@ -82,6 +82,25 @@ describe("POST /api/intake/submit rate limiting", () => {
     }
   });
 
+  it("forwards the client-supplied idempotencyKey to Bright-Space", async () => {
+    // Same pin as bookingSubmit.test.ts: without this forward, Bright-Space
+    // PR #507's M2 fix is dormant and the audit's duplicate-lead bug remains.
+    const { forwardLeadToBrightBase } = await import("../lib/brightbase");
+    const mock = forwardLeadToBrightBase as unknown as ReturnType<typeof vi.fn>;
+    mock.mockClear();
+
+    const key = "test-uuid-01HW7XYZ-intake";
+    const res = await request(app)
+      .post("/api/intake/submit")
+      .set("X-Forwarded-For", "10.0.0.98")
+      .send({ ...goodPayload, idempotencyKey: key });
+
+    expect(res.status).toBe(201);
+    expect(mock).toHaveBeenCalledTimes(1);
+    const forwardedBody = mock.mock.calls[0][0];
+    expect(forwardedBody.idempotencyKey).toBe(key);
+  });
+
   it("returns 429 on the 6th request from the same IP within the window", async () => {
     for (let i = 0; i < 5; i++) {
       await request(app)

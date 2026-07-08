@@ -52,6 +52,11 @@ interface BrightBaseLead {
   petsDetail?: string | null;
   focusAreas?: string[] | null;
   specialInstructions?: string | null;
+  // Per-submission UUID for Bright-Space's dedup short-circuit (see
+  // Bright-Space PR #507). Same key on retries, dual-forwards, or a
+  // double-click collapses to ONE Lead row instead of racing the 5-minute
+  // recency SELECT.
+  idempotencyKey?: string | null;
 }
 
 interface ForwardContext {
@@ -117,6 +122,7 @@ export async function forwardLeadToBrightBase(
   if (body.petsDetail) payload.petsDetail = body.petsDetail;
   if (body.focusAreas && body.focusAreas.length) payload.focusAreas = body.focusAreas;
   if (body.specialInstructions) payload.specialInstructions = body.specialInstructions;
+  if (body.idempotencyKey) payload.idempotencyKey = body.idempotencyKey;
   payload.source = body.source || "Website";
 
   const base = (BRIGHTBASE_API_URL || "").replace(/\/+$/, "");
