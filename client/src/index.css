@@ -694,6 +694,51 @@
     radial-gradient(ellipse 45% 55% at 88% 20%, hsl(200 70% 50% / 0.08) 0%, transparent 60%);
   mix-blend-mode: screen;
 }
+
+/* ── Obsidian-style interactive graph canvas ── */
+.graph-canvas {
+  position: relative;
+  background:
+    radial-gradient(ellipse 60% 45% at 50% 40%, hsl(198 60% 20% / 0.6) 0%, transparent 70%),
+    linear-gradient(180deg, hsl(210 50% 9%) 0%, hsl(200 55% 7%) 55%, hsl(198 65% 5%) 100%);
+  background-image:
+    radial-gradient(circle, hsl(0 0% 100% / 0.06) 1px, transparent 1.5px),
+    radial-gradient(ellipse 60% 45% at 50% 40%, hsl(198 60% 22% / 0.55) 0%, transparent 70%),
+    linear-gradient(180deg, hsl(210 50% 9%) 0%, hsl(200 55% 7%) 55%, hsl(198 65% 5%) 100%);
+  background-size: 22px 22px, auto, auto;
+  background-position: 0 0, 0 0, 0 0;
+  transition: background 0.35s ease;
+}
+:root:not(.dark) .graph-canvas {
+  background:
+    radial-gradient(ellipse 60% 45% at 50% 40%, hsl(198 40% 32% / 0.55) 0%, transparent 70%),
+    linear-gradient(180deg, hsl(210 40% 20%) 0%, hsl(200 45% 15%) 55%, hsl(198 55% 12%) 100%);
+  background-image:
+    radial-gradient(circle, hsl(0 0% 100% / 0.08) 1px, transparent 1.5px),
+    radial-gradient(ellipse 60% 45% at 50% 40%, hsl(198 40% 32% / 0.55) 0%, transparent 70%),
+    linear-gradient(180deg, hsl(210 40% 20%) 0%, hsl(200 45% 15%) 55%, hsl(198 55% 12%) 100%);
+  background-size: 22px 22px, auto, auto;
+}
+.graph-canvas .graph-glow {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  background:
+    radial-gradient(ellipse 40% 55% at 12% 15%, hsl(190 90% 60% / 0.12) 0%, transparent 60%),
+    radial-gradient(ellipse 45% 55% at 88% 20%, hsl(42 95% 60% / 0.10) 0%, transparent 60%),
+    radial-gradient(ellipse 60% 40% at 50% 100%, hsl(200 80% 35% / 0.14) 0%, transparent 65%);
+  mix-blend-mode: screen;
+}
+.graph-canvas::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  background: radial-gradient(ellipse 65% 55% at 50% 50%, transparent 40%, hsl(198 65% 5% / 0.45) 100%);
+}
+:root:not(.dark) .graph-canvas::after {
+  background: radial-gradient(ellipse 65% 55% at 50% 50%, transparent 40%, hsl(198 55% 12% / 0.4) 100%);
+}
 .ocean-wave {
   transform-origin: center bottom;
   will-change: transform;
