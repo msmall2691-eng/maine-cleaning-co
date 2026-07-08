@@ -66,6 +66,9 @@ let app: Express;
 beforeEach(async () => {
   createdBookings.length = 0;
   app = express();
+  // Give each test its own rate-limit key so the sixth test in the file
+  // doesn't 429 from prior tests' hits. Requests inject an X-Forwarded-For.
+  app.set("trust proxy", true);
   app.use(express.json());
   const httpServer = createServer(app);
   await registerRoutes(httpServer, app);
@@ -143,5 +146,27 @@ describe("POST /api/booking/submit", () => {
 
     expect(res.status).toBe(400);
     expect(res.body.message).toMatch(/service area/i);
+  });
+
+  it("forwards the client-supplied idempotencyKey to Bright-Space", async () => {
+    // Bright-Space PR #507 relies on this to collapse retries + the dual-
+    // forward pattern into one Lead. Without it, the audit's M2 duplicate-
+    // lead bug is not actually fixed in production.
+    const { forwardLeadToBrightBase } = await import("../lib/brightbase");
+    const mock = forwardLeadToBrightBase as unknown as ReturnType<typeof vi.fn>;
+    mock.mockClear();
+
+    const key = "test-uuid-01HW7XYZ-booking";
+    const res = await request(app)
+      .post("/api/booking/submit")
+      // Distinct IP so this test doesn't share the earlier tests'
+      // rate-limit bucket.
+      .set("X-Forwarded-For", "10.0.0.201")
+      .send({ ...basePayload, idempotencyKey: key });
+
+    expect(res.status).toBe(201);
+    expect(mock).toHaveBeenCalledTimes(1);
+    const forwardedBody = mock.mock.calls[0][0];
+    expect(forwardedBody.idempotencyKey).toBe(key);
   });
 });

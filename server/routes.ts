@@ -524,6 +524,11 @@ export async function registerRoutes(
         estimateMax: normalized.estimateMax,
         notes: normalized.notes,
         source: "Website",
+        // Client-supplied per-submission UUID. Passed through here so a
+        // single customer submission whose Express handler forwards to
+        // Bright-Space more than once (or the two-endpoint booking+intake
+        // pattern) collapses into ONE Lead via Bright-Space's unique index.
+        idempotencyKey: (req.body as any)?.idempotencyKey || null,
       }, { sourceType: "intake", sourceId: submission.id });
 
       return res.status(201).json({
@@ -1131,6 +1136,10 @@ Rules:
     petsDetail: z.string().optional().nullable(),
     focusAreas: z.array(z.string()).optional().nullable(),
     specialInstructions: z.string().optional().nullable(),
+    // Per-submission UUID from the client. Forwarded to Bright-Space so
+    // its unique-index dedup collapses retries + the dual-forward pattern
+    // into one Lead. See Bright-Space PR #507.
+    idempotencyKey: z.string().optional().nullable(),
   });
 
   app.post("/api/booking/submit", async (req, res) => {
@@ -1299,6 +1308,8 @@ Rules:
         petsDetail: data.petsDetail,
         focusAreas: data.focusAreas,
         specialInstructions: data.specialInstructions,
+        // See intake handler above — same rationale, same forward.
+        idempotencyKey: data.idempotencyKey || null,
       }, { sourceType: "booking", sourceId: booking.id });
 
       return res.status(201).json({

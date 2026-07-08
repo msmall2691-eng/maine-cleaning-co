@@ -107,6 +107,13 @@ function AddressInput({ value, onChange, onZipDetected }: { value: string; onCha
   const fetchSuggestions = useCallback(async (query: string) => {
     if (query.length < 5) { setSuggestions([]); return; }
     setLoading(true);
+    // Nominatim frequently returns a road-level hit even when the customer
+    // typed a specific house number — because that OSM node lacks a building
+    // record on the road. Without this fallback we'd throw away the "155" in
+    // "155 Keystone Dr" and ship the quote to the wrong (road-only) address.
+    // Grab the leading number/unit off the raw query so we can graft it back
+    // onto a road-only Nominatim result (audit L2, July-2026).
+    const typedLeadingNumber = (query.trim().match(/^(\d+[a-zA-Z]?)\s+/)?.[1]) || "";
     try {
       const res = await fetch(
         `https://nominatim.openstreetmap.org/search?q=${encodeURIComponent(query + ", Maine, USA")}&format=json&countrycodes=us&addressdetails=1&limit=5`,
@@ -123,11 +130,21 @@ function AddressInput({ value, onChange, onZipDetected }: { value: string; onCha
         .filter((r: any) => r.address?.state === "Maine" || r.address?.state === "ME")
         .map((r: any) => {
           const houseNum = r.address?.house_number || r.address?.building || r.address?.house_name;
+          const road = r.address?.road || "";
+          let street: string;
+          if (houseNum) {
+            street = `${houseNum} ${road}`.trim();
+          } else if (road) {
+            // No house number in the OSM hit — reuse the number the customer
+            // just typed so the resulting street reads "155 Keystone Drive"
+            // instead of the plain "Keystone Drive" the old code shipped.
+            street = typedLeadingNumber ? `${typedLeadingNumber} ${road}` : road;
+          } else {
+            street = r.display_name.split(",")[0].trim();
+          }
           return {
             display: (r.display_name?.split(", United States")[0] || r.display_name).trim(),
-            street: houseNum
-              ? `${houseNum} ${r.address.road || ""}`.trim()
-              : r.display_name.split(",")[0].trim(),
+            street,
             city: r.address?.city || r.address?.town || r.address?.village || "",
             state: "ME",
             zip: r.address?.postcode || "",
@@ -261,6 +278,30 @@ export function InstantEstimate({ defaultCategory, bookingIntent = false }: Inst
   const [bookingSubmitted, setBookingSubmitted] = useState(false);
   const { toast } = useToast();
 
+  // Idempotency key for the current VISIT, not just one submission attempt.
+  // The step 1/2 intake submit and the step 3 booking submit are the SAME
+  // customer visit — Bright-Space can only collapse them into one Lead if
+  // both forwards carry the same key (codex P1 on PR #36), so this must
+  // survive from the first `submit` call through `bookingMutation`. Also
+  // covers retries (React Query auto-retry, a double-click) and the Express
+  // layer's dual-forward to Bright-Space. Rotated only once the visit is
+  // truly over — after a successful booking, or resetForm() starting a new
+  // one. See Bright-Space PR #507.
+  const idempotencyKeyRef = useRef<string | null>(null);
+  const currentIdempotencyKey = () => {
+    if (!idempotencyKeyRef.current) {
+      idempotencyKeyRef.current =
+        typeof crypto !== "undefined" && typeof crypto.randomUUID === "function"
+          ? crypto.randomUUID()
+          // Fallback for legacy browsers without crypto.randomUUID — good
+          // enough for dedup purposes; the string never goes on the wire in
+          // a security-sensitive place.
+          : `k-${Date.now().toString(36)}-${Math.random().toString(36).slice(2, 12)}`;
+    }
+    return idempotencyKeyRef.current;
+  };
+  const rotateIdempotencyKey = () => { idempotencyKeyRef.current = null; };
+
   const isCustomQuote = category === "str" || category === "commercial";
   const cleanType = category === "deep-clean" ? "deep" : "standard";
 
@@ -375,6 +416,7 @@ export function InstantEstimate({ defaultCategory, bookingIntent = false }: Inst
           address: contactAddress || null,
           photos: photos.length > 0 ? photos : undefined,
           source: "website_form",
+          idempotencyKey: currentIdempotencyKey(),
         }),
       });
       const json = await res.json();
@@ -393,6 +435,11 @@ export function InstantEstimate({ defaultCategory, bookingIntent = false }: Inst
       if (data?.portalCreated) setPortalCreated(true);
       if (data?.existingAccount) setExistingAccount(true);
       if (data?.emailSent === false) setEmailSent(false);
+      // Do NOT rotate here. Step 3 leads straight into bookingMutation for
+      // the same visit — Bright-Space can only collapse the intake forward
+      // and the booking forward into one Lead if both carry the SAME key
+      // (codex P1 on PR #36). The key rotates only once this visit is truly
+      // done: after a successful booking, or when resetForm() starts a new one.
       toast({ title: "Request sent!", description: "We'll be in touch soon." });
     },
     onError: () => { toast({ title: "Something went wrong", description: "Please try again or call us directly.", variant: "destructive" }); },
@@ -435,6 +482,7 @@ export function InstantEstimate({ defaultCategory, bookingIntent = false }: Inst
           petsDetail: petsDetail.trim() || null,
           focusAreas: selectedFocus.length ? selectedFocus : null,
           specialInstructions: specialInstructions.trim() || null,
+          idempotencyKey: currentIdempotencyKey(),
         }),
       });
       const json = await res.json();
@@ -451,6 +499,11 @@ export function InstantEstimate({ defaultCategory, bookingIntent = false }: Inst
     onSuccess: () => {
       setBookingSubmitted(true);
       setStep(4);
+      // The visit is complete — rotate so a subsequent booking (after
+      // resetForm, or a second independent /book submission in the same
+      // page session) gets its own fresh key instead of colliding with
+      // this one in Bright-Space's dedup.
+      rotateIdempotencyKey();
       toast({ title: "Booking request sent!", description: "We'll confirm within 1 business day." });
     },
     onError: (err: Error) => {
@@ -526,6 +579,11 @@ export function InstantEstimate({ defaultCategory, bookingIntent = false }: Inst
     setPhotos([]);
     submit.reset();
     bookingMutation.reset();
+    // A user who submits the intake step (gets an estimate lead), then
+    // resets the form to start over — with the same or different details —
+    // is starting a genuinely new visit. Give it a fresh key so it doesn't
+    // collide with the abandoned one in Bright-Space's dedup.
+    rotateIdempotencyKey();
   };
 
   return (
