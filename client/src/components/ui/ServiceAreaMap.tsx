@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { motion, useReducedMotion } from "framer-motion";
-import { MapPin, Move, Maximize2 } from "lucide-react";
+import { MapPin, Move, Maximize2, Expand, Shrink, X } from "lucide-react";
 
 /**
  * Serving-Southern-Maine — Obsidian-style INTERACTIVE knowledge graph.
@@ -242,11 +242,21 @@ function ObsidianGraph({ animate }: { animate: boolean }) {
   const hoveredIdxRef = useRef<number>(-1);
   hoveredIdxRef.current = hoveredIdx;
 
+  const [selectedIdx, setSelectedIdx] = useState<number>(-1);
+  const selectedIdxRef = useRef<number>(-1);
+  selectedIdxRef.current = selectedIdx;
+
   const draggingIdxRef = useRef<number>(-1);
+  const dragMovedRef = useRef(false);
   const isPanningRef = useRef(false);
   const panStartRef = useRef({ x: 0, y: 0, viewX: 0, viewY: 0 });
+  const pointerDownRef = useRef<{ x: number; y: number; t: number; idx: number } | null>(null);
   const viewRef = useRef({ x: 0, y: 0, scale: 1 });
   const mouseRef = useRef({ x: -9999, y: -9999, inCanvas: false });
+  const timeRef = useRef(0);
+  const spawnRef = useRef(0);
+  const [hasInteracted, setHasInteracted] = useState(false);
+  const [isFullscreen, setIsFullscreen] = useState(false);
   const [tooltip, setTooltip] = useState<{
     idx: number;
     sx: number;
@@ -272,6 +282,7 @@ function ObsidianGraph({ animate }: { animate: boolean }) {
     if (ctx) ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
     graphRef.current = buildGraph(w, h);
     viewRef.current = { x: 0, y: 0, scale: 1 };
+    spawnRef.current = timeRef.current;
   }, []);
 
   useEffect(() => {
@@ -290,6 +301,27 @@ function ObsidianGraph({ animate }: { animate: boolean }) {
       obs.disconnect();
     };
   }, [initGraph]);
+
+  // Re-initialize when fullscreen mode changes (container resizes)
+  useEffect(() => {
+    const t = window.setTimeout(() => initGraph(), 60);
+    return () => window.clearTimeout(t);
+  }, [isFullscreen, initGraph]);
+
+  // Escape exits fullscreen; body scroll locked while fullscreen
+  useEffect(() => {
+    if (!isFullscreen) return;
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === "Escape") setIsFullscreen(false);
+    };
+    window.addEventListener("keydown", onKey);
+    const prevOverflow = document.body.style.overflow;
+    document.body.style.overflow = "hidden";
+    return () => {
+      window.removeEventListener("keydown", onKey);
+      document.body.style.overflow = prevOverflow;
+    };
+  }, [isFullscreen]);
 
   const screenToWorld = useCallback((sx: number, sy: number) => {
     const v = viewRef.current;
@@ -327,6 +359,7 @@ function ObsidianGraph({ animate }: { animate: boolean }) {
     if (!ctx) return;
 
     const step = () => {
+      timeRef.current += 16;
       const graph = graphRef.current;
       const { w, h } = sizeRef.current;
       if (!graph || !w) {
@@ -466,12 +499,19 @@ function ObsidianGraph({ animate }: { animate: boolean }) {
       ctx.scale(v.scale, v.scale);
 
       const hoveredI = hoveredIdxRef.current;
+      const selectedI = selectedIdxRef.current;
+      const activeI = hoveredI >= 0 ? hoveredI : selectedI;
       const highlighted = new Set<number>();
-      if (hoveredI >= 0) {
-        highlighted.add(hoveredI);
-        graph.adjacency[hoveredI].forEach((i) => highlighted.add(i));
+      if (activeI >= 0) {
+        highlighted.add(activeI);
+        graph.adjacency[activeI].forEach((i) => highlighted.add(i));
       }
-      const hasHover = hoveredI >= 0;
+      const hasHover = activeI >= 0;
+
+      // Spawn burst — fades edges + nodes in from HQ over ~800ms after (re)init
+      const spawnElapsed = timeRef.current - spawnRef.current;
+      const spawnT = Math.min(1, spawnElapsed / 800);
+      const spawnEase = 1 - Math.pow(1 - spawnT, 3);
 
       // Edges
       for (let li = 0; li < links.length; li++) {
@@ -509,9 +549,57 @@ function ObsidianGraph({ animate }: { animate: boolean }) {
           ctx.moveTo(a.x, a.y);
           ctx.lineTo(b.x, b.y);
         }
-        ctx.strokeStyle = `hsla(${colorHSL.h}, ${colorHSL.s}%, ${colorHSL.l}%, ${baseAlpha})`;
+        ctx.strokeStyle = `hsla(${colorHSL.h}, ${colorHSL.s}%, ${colorHSL.l}%, ${baseAlpha * spawnEase})`;
         ctx.lineWidth = isHighlighted ? 1.5 : link.kind === "hq" ? 0.55 : 0.7;
         ctx.stroke();
+      }
+
+      // Signal packets — glowing dots flow HQ → city along the bezier curve
+      if (animate) {
+        const packetPeriod = 3400;
+        for (let li = 0; li < links.length; li++) {
+          const link = links[li];
+          if (link.kind !== "hq") continue;
+          const a = nodes[link.a];
+          const b = nodes[link.b];
+          const hq = a.kind === "hq" ? a : b;
+          const city = a.kind === "hq" ? b : a;
+          if (!city.visits) continue;
+          const offset = (link.a * 173 + link.b * 89) % packetPeriod;
+          const phase = ((timeRef.current + offset) % packetPeriod) / packetPeriod;
+          if (phase > 0.72) continue;
+          const p = phase / 0.72;
+          const midX = (hq.x + city.x) / 2;
+          const midY = (hq.y + city.y) / 2;
+          const nx = -(city.y - hq.y);
+          const ny = city.x - hq.x;
+          const len = Math.max(1, Math.sqrt(nx * nx + ny * ny));
+          const bow = 0.11;
+          const cpX = midX + (nx / len) * len * bow;
+          const cpY = midY + (ny / len) * len * bow;
+          const om = 1 - p;
+          const px = om * om * hq.x + 2 * om * p * cpX + p * p * city.x;
+          const py = om * om * hq.y + 2 * om * p * cpY + p * p * city.y;
+          const packetDim = hasHover && !(highlighted.has(link.a) && highlighted.has(link.b));
+          const alpha =
+            (p < 0.15 ? p / 0.15 : p > 0.85 ? (1 - p) / 0.15 : 1) *
+            (packetDim ? 0.22 : 0.85) *
+            spawnEase;
+          const h1 = HQ_COLOR.h + (city.color.h - HQ_COLOR.h) * p;
+          const s1 = HQ_COLOR.s + (city.color.s - HQ_COLOR.s) * p;
+          const l1 = HQ_COLOR.l + (city.color.l - HQ_COLOR.l) * p;
+          const glow = ctx.createRadialGradient(px, py, 0, px, py, 10);
+          glow.addColorStop(0, `hsla(${h1}, ${s1}%, ${l1}%, ${alpha * 0.55})`);
+          glow.addColorStop(1, "transparent");
+          ctx.fillStyle = glow;
+          ctx.beginPath();
+          ctx.arc(px, py, 10, 0, Math.PI * 2);
+          ctx.fill();
+          ctx.beginPath();
+          ctx.arc(px, py, 1.9, 0, Math.PI * 2);
+          ctx.fillStyle = `hsla(${h1}, ${s1}%, ${Math.min(l1 + 10, 92)}%, ${alpha})`;
+          ctx.fill();
+        }
       }
 
       // Nodes (draw HQ last so it's on top)
@@ -543,7 +631,7 @@ function ObsidianGraph({ animate }: { animate: boolean }) {
           ? 0.08
           : 0.05;
         const grad = ctx.createRadialGradient(n.x, n.y, 0, n.x, n.y, glowR);
-        grad.addColorStop(0, `hsla(${col.h}, ${col.s}%, ${col.l}%, ${glowAlpha})`);
+        grad.addColorStop(0, `hsla(${col.h}, ${col.s}%, ${col.l}%, ${glowAlpha * spawnEase})`);
         grad.addColorStop(1, "transparent");
         ctx.fillStyle = grad;
         ctx.beginPath();
@@ -552,9 +640,9 @@ function ObsidianGraph({ animate }: { animate: boolean }) {
 
         // Body
         ctx.beginPath();
-        ctx.arc(n.x, n.y, baseR, 0, Math.PI * 2);
+        ctx.arc(n.x, n.y, baseR * (0.6 + 0.4 * spawnEase), 0, Math.PI * 2);
         const coreAlpha = dim ? 0.28 : isHovered ? 1 : isConnected ? 0.95 : n.kind === "hq" ? 0.98 : 0.85;
-        ctx.fillStyle = `hsla(${col.h}, ${col.s}%, ${col.l}%, ${coreAlpha})`;
+        ctx.fillStyle = `hsla(${col.h}, ${col.s}%, ${col.l}%, ${coreAlpha * spawnEase})`;
         ctx.fill();
 
         // Rim
@@ -605,10 +693,24 @@ function ObsidianGraph({ animate }: { animate: boolean }) {
     (e: React.PointerEvent<HTMLCanvasElement>) => {
       const p = getPos(e);
       const idx = hitTest(p.x, p.y);
+      pointerDownRef.current = { x: p.x, y: p.y, t: Date.now(), idx };
+      dragMovedRef.current = false;
+      setHasInteracted(true);
       if (idx >= 0) {
         draggingIdxRef.current = idx;
         graphRef.current!.nodes[idx].pinned = true;
-        canvasRef.current!.setPointerCapture(e.pointerId);
+        try {
+          canvasRef.current!.setPointerCapture(e.pointerId);
+        } catch {
+          /* noop */
+        }
+        if ("vibrate" in navigator) {
+          try {
+            (navigator as Navigator & { vibrate: (n: number) => void }).vibrate(6);
+          } catch {
+            /* noop */
+          }
+        }
         e.preventDefault();
       } else {
         isPanningRef.current = true;
@@ -618,7 +720,11 @@ function ObsidianGraph({ animate }: { animate: boolean }) {
           viewX: viewRef.current.x,
           viewY: viewRef.current.y,
         };
-        canvasRef.current!.setPointerCapture(e.pointerId);
+        try {
+          canvasRef.current!.setPointerCapture(e.pointerId);
+        } catch {
+          /* noop */
+        }
         e.preventDefault();
       }
     },
@@ -629,6 +735,12 @@ function ObsidianGraph({ animate }: { animate: boolean }) {
     (e: React.PointerEvent<HTMLCanvasElement>) => {
       const p = getPos(e);
       mouseRef.current = { x: p.x, y: p.y, inCanvas: true };
+      const down = pointerDownRef.current;
+      if (down) {
+        const dx = p.x - down.x;
+        const dy = p.y - down.y;
+        if (dx * dx + dy * dy > 36) dragMovedRef.current = true;
+      }
       if (draggingIdxRef.current >= 0) {
         const world = screenToWorld(p.x, p.y);
         const n = graphRef.current!.nodes[draggingIdxRef.current];
@@ -659,11 +771,24 @@ function ObsidianGraph({ animate }: { animate: boolean }) {
   );
 
   const handlePointerUp = useCallback((e: React.PointerEvent<HTMLCanvasElement>) => {
+    const down = pointerDownRef.current;
     if (draggingIdxRef.current >= 0) {
       graphRef.current!.nodes[draggingIdxRef.current].pinned = false;
       draggingIdxRef.current = -1;
     }
     isPanningRef.current = false;
+    if (down) {
+      const elapsed = Date.now() - down.t;
+      if (!dragMovedRef.current && elapsed < 350) {
+        if (down.idx >= 0) {
+          setSelectedIdx((cur) => (cur === down.idx ? -1 : down.idx));
+        } else {
+          setSelectedIdx(-1);
+        }
+      }
+    }
+    pointerDownRef.current = null;
+    dragMovedRef.current = false;
     try {
       canvasRef.current?.releasePointerCapture(e.pointerId);
     } catch {
@@ -711,13 +836,19 @@ function ObsidianGraph({ animate }: { animate: boolean }) {
     forceRerender((n) => n + 1);
   }, []);
 
+  const clearSelection = useCallback(() => setSelectedIdx(-1), []);
+
   const graph = graphRef.current;
   const tooltipNode = tooltip && graph ? graph.nodes[tooltip.idx] : null;
+
+  const wrapperClasses = isFullscreen
+    ? "graph-canvas fixed inset-0 z-[80] w-full h-full overflow-hidden border-0 shadow-none rounded-none"
+    : "graph-canvas relative w-full h-72 sm:h-[26rem] md:h-[30rem] rounded-2xl overflow-hidden border border-border/60 shadow-[0_4px_28px_rgba(0,0,0,0.22)]";
 
   return (
     <div
       ref={containerRef}
-      className="graph-canvas relative w-full h-72 sm:h-[26rem] md:h-[30rem] rounded-2xl overflow-hidden border border-border/60 shadow-[0_4px_28px_rgba(0,0,0,0.22)]"
+      className={wrapperClasses}
       style={{ touchAction: "none" }}
       data-testid="obsidian-graph"
     >
@@ -750,6 +881,18 @@ function ObsidianGraph({ animate }: { animate: boolean }) {
 
       {/* Top-right controls */}
       <div className="absolute top-3 right-3 flex items-center gap-1.5">
+        {selectedIdx >= 0 && (
+          <button
+            type="button"
+            onClick={clearSelection}
+            className="h-8 px-2.5 rounded-full bg-black/40 backdrop-blur-md border border-white/10 flex items-center gap-1 text-white/80 hover:text-white hover:border-white/25 transition-colors text-[10.5px] font-semibold"
+            title="Clear selection"
+            data-testid="button-graph-clear-selection"
+          >
+            <X className="w-3 h-3" />
+            Clear
+          </button>
+        )}
         <button
           type="button"
           onClick={nudgeHQ}
@@ -768,7 +911,31 @@ function ObsidianGraph({ animate }: { animate: boolean }) {
         >
           <Maximize2 className="w-3.5 h-3.5" />
         </button>
+        <button
+          type="button"
+          onClick={() => setIsFullscreen((f) => !f)}
+          className="w-8 h-8 rounded-full bg-black/40 backdrop-blur-md border border-white/10 flex items-center justify-center text-white/80 hover:text-white hover:border-white/25 transition-colors"
+          title={isFullscreen ? "Exit fullscreen (Esc)" : "Expand fullscreen"}
+          data-testid="button-graph-fullscreen"
+        >
+          {isFullscreen ? <Shrink className="w-3.5 h-3.5" /> : <Expand className="w-3.5 h-3.5" />}
+        </button>
       </div>
+
+      {/* First-time hint — fades out once the user interacts */}
+      {!hasInteracted && (
+        <motion.div
+          initial={{ opacity: 0, y: 8 }}
+          animate={{ opacity: 1, y: 0 }}
+          exit={{ opacity: 0 }}
+          transition={{ delay: 0.6, duration: 0.5 }}
+          className="pointer-events-none absolute top-14 left-1/2 -translate-x-1/2"
+        >
+          <div className="px-3 py-1.5 rounded-full bg-black/50 backdrop-blur-md border border-white/15 text-[11px] font-semibold text-white/90 shadow-[0_4px_16px_rgba(0,0,0,0.25)]">
+            Tap a node to focus · drag to move
+          </div>
+        </motion.div>
+      )}
 
       {/* Bottom hint + legend */}
       <div className="absolute bottom-3 left-3 right-3 flex items-end justify-between gap-3 pointer-events-none">
