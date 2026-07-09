@@ -31,6 +31,8 @@ import {
 import { Button } from "@/components/ui/button";
 import { InstantEstimate } from "@/components/ui/InstantEstimate";
 import { ServiceAreaMap } from "@/components/ui/ServiceAreaMap";
+import { SparkleField } from "@/components/ui/SparkleField";
+import { LiveActivityPulse } from "@/components/ui/LiveActivityPulse";
 import { companyInfo } from "@/lib/company-info";
 
 const fadeUp = {
@@ -290,6 +292,7 @@ export default function Home() {
       <section className="relative pt-32 sm:pt-40 md:pt-44 pb-20 sm:pb-28 overflow-hidden">
         <div className="hero-aurora" aria-hidden="true" />
         <div className="hero-dot-grid" aria-hidden="true" />
+        <SparkleField />
         <div className="marquee-track" aria-hidden="true">
           <span>Residential&nbsp;·&nbsp;Deep&nbsp;Cleaning&nbsp;·&nbsp;Vacation&nbsp;Rentals&nbsp;·&nbsp;Commercial&nbsp;·&nbsp;Eco-Friendly&nbsp;·&nbsp;Southern&nbsp;Maine&nbsp;·&nbsp;</span>
           <span>Residential&nbsp;·&nbsp;Deep&nbsp;Cleaning&nbsp;·&nbsp;Vacation&nbsp;Rentals&nbsp;·&nbsp;Commercial&nbsp;·&nbsp;Eco-Friendly&nbsp;·&nbsp;Southern&nbsp;Maine&nbsp;·&nbsp;</span>
@@ -361,13 +364,7 @@ export default function Home() {
             className="flex justify-center mt-5"
             data-testid="serving-indicator"
           >
-            <div className="inline-flex items-center gap-2 text-[12px] sm:text-[13px] text-muted-foreground">
-              <span className="relative flex h-2 w-2">
-                <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-primary opacity-60" />
-                <span className="relative inline-flex rounded-full h-2 w-2 bg-primary" />
-              </span>
-              Currently serving York & Cumberland County
-            </div>
+            <LiveActivityPulse />
           </motion.div>
 
           {/* 5-Day Weather Forecast */}
