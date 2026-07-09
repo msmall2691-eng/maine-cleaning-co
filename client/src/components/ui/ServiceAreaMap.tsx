@@ -246,6 +246,10 @@ function ObsidianGraph({ animate }: { animate: boolean }) {
   const selectedIdxRef = useRef<number>(-1);
   selectedIdxRef.current = selectedIdx;
 
+  const [filterService, setFilterService] = useState<ServiceType | null>(null);
+  const filterServiceRef = useRef<ServiceType | null>(null);
+  filterServiceRef.current = filterService;
+
   const draggingIdxRef = useRef<number>(-1);
   const dragMovedRef = useRef(false);
   const isPanningRef = useRef(false);
@@ -513,6 +517,20 @@ function ObsidianGraph({ animate }: { animate: boolean }) {
       const spawnT = Math.min(1, spawnElapsed / 800);
       const spawnEase = 1 - Math.pow(1 - spawnT, 3);
 
+      // Service filter — cities/hub/HQ matching filter stay at full alpha,
+      // everything else fades to ~15%. Eases smoothly on toggle.
+      const filter = filterServiceRef.current;
+      const nodeInFilter = (i: number) => {
+        if (!filter) return true;
+        const n = nodes[i];
+        if (n.kind === "hq") return true;
+        if (n.kind === "hub") return n.serviceType === filter;
+        return n.services?.includes(filter) ?? false;
+      };
+      const filterAmt = filter ? 1 : 0;
+      const dimNode = (i: number) => 1 - (1 - (nodeInFilter(i) ? 1 : 0.14)) * filterAmt;
+      const dimEdge = (a: number, b: number) => dimNode(a) * dimNode(b);
+
       // Edges
       for (let li = 0; li < links.length; li++) {
         const link = links[li];
@@ -549,7 +567,7 @@ function ObsidianGraph({ animate }: { animate: boolean }) {
           ctx.moveTo(a.x, a.y);
           ctx.lineTo(b.x, b.y);
         }
-        ctx.strokeStyle = `hsla(${colorHSL.h}, ${colorHSL.s}%, ${colorHSL.l}%, ${baseAlpha * spawnEase})`;
+        ctx.strokeStyle = `hsla(${colorHSL.h}, ${colorHSL.s}%, ${colorHSL.l}%, ${baseAlpha * spawnEase * dimEdge(link.a, link.b)})`;
         ctx.lineWidth = isHighlighted ? 1.5 : link.kind === "hq" ? 0.55 : 0.7;
         ctx.stroke();
       }
@@ -584,7 +602,8 @@ function ObsidianGraph({ animate }: { animate: boolean }) {
           const alpha =
             (p < 0.15 ? p / 0.15 : p > 0.85 ? (1 - p) / 0.15 : 1) *
             (packetDim ? 0.22 : 0.85) *
-            spawnEase;
+            spawnEase *
+            dimEdge(link.a, link.b);
           const h1 = HQ_COLOR.h + (city.color.h - HQ_COLOR.h) * p;
           const s1 = HQ_COLOR.s + (city.color.s - HQ_COLOR.s) * p;
           const l1 = HQ_COLOR.l + (city.color.l - HQ_COLOR.l) * p;
@@ -630,8 +649,9 @@ function ObsidianGraph({ animate }: { animate: boolean }) {
           : (n.visits ?? 0) >= 100
           ? 0.08
           : 0.05;
+        const nodeDim = dimNode(i);
         const grad = ctx.createRadialGradient(n.x, n.y, 0, n.x, n.y, glowR);
-        grad.addColorStop(0, `hsla(${col.h}, ${col.s}%, ${col.l}%, ${glowAlpha * spawnEase})`);
+        grad.addColorStop(0, `hsla(${col.h}, ${col.s}%, ${col.l}%, ${glowAlpha * spawnEase * nodeDim})`);
         grad.addColorStop(1, "transparent");
         ctx.fillStyle = grad;
         ctx.beginPath();
@@ -642,7 +662,7 @@ function ObsidianGraph({ animate }: { animate: boolean }) {
         ctx.beginPath();
         ctx.arc(n.x, n.y, baseR * (0.6 + 0.4 * spawnEase), 0, Math.PI * 2);
         const coreAlpha = dim ? 0.28 : isHovered ? 1 : isConnected ? 0.95 : n.kind === "hq" ? 0.98 : 0.85;
-        ctx.fillStyle = `hsla(${col.h}, ${col.s}%, ${col.l}%, ${coreAlpha * spawnEase})`;
+        ctx.fillStyle = `hsla(${col.h}, ${col.s}%, ${col.l}%, ${coreAlpha * spawnEase * nodeDim})`;
         ctx.fill();
 
         // Rim
@@ -849,20 +869,27 @@ function ObsidianGraph({ animate }: { animate: boolean }) {
     <div
       ref={containerRef}
       className={wrapperClasses}
-      style={{ touchAction: "none" }}
+      style={{ touchAction: "none", overscrollBehavior: "contain" }}
       data-testid="obsidian-graph"
     >
       <div className="graph-glow" aria-hidden="true" />
       <canvas
         ref={canvasRef}
-        className="absolute inset-0"
-        style={{ cursor: draggingIdxRef.current >= 0 ? "grabbing" : hoveredIdx >= 0 ? "grab" : "default" }}
+        className="absolute inset-0 select-none"
+        style={{
+          cursor: draggingIdxRef.current >= 0 ? "grabbing" : hoveredIdx >= 0 ? "grab" : "default",
+          touchAction: "none",
+          WebkitUserSelect: "none",
+          WebkitTouchCallout: "none",
+          overscrollBehavior: "contain",
+        }}
         onPointerDown={handlePointerDown}
         onPointerMove={handlePointerMove}
         onPointerUp={handlePointerUp}
         onPointerCancel={handlePointerUp}
         onPointerLeave={handlePointerLeave}
         onWheel={handleWheel}
+        onContextMenu={(e) => e.preventDefault()}
       />
 
       {/* Top-left HQ pill */}
@@ -937,38 +964,48 @@ function ObsidianGraph({ animate }: { animate: boolean }) {
         </motion.div>
       )}
 
-      {/* Bottom hint + legend */}
-      <div className="absolute bottom-3 left-3 right-3 flex items-end justify-between gap-3 pointer-events-none">
-        <div className="flex items-center gap-1.5 text-white/60">
+      {/* Bottom row — reach label + tappable filter chips */}
+      <div className="absolute bottom-3 left-3 right-3 flex flex-col-reverse sm:flex-row sm:items-end sm:justify-between gap-2 sm:gap-3">
+        <div className="flex items-center gap-1.5 text-white/60 pointer-events-none">
           <MapPin className="w-3 h-3" />
           <span className="text-[10px] font-medium">
-            {TOTAL_COMMUNITIES} communities linked to HQ · 60-mile reach
+            {TOTAL_COMMUNITIES} communities · 60-mile reach
           </span>
         </div>
-        <div className="hidden sm:flex items-center gap-2.5 text-[10px] text-white/55 flex-wrap justify-end max-w-[55%]">
+        <div className="flex items-center gap-1.5 flex-wrap justify-start sm:justify-end">
           {[
-            { c: RES_COLOR, label: "Residential" },
-            { c: COM_COLOR, label: "Commercial" },
-            { c: VAC_COLOR, label: "Vacation Rental" },
-          ].map((it) => (
-            <span key={it.label} className="flex items-center gap-1">
-              <span
-                className="w-2 h-2 rounded-full"
-                style={{
-                  background: `hsl(${it.c.h} ${it.c.s}% ${it.c.l}%)`,
-                  boxShadow: `0 0 6px hsl(${it.c.h} ${it.c.s}% ${it.c.l}% / 0.65)`,
+            { type: "residential" as ServiceType, c: RES_COLOR, label: "Residential" },
+            { type: "commercial" as ServiceType, c: COM_COLOR, label: "Commercial" },
+            { type: "vacation" as ServiceType, c: VAC_COLOR, label: "Vacation" },
+          ].map((it) => {
+            const active = filterService === it.type;
+            return (
+              <button
+                key={it.type}
+                type="button"
+                onClick={() => {
+                  setHasInteracted(true);
+                  setFilterService((cur) => (cur === it.type ? null : it.type));
                 }}
-              />
-              {it.label}
-            </span>
-          ))}
-        </div>
-      </div>
-
-      {/* "How to play" pill — bottom-center on mobile */}
-      <div className="absolute bottom-3 left-1/2 -translate-x-1/2 sm:hidden pointer-events-none">
-        <div className="px-2.5 py-1 rounded-full bg-black/40 backdrop-blur-md border border-white/10 text-[9.5px] text-white/75 font-medium">
-          Drag nodes · tap to focus
+                className={`flex items-center gap-1 h-6 px-2 rounded-full backdrop-blur-md border transition-all text-[10px] font-semibold ${
+                  active
+                    ? "bg-white/15 border-white/40 text-white"
+                    : "bg-black/40 border-white/10 text-white/70 hover:text-white hover:border-white/25"
+                }`}
+                title={active ? `Show all` : `Isolate ${it.label} network`}
+                data-testid={`button-filter-${it.type}`}
+              >
+                <span
+                  className="w-1.5 h-1.5 rounded-full"
+                  style={{
+                    background: `hsl(${it.c.h} ${it.c.s}% ${it.c.l}%)`,
+                    boxShadow: `0 0 ${active ? 8 : 5}px hsl(${it.c.h} ${it.c.s}% ${it.c.l}% / ${active ? 0.9 : 0.6})`,
+                  }}
+                />
+                {it.label}
+              </button>
+            );
+          })}
         </div>
       </div>
 
