@@ -31,6 +31,7 @@ import {
   AlertCircle,
 } from "lucide-react";
 import { companyInfo } from "@/lib/company-info";
+import { VoiceInput, type ParsedEstimate } from "@/components/ui/VoiceInput";
 
 type ServiceCategory = "residential" | "deep-clean" | "str" | "commercial";
 type Frequency = "weekly" | "biweekly" | "monthly" | "one-time";
@@ -304,6 +305,24 @@ export function InstantEstimate({ defaultCategory, bookingIntent = false }: Inst
 
   const isCustomQuote = category === "str" || category === "commercial";
   const cleanType = category === "deep-clean" ? "deep" : "standard";
+
+  // Voice input → fill fields. Pricing formulas untouched — we're only
+  // driving the same setters the manual controls drive.
+  const applyVoice = useCallback((p: ParsedEstimate) => {
+    if (p.category) setCategory(p.category);
+    if (p.sqft) setSqft([clamp(p.sqft, 500, 6000)]);
+    if (typeof p.bathrooms === "number") {
+      const rounded = Math.round(p.bathrooms * 2) / 2;
+      setBathrooms(clamp(rounded, 1, 6));
+    }
+    if (p.frequency) setFrequency(p.frequency);
+    if (p.petHair) setPetHair(p.petHair);
+    if (p.condition) setCondition(p.condition);
+    // Fold the raw transcript into notes so cleaners see the exact request
+    if (p.transcript) {
+      setContactNotes((prev) => (prev ? `${prev}\n${p.transcript}` : p.transcript));
+    }
+  }, []);
 
   const handlePhotoUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
     const files = e.target.files;
@@ -589,14 +608,28 @@ export function InstantEstimate({ defaultCategory, bookingIntent = false }: Inst
   return (
     <div className="bg-card/90 backdrop-blur-md rounded-2xl border border-border shadow-[0_2px_16px_rgba(0,0,0,0.15),0_8px_32px_rgba(0,0,0,0.1)] w-full max-w-full overflow-hidden card-gradient-border" data-testid="card-instant-estimate">
       <div className="px-4 sm:px-6 pt-5 sm:pt-6 pb-4 border-b border-border/50">
-        <h3 className="text-lg sm:text-xl font-bold text-foreground" data-testid="text-instant-estimate-title">
-          {isCustomQuote ? "Request a Custom Quote" : "Instant Estimate"}
-        </h3>
-        <p className="text-sm text-muted-foreground mt-0.5">
-          {isCustomQuote
-            ? `Pricing for ${category === "str" ? "vacation rentals" : "commercial spaces"} varies — we'll get back to you quickly.`
-            : "Adjust the details for an instant price range."}
-        </p>
+        <div className="flex items-start justify-between gap-3">
+          <div className="min-w-0">
+            <h3 className="text-lg sm:text-xl font-bold text-foreground flex items-center gap-2" data-testid="text-instant-estimate-title">
+              {!isCustomQuote && (
+                <span className="w-6 h-6 rounded-lg bg-gradient-to-br from-primary/25 to-primary/10 flex items-center justify-center flex-shrink-0">
+                  <Sparkles className="w-3.5 h-3.5 text-primary" />
+                </span>
+              )}
+              {isCustomQuote ? "Request a Custom Quote" : "Instant Estimate"}
+            </h3>
+            <p className="text-sm text-muted-foreground mt-0.5">
+              {isCustomQuote
+                ? `Pricing for ${category === "str" ? "vacation rentals" : "commercial spaces"} varies — we'll get back to you quickly.`
+                : "Adjust the details for an instant price range."}
+            </p>
+          </div>
+        </div>
+        {step === 1 && !isCustomQuote && (
+          <div className="mt-3">
+            <VoiceInput onParse={applyVoice} />
+          </div>
+        )}
       </div>
 
       <div className="px-4 sm:px-6 py-5 sm:py-6">
@@ -743,9 +776,16 @@ export function InstantEstimate({ defaultCategory, bookingIntent = false }: Inst
                 />
               </div>
 
-              <div className="rounded-xl bg-gradient-to-br from-emerald-500/10 to-blue-500/10 border border-emerald-500/20 p-5">
-                <div className="text-xs font-semibold tracking-wide text-muted-foreground uppercase mb-1.5" data-testid="label-range">Estimated range</div>
-                <div className="text-3xl sm:text-4xl font-bold text-foreground tracking-tight" data-testid="text-range">
+              <div className="relative rounded-2xl bg-gradient-to-br from-emerald-500/12 via-teal-500/8 to-blue-500/12 border border-emerald-500/25 p-5 overflow-hidden shadow-[inset_0_1px_0_rgba(255,255,255,0.06)]">
+                <div className="absolute -top-8 -right-6 w-32 h-32 rounded-full bg-emerald-400/10 blur-2xl pointer-events-none" aria-hidden="true" />
+                <div className="absolute -bottom-10 -left-6 w-32 h-32 rounded-full bg-blue-400/10 blur-2xl pointer-events-none" aria-hidden="true" />
+                <div className="flex items-center gap-1.5 mb-1.5" data-testid="label-range">
+                  <Sparkles className="w-3 h-3 text-emerald-500/80" />
+                  <span className="text-xs font-semibold tracking-wide text-muted-foreground uppercase">
+                    Estimated range
+                  </span>
+                </div>
+                <div className="text-3xl sm:text-[2.4rem] font-bold text-foreground tracking-tight" data-testid="text-range">
                   {fmt(engine.min)}<span className="text-muted-foreground font-normal mx-1.5 text-xl sm:text-2xl">–</span>{fmt(engine.max)}
                 </div>
                 <div className="flex flex-wrap gap-1.5 mt-2.5" data-testid="text-summary">
