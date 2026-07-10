@@ -75,8 +75,8 @@ export function AIChatWidget() {
             animate={{ opacity: 1, y: 0, scale: 1 }}
             exit={{ opacity: 0, y: 20, scale: 0.95 }}
             transition={{ duration: 0.2 }}
-            className="fixed bottom-20 sm:bottom-24 right-4 sm:right-6 z-50 w-[calc(100vw-2rem)] sm:w-[380px] bg-card rounded-2xl shadow-2xl border border-border flex flex-col overflow-hidden"
-            style={{ maxHeight: "min(500px, calc(100vh - 160px))" }}
+            className="fixed bottom-16 sm:bottom-20 right-3 sm:right-5 z-50 w-[calc(100vw-1.5rem)] sm:w-[340px] bg-card rounded-2xl shadow-2xl border border-border flex flex-col overflow-hidden"
+            style={{ maxHeight: "min(460px, calc(100vh - 140px))" }}
             data-testid="chat-widget-panel"
           >
             <div className="bg-gradient-to-r from-primary to-primary/80 text-white px-5 py-4 flex items-center justify-between flex-shrink-0">
@@ -174,7 +174,7 @@ export function AIChatWidget() {
 
       <motion.button
         onClick={() => setOpen(!open)}
-        className={`fixed bottom-4 sm:bottom-6 right-4 sm:right-6 z-50 w-14 h-14 rounded-full bg-primary text-white flex items-center justify-center transition-shadow ${!open ? "chat-bubble-pulse" : "shadow-lg hover:shadow-xl"}`}
+        className={`fixed bottom-3 sm:bottom-5 right-3 sm:right-5 z-50 w-11 h-11 sm:w-12 sm:h-12 rounded-full bg-primary text-white flex items-center justify-center transition-shadow ${!open ? "chat-bubble-pulse" : "shadow-lg hover:shadow-xl"}`}
         whileHover={{ scale: 1.05 }}
         whileTap={{ scale: 0.95 }}
         data-testid="button-open-chat"
@@ -182,11 +182,11 @@ export function AIChatWidget() {
         <AnimatePresence mode="wait">
           {open ? (
             <motion.div key="close" initial={{ rotate: -90, opacity: 0 }} animate={{ rotate: 0, opacity: 1 }} exit={{ rotate: 90, opacity: 0 }}>
-              <X className="w-6 h-6" />
+              <X className="w-5 h-5" />
             </motion.div>
           ) : (
             <motion.div key="open" initial={{ rotate: 90, opacity: 0 }} animate={{ rotate: 0, opacity: 1 }} exit={{ rotate: -90, opacity: 0 }} className="relative">
-              <MessageCircle className="w-6 h-6" />
+              <MessageCircle className="w-5 h-5" />
               <span className="absolute -top-1 -right-1 w-3 h-3 bg-green-400 rounded-full border-2 border-primary" />
             </motion.div>
           )}
