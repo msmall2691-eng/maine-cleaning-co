@@ -33,6 +33,7 @@ import { InstantEstimate } from "@/components/ui/InstantEstimate";
 import { ServiceAreaMap } from "@/components/ui/ServiceAreaMap";
 import { SparkleField } from "@/components/ui/SparkleField";
 import { LiveActivityPulse } from "@/components/ui/LiveActivityPulse";
+import { CoverageCheck } from "@/components/ui/CoverageCheck";
 import { companyInfo } from "@/lib/company-info";
 
 const fadeUp = {
@@ -495,6 +496,13 @@ export default function Home() {
               </div>
             </Link>
           </div>
+        </div>
+      </div>
+
+      {/* ── Instant Coverage Check ── */}
+      <div className="relative z-10 section-white">
+        <div className="container mx-auto px-4 sm:px-6 pt-6 sm:pt-10 pb-2 sm:pb-4">
+          <CoverageCheck />
         </div>
       </div>
 
