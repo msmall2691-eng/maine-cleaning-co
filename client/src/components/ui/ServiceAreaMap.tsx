@@ -19,8 +19,11 @@ const RES_COLOR = { h: 200, s: 82, l: 66 };
 const COM_COLOR = { h: 148, s: 62, l: 55 };
 const VAC_COLOR = { h: 282, s: 60, l: 66 };
 
-const CENTER = { lat: 43.5712, lng: -70.7287, name: "North Waterboro" };
-const MAX_MILES = 60;
+// Geographic center of the service area (roughly Buxton/Saco corridor).
+// This is used purely to lay out the initial graph and anchor the physics
+// simulation — it is not a public "HQ" address.
+const CENTER = { lat: 43.60, lng: -70.55, name: "The Maine Cleaning Co." };
+const MAX_MILES = 95;
 
 type City = { name: string; lat: number; lng: number; visits: number; services: ServiceType[] };
 
@@ -902,7 +905,7 @@ function ObsidianGraph({ animate }: { animate: boolean }) {
               boxShadow: `0 0 8px hsl(${HQ_COLOR.h} ${HQ_COLOR.s}% ${HQ_COLOR.l}% / 0.75)`,
             }}
           />
-          North Waterboro · HQ
+          The Maine Cleaning Co. · Southern Maine
         </div>
       </div>
 
@@ -969,7 +972,7 @@ function ObsidianGraph({ animate }: { animate: boolean }) {
         <div className="flex items-center gap-1.5 text-white/60 pointer-events-none">
           <MapPin className="w-3 h-3" />
           <span className="text-[10px] font-medium">
-            {TOTAL_COMMUNITIES} communities · 60-mile reach
+            {TOTAL_COMMUNITIES}+ communities · all across Southern Maine
           </span>
         </div>
         <div className="flex items-center gap-1.5 flex-wrap justify-start sm:justify-end">

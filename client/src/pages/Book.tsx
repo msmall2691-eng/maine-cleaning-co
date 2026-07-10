@@ -53,7 +53,7 @@ export default function Book() {
           <p className="mt-3 text-base text-muted-foreground max-w-2xl leading-relaxed">
             Get an instant estimate, tell us a few essentials, and pick a date — we confirm within
             one business day. Serving {companyInfo.serviceArea?.center || "Southern Maine"} and the
-            surrounding communities within 60 miles.
+            surrounding communities all across York and Cumberland County.
           </p>
 
           <div className="mt-6 grid grid-cols-1 sm:grid-cols-3 gap-3 max-w-3xl">
@@ -72,7 +72,7 @@ export default function Book() {
               </div>
               <div>
                 <p className="text-sm font-semibold text-foreground">Pick your date</p>
-                <p className="text-xs text-muted-foreground mt-0.5">2+ days out, within 60 miles</p>
+                <p className="text-xs text-muted-foreground mt-0.5">2+ days out, anywhere in Southern Maine</p>
               </div>
             </div>
             <div className="flex items-start gap-2.5 rounded-xl border border-border/40 bg-card px-3.5 py-3">

@@ -1051,10 +1051,12 @@ Rules:
 
   // ── BOOKING REQUESTS ──
 
-  // North Waterboro, ME coordinates
-  const SERVICE_CENTER_LAT = 43.5712;
-  const SERVICE_CENTER_LNG = -70.7287;
-  const MAX_SERVICE_RADIUS_MILES = 60;
+  // Geographic center of our Southern Maine service area (near the Saco /
+  // Buxton corridor). Distance is used purely to gate address eligibility
+  // — not shown to customers as "distance from HQ."
+  const SERVICE_CENTER_LAT = 43.60;
+  const SERVICE_CENTER_LNG = -70.55;
+  const MAX_SERVICE_RADIUS_MILES = 95;
   // Was 2 (a hard "we need two calendar days" gate). Relaxed to 1 so
   // the client's tomorrow-forward date picker matches — the client's
   // minBookingDate = today+1 got customers all the way through the form
@@ -1100,8 +1102,8 @@ Rules:
         eligible,
         distanceMiles: Math.round(distance),
         message: eligible
-          ? `You're ${Math.round(distance)} miles from our service center — you're in our area!`
-          : `Unfortunately, ${Math.round(distance)} miles is outside our ${MAX_SERVICE_RADIUS_MILES}-mile service area from North Waterboro. Call us at 207-572-0502 to discuss options.`,
+          ? `You're in our Southern Maine service area — we've got you covered.`
+          : `That address is a bit outside our regular Southern Maine route. Give us a call at 207-572-0502 and we'll do our best to work it out.`,
       });
     } catch (error) {
       log("ERROR", "booking", "Address validation failed", { error: String(error) });
