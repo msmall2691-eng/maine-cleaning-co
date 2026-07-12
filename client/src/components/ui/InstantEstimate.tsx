@@ -54,28 +54,33 @@ function Seg<T extends string>({
   onChange,
   id,
 }: {
-  options: { id: T; label: string }[];
+  options: { id: T; label: string; icon?: React.ComponentType<{ className?: string }> }[];
   value: T;
   onChange: (v: T) => void;
   id: string;
 }) {
   return (
-    <div className="flex rounded-xl bg-muted/60 p-1 gap-0.5 w-full overflow-hidden">
-      {options.map((o) => (
-        <button
-          key={o.id}
-          type="button"
-          onClick={() => onChange(o.id)}
-          data-testid={`${id}-${o.id}`}
-          className={`flex-1 py-2 px-1 rounded-lg text-[13px] sm:text-sm font-medium transition-all text-center leading-snug min-h-[44px] flex items-center justify-center ${
-            value === o.id
-              ? "bg-card text-foreground shadow-md ring-1 ring-primary/30 font-semibold"
-              : "text-muted-foreground hover:text-foreground"
-          }`}
-        >
-          {o.label}
-        </button>
-      ))}
+    <div className="flex rounded-xl bg-muted/40 p-1 gap-0.5 w-full overflow-hidden border border-border/40">
+      {options.map((o) => {
+        const active = value === o.id;
+        const Icon = o.icon;
+        return (
+          <button
+            key={o.id}
+            type="button"
+            onClick={() => onChange(o.id)}
+            data-testid={`${id}-${o.id}`}
+            className={`flex-1 py-2 px-1.5 rounded-lg text-[12.5px] sm:text-[13px] font-medium transition-all text-center leading-snug min-h-[44px] flex items-center justify-center gap-1.5 ${
+              active
+                ? "bg-primary/15 text-foreground ring-1 ring-primary/40 font-semibold shadow-[inset_0_1px_0_hsl(var(--primary)/0.1)]"
+                : "text-muted-foreground hover:text-foreground hover:bg-card/40"
+            }`}
+          >
+            {Icon && <Icon className={`w-3.5 h-3.5 ${active ? "text-primary" : "opacity-60"}`} />}
+            <span>{o.label}</span>
+          </button>
+        );
+      })}
     </div>
   );
 }
@@ -677,17 +682,37 @@ export function InstantEstimate({ defaultCategory, bookingIntent = false }: Inst
               <div>
                 <div className="flex justify-between items-baseline mb-1.5">
                   <label className="label-sm !mb-0">Square footage</label>
-                  <span className="text-base font-bold text-foreground tabular-nums" data-testid="value-sqft">{sqft[0].toLocaleString()} <span className="text-sm font-semibold text-muted-foreground">sq ft</span></span>
+                  <span className="text-lg font-bold text-primary tabular-nums" data-testid="value-sqft">
+                    {sqft[0].toLocaleString()}
+                    <span className="text-xs font-medium text-muted-foreground ml-1">sq ft</span>
+                  </span>
                 </div>
                 <Slider value={sqft} onValueChange={setSqft} min={500} max={6000} step={100} className="w-full" data-testid="slider-sqft" />
-                <div className="flex justify-between mt-1 text-xs text-muted-foreground"><span>500</span><span>6,000+</span></div>
+                <div className="flex justify-between items-center mt-1.5">
+                  <span className="text-[10px] text-muted-foreground">500</span>
+                  <span className="text-[10.5px] text-muted-foreground/80 font-medium">
+                    {(() => {
+                      const s = sqft[0];
+                      if (s < 800) return "≈ studio / small condo";
+                      if (s < 1300) return "≈ 1–2 bedroom";
+                      if (s < 1900) return "≈ 2–3 bedroom";
+                      if (s < 2700) return "≈ 3–4 bedroom";
+                      if (s < 3600) return "≈ 4–5 bedroom";
+                      return "≈ large home";
+                    })()}
+                  </span>
+                  <span className="text-[10px] text-muted-foreground">6,000+</span>
+                </div>
               </div>
 
               <div>
                 <div className="flex justify-between items-baseline mb-1.5">
-                  <label className="label-sm !mb-0">Bathrooms <span className="font-normal text-muted-foreground text-[11px]">(inc. half baths)</span></label>
-                  <span className="text-base font-bold text-foreground" data-testid="value-bathrooms">
+                  <label className="label-sm !mb-0">Bathrooms</label>
+                  <span className="text-lg font-bold text-primary tabular-nums" data-testid="value-bathrooms">
                     {bathrooms % 1 === 0.5 ? `${Math.floor(bathrooms)}½` : bathrooms}
+                    <span className="text-xs font-medium text-muted-foreground ml-1">
+                      {bathrooms === 1 ? "bath" : "baths"}
+                    </span>
                   </span>
                 </div>
                 <div className="flex items-center gap-2">
@@ -698,24 +723,21 @@ export function InstantEstimate({ defaultCategory, bookingIntent = false }: Inst
                     data-testid="button-bath-minus"
                     aria-label="Fewer bathrooms"
                   >&minus;</button>
-                  <div className="flex-1 h-10 rounded-lg bg-muted/40 flex items-center justify-center gap-1">
-                    {[1, 1.5, 2, 2.5, 3, 3.5, 4, 4.5, 5, 5.5, 6].filter(n => n <= 4.5).map(n => {
+                  <div className="flex-1 h-10 rounded-lg bg-muted/30 border border-border/40 flex items-center justify-center gap-1 px-2">
+                    {[1, 1.5, 2, 2.5, 3, 3.5, 4, 4.5, 5, 5.5, 6].map(n => {
                       const isHalf = n % 1 === 0.5;
                       const filled = n <= bathrooms;
                       return (
                         <div
                           key={n}
-                          className={`transition-colors ${
+                          className={`transition-all ${
                             isHalf
-                              ? `w-1 h-1 rounded-full ${filled ? "bg-primary/50" : "bg-muted-foreground/15"}`
-                              : `w-2 h-2 rounded-full ${filled ? "bg-primary" : "bg-muted-foreground/20"}`
+                              ? `w-1 h-1 rounded-full ${filled ? "bg-primary/60" : "bg-muted-foreground/20"}`
+                              : `w-2.5 h-2.5 rounded-full ${filled ? "bg-primary shadow-[0_0_6px_hsl(var(--primary)/0.5)]" : "bg-muted-foreground/25"}`
                           }`}
                         />
                       );
                     })}
-                    {bathrooms > 4.5 && (
-                      <span className="text-xs font-semibold text-primary ml-0.5">{bathrooms % 1 === 0.5 ? `${Math.floor(bathrooms)}½` : bathrooms}</span>
-                    )}
                   </div>
                   <button
                     type="button"
@@ -725,9 +747,9 @@ export function InstantEstimate({ defaultCategory, bookingIntent = false }: Inst
                     aria-label="More bathrooms"
                   >+</button>
                 </div>
-                <div className="flex justify-between mt-1 text-[10px] text-muted-foreground px-0.5">
-                  <span>1</span><span>Full = ●&nbsp;&nbsp;Half = ·</span><span>6</span>
-                </div>
+                <p className="text-[10.5px] text-muted-foreground/70 mt-1.5 text-center">
+                  Tap + / − · half-baths count too
+                </p>
               </div>
 
               {category === "residential" && (

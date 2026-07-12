@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { motion, useReducedMotion } from "framer-motion";
-import { MapPin, Move, Maximize2, Expand, Shrink, X } from "lucide-react";
+import { MapPin, Maximize2, Expand, Shrink, X } from "lucide-react";
 
 /**
  * Serving-Southern-Maine — Obsidian-style INTERACTIVE knowledge graph.
@@ -378,8 +378,8 @@ function ObsidianGraph({ animate }: { animate: boolean }) {
       const links = graph.links;
       const cx = w / 2;
       const cy = h * 0.52;
-      const REPULSION = 620;
-      const CENTRIPETAL = 0.005;
+      const REPULSION = 850;
+      const CENTRIPETAL = 0.004;
       const DAMPING = 0.86;
       const CURSOR_STRENGTH = 3400;
       const CURSOR_RADIUS = 80;
@@ -675,13 +675,14 @@ function ObsidianGraph({ animate }: { animate: boolean }) {
           ctx.stroke();
         }
 
-        // Labels
+        // Labels — dramatically cut ambient noise on mobile. Only HQ + hub
+        // labels always show. City names appear on hover / selection so the
+        // graph reads as a clean network instead of a wall of overlapping text.
         const showLabel =
           n.kind === "hq" ||
           n.kind === "hub" ||
           isHovered ||
-          isConnected ||
-          (n.visits ?? 0) >= 300;
+          isConnected;
         if (showLabel) {
           const labelAlpha = dim ? 0.35 : isHovered ? 1 : n.kind === "hq" ? 0.95 : 0.75;
           ctx.font = `${
@@ -846,19 +847,6 @@ function ObsidianGraph({ animate }: { animate: boolean }) {
     forceRerender((n) => n + 1);
   }, [initGraph]);
 
-  const nudgeHQ = useCallback(() => {
-    const graph = graphRef.current;
-    if (!graph) return;
-    const hq = graph.nodes[graph.hqIndex];
-    const { w, h } = sizeRef.current;
-    hq.x = w / 2;
-    hq.y = h * 0.52;
-    hq.vx = 0;
-    hq.vy = 0;
-    viewRef.current = { x: 0, y: 0, scale: 1 };
-    forceRerender((n) => n + 1);
-  }, []);
-
   const clearSelection = useCallback(() => setSelectedIdx(-1), []);
 
   const graph = graphRef.current;
@@ -866,7 +854,7 @@ function ObsidianGraph({ animate }: { animate: boolean }) {
 
   const wrapperClasses = isFullscreen
     ? "graph-canvas fixed inset-0 z-[80] w-full h-full overflow-hidden border-0 shadow-none rounded-none"
-    : "graph-canvas relative w-full h-72 sm:h-[26rem] md:h-[30rem] rounded-2xl overflow-hidden border border-border/60 shadow-[0_4px_28px_rgba(0,0,0,0.22)]";
+    : "graph-canvas relative w-full h-80 sm:h-[26rem] md:h-[30rem] rounded-2xl overflow-hidden border border-border/60 shadow-[0_4px_28px_rgba(0,0,0,0.22)]";
 
   return (
     <div
@@ -909,47 +897,39 @@ function ObsidianGraph({ animate }: { animate: boolean }) {
         </div>
       </div>
 
-      {/* Top-right controls */}
-      <div className="absolute top-3 right-3 flex items-center gap-1.5">
+      {/* Top-right controls — compact cluster in one pill */}
+      <div className="absolute top-3 right-3 flex items-center gap-1">
         {selectedIdx >= 0 && (
           <button
             type="button"
             onClick={clearSelection}
-            className="h-8 px-2.5 rounded-full bg-black/40 backdrop-blur-md border border-white/10 flex items-center gap-1 text-white/80 hover:text-white hover:border-white/25 transition-colors text-[10.5px] font-semibold"
+            className="w-8 h-8 rounded-full bg-black/40 backdrop-blur-md border border-white/10 flex items-center justify-center text-white/80 hover:text-white hover:border-white/25 transition-colors"
             title="Clear selection"
             data-testid="button-graph-clear-selection"
           >
-            <X className="w-3 h-3" />
-            Clear
+            <X className="w-3.5 h-3.5" />
           </button>
         )}
-        <button
-          type="button"
-          onClick={nudgeHQ}
-          className="w-8 h-8 rounded-full bg-black/40 backdrop-blur-md border border-white/10 flex items-center justify-center text-white/80 hover:text-white hover:border-white/25 transition-colors"
-          title="Re-center HQ"
-          data-testid="button-graph-focus-hq"
-        >
-          <Move className="w-3.5 h-3.5" />
-        </button>
-        <button
-          type="button"
-          onClick={resetView}
-          className="w-8 h-8 rounded-full bg-black/40 backdrop-blur-md border border-white/10 flex items-center justify-center text-white/80 hover:text-white hover:border-white/25 transition-colors"
-          title="Reset graph"
-          data-testid="button-graph-reset"
-        >
-          <Maximize2 className="w-3.5 h-3.5" />
-        </button>
-        <button
-          type="button"
-          onClick={() => setIsFullscreen((f) => !f)}
-          className="w-8 h-8 rounded-full bg-black/40 backdrop-blur-md border border-white/10 flex items-center justify-center text-white/80 hover:text-white hover:border-white/25 transition-colors"
-          title={isFullscreen ? "Exit fullscreen (Esc)" : "Expand fullscreen"}
-          data-testid="button-graph-fullscreen"
-        >
-          {isFullscreen ? <Shrink className="w-3.5 h-3.5" /> : <Expand className="w-3.5 h-3.5" />}
-        </button>
+        <div className="flex items-center bg-black/40 backdrop-blur-md border border-white/10 rounded-full overflow-hidden">
+          <button
+            type="button"
+            onClick={resetView}
+            className="w-8 h-8 flex items-center justify-center text-white/80 hover:text-white hover:bg-white/10 transition-colors"
+            title="Reset graph"
+            data-testid="button-graph-reset"
+          >
+            <Maximize2 className="w-3.5 h-3.5" />
+          </button>
+          <button
+            type="button"
+            onClick={() => setIsFullscreen((f) => !f)}
+            className="w-8 h-8 flex items-center justify-center text-white/80 hover:text-white hover:bg-white/10 transition-colors border-l border-white/10"
+            title={isFullscreen ? "Exit fullscreen (Esc)" : "Expand fullscreen"}
+            data-testid="button-graph-fullscreen"
+          >
+            {isFullscreen ? <Shrink className="w-3.5 h-3.5" /> : <Expand className="w-3.5 h-3.5" />}
+          </button>
+        </div>
       </div>
 
       {/* First-time hint — fades out once the user interacts */}
