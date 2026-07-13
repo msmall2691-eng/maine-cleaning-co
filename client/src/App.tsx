@@ -6,6 +6,7 @@ import { Toaster } from "@/components/ui/toaster";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import Navbar from "@/components/layout/Navbar";
 import Footer from "@/components/layout/Footer";
+import MStudioHome from "@/pages/MStudioHome";
 import Home from "@/pages/Home";
 import Book from "@/pages/Book";
 import Portal from "@/pages/Portal";
@@ -50,7 +51,8 @@ function Router() {
     <>
     <ScrollToTop />
     <Switch>
-      <Route path="/" component={Home} />
+      <Route path="/" component={MStudioHome} />
+      <Route path="/cleaning" component={Home} />
       <Route path="/book" component={Book} />
       {/* Customer portal — the components + all /api/portal/* server
           handlers were already built and shipped in code; they just

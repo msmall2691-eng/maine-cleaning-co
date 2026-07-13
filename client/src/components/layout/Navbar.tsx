@@ -1,26 +1,43 @@
 import { useState, useEffect } from "react";
 import { Link, useLocation } from "wouter";
 import { AnimatePresence, motion } from "framer-motion";
-import { Menu, X, Phone, Calendar, User } from "lucide-react";
+import { Menu, X, Phone, Calendar, User, Mail, ArrowRight } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { ThemeToggle } from "@/components/ui/ThemeToggle";
 import { companyInfo } from "@/lib/company-info";
 
-const navLinks = [
-  { href: "/", label: "Home" },
+const MSTUDIO_EMAIL = "msmall2691@gmail.com";
+const MSTUDIO_START_HREF = `mailto:${MSTUDIO_EMAIL}?subject=Start%20a%20Project%20with%20M%20Studio`;
+
+type NavLink = { href: string; label: string };
+
+const cleaningLinks: NavLink[] = [
+  { href: "/cleaning", label: "Home" },
   { href: "/services", label: "Services" },
   { href: "/about", label: "About" },
   { href: "/how-it-works", label: "How It Works" },
   { href: "/service-areas", label: "Service Areas" },
   { href: "/short-term-rentals", label: "Airbnb & STR" },
   { href: "/blog", label: "Blog" },
-  { href: "/#contact", label: "Contact" },
+];
+
+const mstudioLinks: NavLink[] = [
+  { href: "#what-i-build", label: "What I Build" },
+  { href: "#founder", label: "The Founder" },
+  { href: "#philosophy", label: "Philosophy" },
+  { href: "/cleaning", label: "Cleaning Co." },
 ];
 
 export default function Navbar() {
   const [location] = useLocation();
   const [scrolled, setScrolled] = useState(false);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+
+  // M Studio brand shows on the front door only. Every cleaning route
+  // (booking / portal / admin / services / etc.) keeps its own nav so
+  // existing customers aren't confused.
+  const isMStudio = location === "/";
+  const links = isMStudio ? mstudioLinks : cleaningLinks;
 
   useEffect(() => {
     // rAF-throttle + only setState when the boolean flips. Previously we
@@ -54,18 +71,24 @@ export default function Navbar() {
 
   useEffect(() => {
     document.body.style.overflow = mobileMenuOpen ? "hidden" : "";
-    return () => { document.body.style.overflow = ""; };
+    return () => {
+      document.body.style.overflow = "";
+    };
   }, [mobileMenuOpen]);
 
-  const scrollToSection = (hash: string) => {
+  const scrollToId = (id: string) => {
     setMobileMenuOpen(false);
-    const id = hash.replace("#", "");
     const el = document.getElementById(id);
     if (el) el.scrollIntoView({ behavior: "smooth" });
-    else window.location.href = "/#" + id;
+    else if (isMStudio) {
+      // On M Studio home; anchor doesn't exist yet — fall back to top
+      window.scrollTo({ top: 0, behavior: "smooth" });
+    } else {
+      window.location.href = "/#" + id;
+    }
   };
 
-  const scrollToEstimate = () => scrollToSection("get-estimate");
+  const scrollToEstimate = () => scrollToId("get-estimate");
 
   return (
     <header
@@ -78,44 +101,42 @@ export default function Navbar() {
         <Link href="/" className="flex-shrink-0 group" data-testid="link-home-logo">
           <div className="flex flex-col leading-none">
             <span className="font-serif font-bold text-[15px] sm:text-[17px] md:text-[18px] tracking-[-0.01em] text-foreground group-hover:text-primary transition-colors duration-200">
-              The Maine Cleaning Co.
+              {isMStudio ? "M Studio" : "The Maine Cleaning Co."}
             </span>
             <span className="text-[9.5px] sm:text-[10px] tracking-[0.1em] text-muted-foreground/70 uppercase font-medium hidden sm:block mt-0.5 group-hover:text-muted-foreground transition-colors">
-              Est. 2018 · Southern Maine
+              {isMStudio ? "Built by an operator" : "Est. 2018 · Southern Maine"}
             </span>
           </div>
         </Link>
 
         {/* Desktop nav */}
         <nav className="hidden md:flex items-center gap-0.5 lg:gap-1">
-          {navLinks.map((link) => {
-            const isHash = link.href.includes("#");
-            const hashId = isHash ? link.href.split("#")[1] : "";
+          {links.map((link) => {
+            const isAnchor = link.href.startsWith("#");
             const baseCls = `relative px-3.5 lg:px-4 py-2 text-[13px] lg:text-[13.5px] font-medium transition-colors duration-200 rounded-xl tracking-wide group ${
-              location === link.href
+              !isAnchor && location === link.href
                 ? "text-foreground font-semibold"
                 : "text-muted-foreground hover:text-foreground"
             }`;
-            if (isHash) {
+            const testId = `link-nav-${link.label.toLowerCase().replace(/[^a-z]/g, "-")}`;
+            if (isAnchor) {
               return (
                 <a
                   key={link.href}
                   href={link.href}
                   className={baseCls}
-                  data-testid={`link-nav-${link.label.toLowerCase().replace(/[^a-z]/g, "-")}`}
-                  onClick={(e) => { e.preventDefault(); scrollToSection(hashId); }}
+                  data-testid={testId}
+                  onClick={(e) => {
+                    e.preventDefault();
+                    scrollToId(link.href.slice(1));
+                  }}
                 >
                   {link.label}
                 </a>
               );
             }
             return (
-              <Link
-                key={link.href}
-                href={link.href}
-                className={baseCls}
-                data-testid={`link-nav-${link.label.toLowerCase().replace(/[^a-z]/g, "-")}`}
-              >
+              <Link key={link.href} href={link.href} className={baseCls} data-testid={testId}>
                 {link.label}
                 {location === link.href && (
                   <motion.span
@@ -130,44 +151,66 @@ export default function Navbar() {
 
         {/* Desktop CTAs */}
         <div className="hidden md:flex items-center gap-2.5">
-          <a
-            href={companyInfo.contact.phoneHref}
-            className="flex items-center gap-1.5 text-[13px] font-medium text-muted-foreground hover:text-foreground transition-colors px-2"
-            data-testid="link-nav-phone"
-          >
-            <Phone className="w-3.5 h-3.5 text-primary/70" />
-            {companyInfo.contact.phoneDisplay}
-          </a>
-          {/* Portal entry — every customer who books via /book gets an
-              account auto-created and a welcome email with a reset link.
-              This nav item is how a returning customer signs in later. */}
-          <Link
-            href="/portal/login"
-            className="flex items-center gap-1.5 text-[13px] font-medium text-muted-foreground hover:text-foreground transition-colors px-2"
-            data-testid="link-nav-portal"
-          >
-            <User className="w-3.5 h-3.5 text-primary/70" />
-            Sign In
-          </Link>
-          <ThemeToggle />
-          <Button
-            size="sm"
-            variant="outline"
-            className="rounded-full px-4 h-9 text-[13px] font-medium tracking-wide"
-            onClick={scrollToEstimate}
-            data-testid="button-nav-estimate"
-          >
-            Get a Quote
-          </Button>
-          <Link href="/book">
-            <Button
-              size="sm"
-              className="rounded-full px-5 h-9 text-[13px] font-semibold shadow-[0_2px_8px_rgba(0,0,0,0.15)] tracking-wide gap-1.5"
-              data-testid="button-nav-book"
-            >
-              <Calendar className="w-3.5 h-3.5" /> Book Now
-            </Button>
-          </Link>
+          {isMStudio ? (
+            <>
+              <a
+                href={`mailto:${MSTUDIO_EMAIL}`}
+                className="flex items-center gap-1.5 text-[13px] font-medium text-muted-foreground hover:text-foreground transition-colors px-2"
+                data-testid="link-nav-email"
+              >
+                <Mail className="w-3.5 h-3.5 text-primary/70" />
+                {MSTUDIO_EMAIL}
+              </a>
+              <ThemeToggle />
+              <a href={MSTUDIO_START_HREF}>
+                <Button
+                  size="sm"
+                  className="rounded-full px-5 h-9 text-[13px] font-semibold shadow-[0_2px_8px_rgba(0,0,0,0.15)] tracking-wide gap-1.5"
+                  data-testid="button-nav-start-project"
+                >
+                  Start a Project <ArrowRight className="w-3.5 h-3.5" />
+                </Button>
+              </a>
+            </>
+          ) : (
+            <>
+              <a
+                href={companyInfo.contact.phoneHref}
+                className="flex items-center gap-1.5 text-[13px] font-medium text-muted-foreground hover:text-foreground transition-colors px-2"
+                data-testid="link-nav-phone"
+              >
+                <Phone className="w-3.5 h-3.5 text-primary/70" />
+                {companyInfo.contact.phoneDisplay}
+              </a>
+              <Link
+                href="/portal/login"
+                className="flex items-center gap-1.5 text-[13px] font-medium text-muted-foreground hover:text-foreground transition-colors px-2"
+                data-testid="link-nav-portal"
+              >
+                <User className="w-3.5 h-3.5 text-primary/70" />
+                Sign In
+              </Link>
+              <ThemeToggle />
+              <Button
+                size="sm"
+                variant="outline"
+                className="rounded-full px-4 h-9 text-[13px] font-medium tracking-wide"
+                onClick={scrollToEstimate}
+                data-testid="button-nav-estimate"
+              >
+                Get a Quote
+              </Button>
+              <Link href="/book">
+                <Button
+                  size="sm"
+                  className="rounded-full px-5 h-9 text-[13px] font-semibold shadow-[0_2px_8px_rgba(0,0,0,0.15)] tracking-wide gap-1.5"
+                  data-testid="button-nav-book"
+                >
+                  <Calendar className="w-3.5 h-3.5" /> Book Now
+                </Button>
+              </Link>
+            </>
+          )}
         </div>
 
         {/* Mobile controls */}
@@ -179,13 +222,13 @@ export default function Navbar() {
             aria-label="Toggle menu"
             data-testid="button-mobile-menu"
           >
-          <motion.div
-            animate={{ rotate: mobileMenuOpen ? 90 : 0 }}
-            transition={{ duration: 0.2, ease: [0.22, 1, 0.36, 1] }}
-          >
-            {mobileMenuOpen ? <X className="w-5 h-5" /> : <Menu className="w-5 h-5" />}
-          </motion.div>
-        </button>
+            <motion.div
+              animate={{ rotate: mobileMenuOpen ? 90 : 0 }}
+              transition={{ duration: 0.2, ease: [0.22, 1, 0.36, 1] }}
+            >
+              {mobileMenuOpen ? <X className="w-5 h-5" /> : <Menu className="w-5 h-5" />}
+            </motion.div>
+          </button>
         </div>
       </div>
 
@@ -209,11 +252,10 @@ export default function Navbar() {
               className="md:hidden navbar-glass border-t-0 overflow-hidden absolute top-full left-0 right-0 z-50"
             >
               <nav className="flex flex-col px-6 pt-4 pb-7 gap-0.5">
-                {navLinks.map((link, i) => {
-                  const isHash = link.href.includes("#");
-                  const hashId = isHash ? link.href.split("#")[1] : "";
+                {links.map((link, i) => {
+                  const isAnchor = link.href.startsWith("#");
                   const cls = `flex items-center py-3.5 px-4 rounded-2xl text-[15px] font-medium active:bg-secondary/50 transition-colors ${
-                    location === link.href
+                    !isAnchor && location === link.href
                       ? "text-foreground font-semibold bg-secondary/40"
                       : "text-muted-foreground hover:text-foreground hover:bg-secondary/20"
                   }`;
@@ -224,12 +266,15 @@ export default function Navbar() {
                       animate={{ opacity: 1, x: 0 }}
                       transition={{ delay: i * 0.04, duration: 0.28, ease: [0.22, 1, 0.36, 1] }}
                     >
-                      {isHash ? (
+                      {isAnchor ? (
                         <a
                           href={link.href}
                           className={cls}
                           data-testid={`link-mobile-${link.label.toLowerCase().replace(/[^a-z]/g, "-")}`}
-                          onClick={(e) => { e.preventDefault(); scrollToSection(hashId); }}
+                          onClick={(e) => {
+                            e.preventDefault();
+                            scrollToId(link.href.slice(1));
+                          }}
                         >
                           {link.label}
                         </a>
@@ -246,39 +291,62 @@ export default function Navbar() {
                   );
                 })}
 
-                <motion.div
-                  initial={{ opacity: 0, y: 8 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  transition={{ delay: navLinks.length * 0.04 + 0.06, duration: 0.28 }}
-                  className="pt-3 space-y-2.5"
-                >
-                  <a href={companyInfo.contact.phoneHref} data-testid="link-mobile-phone">
-                    <Button variant="outline" className="rounded-full h-12 w-full text-[15px] font-medium border-border gap-2">
-                      <Phone className="w-4 h-4" /> {companyInfo.contact.phoneDisplay}
-                    </Button>
-                  </a>
-                  <Link href="/portal/login" data-testid="link-mobile-portal">
-                    <Button variant="ghost" className="rounded-full h-11 w-full text-[13px] font-medium text-muted-foreground gap-2">
-                      <User className="w-4 h-4" /> Sign in to your portal
-                    </Button>
-                  </Link>
-                  <Link href="/book">
-                    <Button
-                      className="rounded-full h-12 w-full text-[15px] font-semibold shadow-[0_2px_8px_rgba(0,0,0,0.1)] gap-2"
-                      data-testid="button-mobile-book"
-                    >
-                      <Calendar className="w-4 h-4" /> Book a Cleaning
-                    </Button>
-                  </Link>
-                  <Button
-                    variant="ghost"
-                    className="rounded-full h-11 w-full text-[13px] font-medium text-muted-foreground"
-                    onClick={scrollToEstimate}
-                    data-testid="button-mobile-estimate"
+                {isMStudio ? (
+                  <motion.div
+                    initial={{ opacity: 0, y: 8 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ delay: links.length * 0.04 + 0.06, duration: 0.28 }}
+                    className="pt-3 space-y-2.5"
                   >
-                    Or just get an estimate
-                  </Button>
-                </motion.div>
+                    <a href={`mailto:${MSTUDIO_EMAIL}`} data-testid="link-mobile-email">
+                      <Button variant="outline" className="rounded-full h-12 w-full text-[15px] font-medium border-border gap-2">
+                        <Mail className="w-4 h-4" /> {MSTUDIO_EMAIL}
+                      </Button>
+                    </a>
+                    <a href={MSTUDIO_START_HREF}>
+                      <Button
+                        className="rounded-full h-12 w-full text-[15px] font-semibold shadow-[0_2px_8px_rgba(0,0,0,0.1)] gap-2"
+                        data-testid="button-mobile-start-project"
+                      >
+                        Start a Project <ArrowRight className="w-4 h-4" />
+                      </Button>
+                    </a>
+                  </motion.div>
+                ) : (
+                  <motion.div
+                    initial={{ opacity: 0, y: 8 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ delay: links.length * 0.04 + 0.06, duration: 0.28 }}
+                    className="pt-3 space-y-2.5"
+                  >
+                    <a href={companyInfo.contact.phoneHref} data-testid="link-mobile-phone">
+                      <Button variant="outline" className="rounded-full h-12 w-full text-[15px] font-medium border-border gap-2">
+                        <Phone className="w-4 h-4" /> {companyInfo.contact.phoneDisplay}
+                      </Button>
+                    </a>
+                    <Link href="/portal/login" data-testid="link-mobile-portal">
+                      <Button variant="ghost" className="rounded-full h-11 w-full text-[13px] font-medium text-muted-foreground gap-2">
+                        <User className="w-4 h-4" /> Sign in to your portal
+                      </Button>
+                    </Link>
+                    <Link href="/book">
+                      <Button
+                        className="rounded-full h-12 w-full text-[15px] font-semibold shadow-[0_2px_8px_rgba(0,0,0,0.1)] gap-2"
+                        data-testid="button-mobile-book"
+                      >
+                        <Calendar className="w-4 h-4" /> Book a Cleaning
+                      </Button>
+                    </Link>
+                    <Button
+                      variant="ghost"
+                      className="rounded-full h-11 w-full text-[13px] font-medium text-muted-foreground"
+                      onClick={scrollToEstimate}
+                      data-testid="button-mobile-estimate"
+                    >
+                      Or just get an estimate
+                    </Button>
+                  </motion.div>
+                )}
               </nav>
             </motion.div>
           </>
