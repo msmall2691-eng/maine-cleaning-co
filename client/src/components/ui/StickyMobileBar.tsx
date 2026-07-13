@@ -16,10 +16,10 @@ export function StickyMobileBar() {
     return () => window.removeEventListener("scroll", onScroll);
   }, []);
 
-  // Cleaning-specific CTA — hide on the M Studio homepage where a
-  // "Book Now" button would be off-brand. Also hidden on /book itself
-  // because the estimator IS the whole page there.
-  if (!visible || location === "/book" || location === "/") return null;
+  // On the /book page the estimator IS the whole page — the sticky bar's
+  // primary CTA would just re-land the customer where they already are.
+  // Hide it there and let the page's own Book button own the flow.
+  if (!visible || location === "/book") return null;
 
   return (
     <div
