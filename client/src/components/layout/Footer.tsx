@@ -3,11 +3,15 @@ import { Phone, MessageSquare, Mail, MapPin, ArrowRight } from "lucide-react";
 import { companyInfo } from "@/lib/company-info";
 import { Button } from "@/components/ui/button";
 
+const MSTUDIO_EMAIL = "msmall2691@gmail.com";
+const MSTUDIO_START_HREF = `mailto:${MSTUDIO_EMAIL}?subject=Start%20a%20Project%20with%20M%20Studio`;
+
 export default function Footer() {
   const [location] = useLocation();
+  const isMStudio = location === "/";
 
   const scrollToEstimate = (e: React.MouseEvent) => {
-    if (location === "/") {
+    if (location === "/cleaning") {
       e.preventDefault();
       document.getElementById("get-estimate")?.scrollIntoView({ behavior: "smooth" });
     }
@@ -18,90 +22,159 @@ export default function Footer() {
       <div className="container mx-auto px-4 sm:px-6">
 
         {/* ── CTA banner ── */}
-        <div className="bg-primary/10 border border-primary/20 rounded-2xl px-6 py-6 mb-14 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
-          <div>
-            <p className="font-semibold text-foreground">The Maine choice for a clean space.</p>
-            <p className="text-sm text-muted-foreground mt-0.5">Free estimate in under 60 seconds — no commitment required.</p>
-          </div>
-          <a href="/#get-estimate" onClick={scrollToEstimate} data-testid="link-footer-cta-estimate">
-            <Button size="sm" className="rounded-full h-9 px-5 text-sm gap-1.5 flex-shrink-0">
-              Get Estimate <ArrowRight className="w-3.5 h-3.5" />
-            </Button>
-          </a>
-        </div>
-
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-10 mb-14">
-          {/* Brand */}
-          <div className="sm:col-span-2 lg:col-span-1">
-            <div className="mb-4">
-              <span className="font-serif font-bold text-lg tracking-[-0.02em] text-foreground block">
-                The Maine Cleaning Co.
-              </span>
-              <span className="text-xs tracking-[0.06em] text-muted-foreground uppercase font-medium mt-0.5 block">
-                Est. 2018 · Southern Maine
-              </span>
+        {isMStudio ? (
+          <div className="bg-primary/10 border border-primary/20 rounded-2xl px-6 py-6 mb-14 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+            <div>
+              <p className="font-semibold text-foreground">Have a system that isn't working the way it should?</p>
+              <p className="text-sm text-muted-foreground mt-0.5">Send a short note — I'll get back to you within a business day.</p>
             </div>
-            <p className="text-muted-foreground text-sm leading-relaxed mb-6 max-w-xs">
-              Professional cleaning for homes, businesses, and vacation rentals across Southern Maine since 2018.
-            </p>
-            <div className="flex flex-col gap-3 text-sm">
-              <a href={companyInfo.contact.phoneHref} className="inline-flex items-center gap-2.5 text-foreground hover:text-primary transition-colors" data-testid="link-footer-call">
-                <Phone className="w-4 h-4 text-primary flex-shrink-0" /> {companyInfo.contact.phoneDisplay}
-              </a>
-              <a href={companyInfo.contact.smsHref} className="inline-flex sm:hidden items-center gap-2.5 text-foreground hover:text-primary transition-colors" data-testid="link-footer-text">
-                <MessageSquare className="w-4 h-4 text-primary flex-shrink-0" /> Text Us
-              </a>
-              <a href={companyInfo.contact.phoneHref} className="hidden sm:inline-flex items-center gap-2.5 text-foreground hover:text-primary transition-colors" data-testid="link-footer-text-desktop">
-                <MessageSquare className="w-4 h-4 text-primary flex-shrink-0" /> Call or Text {companyInfo.contact.phoneDisplay}
-              </a>
-              <a href={companyInfo.contact.emailHref} className="inline-flex items-center gap-2.5 text-foreground hover:text-primary transition-colors" data-testid="link-footer-email">
-                <Mail className="w-4 h-4 text-primary flex-shrink-0" /> {companyInfo.contact.email}
-              </a>
+            <a href={MSTUDIO_START_HREF} data-testid="link-footer-cta-start">
+              <Button size="sm" className="rounded-full h-9 px-5 text-sm gap-1.5 flex-shrink-0">
+                Start a Project <ArrowRight className="w-3.5 h-3.5" />
+              </Button>
+            </a>
+          </div>
+        ) : (
+          <div className="bg-primary/10 border border-primary/20 rounded-2xl px-6 py-6 mb-14 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+            <div>
+              <p className="font-semibold text-foreground">The Maine choice for a clean space.</p>
+              <p className="text-sm text-muted-foreground mt-0.5">Free estimate in under 60 seconds — no commitment required.</p>
+            </div>
+            <a href="/cleaning#get-estimate" onClick={scrollToEstimate} data-testid="link-footer-cta-estimate">
+              <Button size="sm" className="rounded-full h-9 px-5 text-sm gap-1.5 flex-shrink-0">
+                Get Estimate <ArrowRight className="w-3.5 h-3.5" />
+              </Button>
+            </a>
+          </div>
+        )}
+
+        {isMStudio ? (
+          // ── M Studio footer columns ──
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-10 mb-14">
+            <div className="sm:col-span-2 lg:col-span-1">
+              <div className="mb-4">
+                <span className="font-serif font-bold text-lg tracking-[-0.02em] text-foreground block">
+                  M Studio
+                </span>
+                <span className="text-xs tracking-[0.06em] text-muted-foreground uppercase font-medium mt-0.5 block">
+                  Built by an operator
+                </span>
+              </div>
+              <p className="text-muted-foreground text-sm leading-relaxed mb-6 max-w-xs">
+                AI, automation, and custom software built around the way your business already
+                operates.
+              </p>
+              <div className="flex flex-col gap-3 text-sm">
+                <a
+                  href={`mailto:${MSTUDIO_EMAIL}`}
+                  className="inline-flex items-center gap-2.5 text-foreground hover:text-primary transition-colors"
+                  data-testid="link-footer-mstudio-email"
+                >
+                  <Mail className="w-4 h-4 text-primary flex-shrink-0" /> {MSTUDIO_EMAIL}
+                </a>
+              </div>
+            </div>
+
+            <div>
+              <h4 className="font-semibold text-foreground mb-5 text-xs uppercase tracking-[0.15em]">
+                What I Build
+              </h4>
+              <ul className="space-y-3 text-sm">
+                <li><a href="/#what-i-build" className="text-muted-foreground hover:text-foreground transition-colors">AI Workflows</a></li>
+                <li><a href="/#what-i-build" className="text-muted-foreground hover:text-foreground transition-colors">Custom Software</a></li>
+                <li><a href="/#what-i-build" className="text-muted-foreground hover:text-foreground transition-colors">Internal Tools</a></li>
+                <li><a href="/#what-i-build" className="text-muted-foreground hover:text-foreground transition-colors">Automation</a></li>
+                <li><a href="/#what-i-build" className="text-muted-foreground hover:text-foreground transition-colors">Dashboards</a></li>
+                <li><a href="/#what-i-build" className="text-muted-foreground hover:text-foreground transition-colors">Operations Systems</a></li>
+              </ul>
+            </div>
+
+            <div>
+              <h4 className="font-semibold text-foreground mb-5 text-xs uppercase tracking-[0.15em]">
+                About
+              </h4>
+              <ul className="space-y-3 text-sm">
+                <li><a href="/#founder" className="text-muted-foreground hover:text-foreground transition-colors">Built by an Operator</a></li>
+                <li><a href="/#philosophy" className="text-muted-foreground hover:text-foreground transition-colors">Philosophy</a></li>
+                <li><Link href="/cleaning" className="text-muted-foreground hover:text-foreground transition-colors">The Maine Cleaning Co.</Link></li>
+                <li><a href={MSTUDIO_START_HREF} className="text-muted-foreground hover:text-foreground transition-colors">Start a Project</a></li>
+              </ul>
             </div>
           </div>
-
-          {/* Services — no duplicates */}
-          <div>
-            <h4 className="font-semibold text-foreground mb-5 text-xs uppercase tracking-[0.15em]">Services</h4>
-            <ul className="space-y-3 text-sm">
-              <li><Link href="/services/residential" className="text-muted-foreground hover:text-foreground transition-colors">Residential Cleaning</Link></li>
-              <li><Link href="/services/deep-cleaning" className="text-muted-foreground hover:text-foreground transition-colors">Deep Cleaning</Link></li>
-              <li><Link href="/short-term-rentals" className="text-muted-foreground hover:text-foreground transition-colors">Airbnb & Vacation Rental</Link></li>
-              <li><Link href="/services/commercial" className="text-muted-foreground hover:text-foreground transition-colors">Commercial</Link></li>
-              <li><Link href="/services/move-in-out" className="text-muted-foreground hover:text-foreground transition-colors">Move-In / Move-Out</Link></li>
-            </ul>
-          </div>
-
-          {/* Company */}
-          <div>
-            <h4 className="font-semibold text-foreground mb-5 text-xs uppercase tracking-[0.15em]">Company</h4>
-            <ul className="space-y-3 text-sm">
-              <li><Link href="/about" className="text-muted-foreground hover:text-foreground transition-colors">About Us</Link></li>
-              <li><Link href="/how-it-works" className="text-muted-foreground hover:text-foreground transition-colors">How It Works</Link></li>
-              <li><Link href="/service-areas" className="text-muted-foreground hover:text-foreground transition-colors">Service Areas</Link></li>
-              <li><Link href="/blog" className="text-muted-foreground hover:text-foreground transition-colors">Blog</Link></li>
-              <li><a href="/#contact" onClick={(e) => { if (location === "/") { e.preventDefault(); document.getElementById("contact")?.scrollIntoView({ behavior: "smooth" }); }}} className="text-muted-foreground hover:text-foreground transition-colors">Contact</a></li>
-            </ul>
-          </div>
-
-          {/* Area + Connect */}
-          <div>
-            <h4 className="font-semibold text-foreground mb-5 text-xs uppercase tracking-[0.15em]">Service Area</h4>
-            <div className="flex items-start gap-2.5 text-sm text-muted-foreground mb-6">
-              <MapPin className="w-4 h-4 mt-0.5 text-primary flex-shrink-0" />
-              <span>York & Cumberland County,<br />Southern Maine</span>
+        ) : (
+          // ── Cleaning footer columns (existing) ──
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-10 mb-14">
+            <div className="sm:col-span-2 lg:col-span-1">
+              <div className="mb-4">
+                <span className="font-serif font-bold text-lg tracking-[-0.02em] text-foreground block">
+                  The Maine Cleaning Co.
+                </span>
+                <span className="text-xs tracking-[0.06em] text-muted-foreground uppercase font-medium mt-0.5 block">
+                  Est. 2018 · Southern Maine
+                </span>
+              </div>
+              <p className="text-muted-foreground text-sm leading-relaxed mb-6 max-w-xs">
+                Professional cleaning for homes, businesses, and vacation rentals across Southern Maine since 2018.
+              </p>
+              <div className="flex flex-col gap-3 text-sm">
+                <a href={companyInfo.contact.phoneHref} className="inline-flex items-center gap-2.5 text-foreground hover:text-primary transition-colors" data-testid="link-footer-call">
+                  <Phone className="w-4 h-4 text-primary flex-shrink-0" /> {companyInfo.contact.phoneDisplay}
+                </a>
+                <a href={companyInfo.contact.smsHref} className="inline-flex sm:hidden items-center gap-2.5 text-foreground hover:text-primary transition-colors" data-testid="link-footer-text">
+                  <MessageSquare className="w-4 h-4 text-primary flex-shrink-0" /> Text Us
+                </a>
+                <a href={companyInfo.contact.phoneHref} className="hidden sm:inline-flex items-center gap-2.5 text-foreground hover:text-primary transition-colors" data-testid="link-footer-text-desktop">
+                  <MessageSquare className="w-4 h-4 text-primary flex-shrink-0" /> Call or Text {companyInfo.contact.phoneDisplay}
+                </a>
+                <a href={companyInfo.contact.emailHref} className="inline-flex items-center gap-2.5 text-foreground hover:text-primary transition-colors" data-testid="link-footer-email">
+                  <Mail className="w-4 h-4 text-primary flex-shrink-0" /> {companyInfo.contact.email}
+                </a>
+              </div>
             </div>
-            <h4 className="font-semibold text-foreground mb-3 text-xs uppercase tracking-[0.15em]">Connect</h4>
-            <ul className="space-y-3 text-sm">
-              <li><a href={companyInfo.socials.facebook} target="_blank" rel="noopener noreferrer" className="text-muted-foreground hover:text-foreground transition-colors" data-testid="link-facebook">Facebook</a></li>
-              <li><a href={companyInfo.socials.instagram} target="_blank" rel="noopener noreferrer" className="text-muted-foreground hover:text-foreground transition-colors" data-testid="link-instagram">Instagram</a></li>
-              <li><a href="https://g.page/r/CYnY6ulFfvDtEAE/review" target="_blank" rel="noopener noreferrer" className="text-muted-foreground hover:text-foreground transition-colors" data-testid="link-google-review">Leave a Review</a></li>
-            </ul>
+
+            <div>
+              <h4 className="font-semibold text-foreground mb-5 text-xs uppercase tracking-[0.15em]">Services</h4>
+              <ul className="space-y-3 text-sm">
+                <li><Link href="/services/residential" className="text-muted-foreground hover:text-foreground transition-colors">Residential Cleaning</Link></li>
+                <li><Link href="/services/deep-cleaning" className="text-muted-foreground hover:text-foreground transition-colors">Deep Cleaning</Link></li>
+                <li><Link href="/short-term-rentals" className="text-muted-foreground hover:text-foreground transition-colors">Airbnb & Vacation Rental</Link></li>
+                <li><Link href="/services/commercial" className="text-muted-foreground hover:text-foreground transition-colors">Commercial</Link></li>
+                <li><Link href="/services/move-in-out" className="text-muted-foreground hover:text-foreground transition-colors">Move-In / Move-Out</Link></li>
+              </ul>
+            </div>
+
+            <div>
+              <h4 className="font-semibold text-foreground mb-5 text-xs uppercase tracking-[0.15em]">Company</h4>
+              <ul className="space-y-3 text-sm">
+                <li><Link href="/about" className="text-muted-foreground hover:text-foreground transition-colors">About Us</Link></li>
+                <li><Link href="/how-it-works" className="text-muted-foreground hover:text-foreground transition-colors">How It Works</Link></li>
+                <li><Link href="/service-areas" className="text-muted-foreground hover:text-foreground transition-colors">Service Areas</Link></li>
+                <li><Link href="/blog" className="text-muted-foreground hover:text-foreground transition-colors">Blog</Link></li>
+                <li><a href="/cleaning#contact" onClick={(e) => { if (location === "/cleaning") { e.preventDefault(); document.getElementById("contact")?.scrollIntoView({ behavior: "smooth" }); }}} className="text-muted-foreground hover:text-foreground transition-colors">Contact</a></li>
+              </ul>
+            </div>
+
+            <div>
+              <h4 className="font-semibold text-foreground mb-5 text-xs uppercase tracking-[0.15em]">Service Area</h4>
+              <div className="flex items-start gap-2.5 text-sm text-muted-foreground mb-6">
+                <MapPin className="w-4 h-4 mt-0.5 text-primary flex-shrink-0" />
+                <span>York & Cumberland County,<br />Southern Maine</span>
+              </div>
+              <h4 className="font-semibold text-foreground mb-3 text-xs uppercase tracking-[0.15em]">Connect</h4>
+              <ul className="space-y-3 text-sm">
+                <li><a href={companyInfo.socials.facebook} target="_blank" rel="noopener noreferrer" className="text-muted-foreground hover:text-foreground transition-colors" data-testid="link-facebook">Facebook</a></li>
+                <li><a href={companyInfo.socials.instagram} target="_blank" rel="noopener noreferrer" className="text-muted-foreground hover:text-foreground transition-colors" data-testid="link-instagram">Instagram</a></li>
+                <li><a href="https://g.page/r/CYnY6ulFfvDtEAE/review" target="_blank" rel="noopener noreferrer" className="text-muted-foreground hover:text-foreground transition-colors" data-testid="link-google-review">Leave a Review</a></li>
+              </ul>
+            </div>
           </div>
-        </div>
+        )}
 
         <div className="border-t border-border/40 pt-6 text-xs text-muted-foreground flex flex-col sm:flex-row justify-between items-center gap-3">
-          <p>&copy; {new Date().getFullYear()} The Maine Cleaning Co. All rights reserved.</p>
+          <p>
+            &copy; {new Date().getFullYear()}{" "}
+            {isMStudio ? "M Studio" : "The Maine Cleaning Co."}. All rights reserved.
+          </p>
           <div className="flex items-center gap-5">
             <Link href="/privacy" className="hover:text-foreground transition-colors">Privacy Policy</Link>
             <Link href="/terms" className="hover:text-foreground transition-colors">Terms of Service</Link>

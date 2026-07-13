@@ -1,4 +1,5 @@
 import { useState, useRef, useEffect } from "react";
+import { useLocation } from "wouter";
 import { motion, AnimatePresence } from "framer-motion";
 import { MessageCircle, X, Send, Sparkles, Loader2, ArrowRight } from "lucide-react";
 import { Button } from "./button";
@@ -15,6 +16,7 @@ export function AIChatWidget() {
   const [loading, setLoading] = useState(false);
   const [available, setAvailable] = useState(false);
   const scrollRef = useRef<HTMLDivElement>(null);
+  const [location] = useLocation();
 
   useEffect(() => {
     fetch("/api/config/features")
@@ -30,6 +32,8 @@ export function AIChatWidget() {
   }, [messages, loading]);
 
   if (!available) return null;
+  // Cleaning-specific assistant — hide on the M Studio homepage.
+  if (location === "/") return null;
 
   const sendMessage = async () => {
     const text = input.trim();
