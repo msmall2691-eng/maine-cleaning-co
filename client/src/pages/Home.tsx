@@ -239,7 +239,7 @@ export default function Home() {
   };
   const [weather, setWeather] = useState<WeatherData | null>(null);
   const [weatherFailed, setWeatherFailed] = useState(false);
-  const [scrollProgress, setScrollProgress] = useState(0);
+  const [pastThreshold, setPastThreshold] = useState(false);
   const [activeReviewIndex, setActiveReviewIndex] = useState(0);
 
   useEffect(() => {
@@ -263,15 +263,38 @@ export default function Home() {
     return () => el.removeEventListener("scroll", onScroll);
   }, []);
 
-  const handleScroll = useCallback(() => {
-    const h = document.documentElement.scrollHeight - window.innerHeight;
-    if (h > 0) setScrollProgress(Math.min(window.scrollY / h, 1));
-  }, []);
-
+  // Scroll progress goes through a CSS variable + rAF throttle instead of
+  // React state — updating state on every scroll pixel was re-rendering the
+  // entire Home tree and killing mobile scroll fps. The progress bar reads
+  // --scroll-progress via CSS transform (compositor-only, no layout). We
+  // only setState when the past-8% threshold flips (rare) to drive the
+  // back-to-top button visibility.
   useEffect(() => {
-    window.addEventListener("scroll", handleScroll, { passive: true });
-    return () => window.removeEventListener("scroll", handleScroll);
-  }, [handleScroll]);
+    let raf = 0;
+    let lastPast = false;
+    const update = () => {
+      raf = 0;
+      const h = document.documentElement.scrollHeight - window.innerHeight;
+      const y = window.scrollY;
+      const p = h > 0 ? Math.min(y / h, 1) : 0;
+      document.documentElement.style.setProperty("--scroll-progress", String(p));
+      const past = p > 0.08;
+      if (past !== lastPast) {
+        lastPast = past;
+        setPastThreshold(past);
+      }
+    };
+    const onScroll = () => {
+      if (raf) return;
+      raf = requestAnimationFrame(update);
+    };
+    update();
+    window.addEventListener("scroll", onScroll, { passive: true });
+    return () => {
+      window.removeEventListener("scroll", onScroll);
+      if (raf) cancelAnimationFrame(raf);
+    };
+  }, []);
 
   const scrollCarousel = (dir: number) => {
     if (!carouselRef.current) return;
@@ -284,9 +307,12 @@ export default function Home() {
 
   return (
     <div className="w-full overflow-x-hidden">
-      {/* Scroll progress bar */}
+      {/* Scroll progress bar — driven by CSS var (compositor-only transform) */}
       <div className="fixed top-0 left-0 right-0 z-[60] h-[2px] bg-transparent pointer-events-none">
-        <div className="h-full bg-primary/60 transition-none" style={{ width: `${scrollProgress * 100}%` }} />
+        <div
+          className="h-full bg-primary/60 origin-left"
+          style={{ transform: "scaleX(var(--scroll-progress, 0))", willChange: "transform" }}
+        />
       </div>
 
       {/* ── Hero ── */}
@@ -707,8 +733,8 @@ export default function Home() {
       {/* Back to Top */}
       <motion.button
         initial={{ opacity: 0 }}
-        animate={{ opacity: scrollProgress > 0.08 ? 1 : 0 }}
-        className={`fixed z-40 w-10 h-10 rounded-full bg-card border border-border shadow-[0_2px_12px_rgba(0,0,0,0.2)] flex items-center justify-center text-muted-foreground hover:text-foreground hover:shadow-[0_4px_16px_rgba(0,0,0,0.3)] transition-all right-4 bottom-20 lg:bottom-6 ${scrollProgress > 0.08 ? "pointer-events-auto" : "pointer-events-none"}`}
+        animate={{ opacity: pastThreshold ? 1 : 0 }}
+        className={`fixed z-40 w-10 h-10 rounded-full bg-card border border-border shadow-[0_2px_12px_rgba(0,0,0,0.2)] flex items-center justify-center text-muted-foreground hover:text-foreground hover:shadow-[0_4px_16px_rgba(0,0,0,0.3)] transition-all right-4 bottom-20 lg:bottom-6 ${pastThreshold ? "pointer-events-auto" : "pointer-events-none"}`}
         onClick={() => window.scrollTo({ top: 0, behavior: "smooth" })}
         aria-label="Back to top"
         data-testid="button-back-to-top"

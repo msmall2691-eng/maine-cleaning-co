@@ -383,6 +383,14 @@ function ObsidianGraph({ animate }: { animate: boolean }) {
       const DAMPING = 0.86;
       const CURSOR_STRENGTH = 3400;
       const CURSOR_RADIUS = 80;
+      // Skip physics AND render when the graph is scrolled out of view —
+      // main-thread work during scroll delays touch/gesture handling on
+      // mobile. RAF still fires (cheap when tab is visible) so we resume
+      // instantly when the graph scrolls back into view.
+      if (!isVisibleRef.current) {
+        animRef.current = requestAnimationFrame(step);
+        return;
+      }
       const doPhysics = animate;
 
       if (doPhysics) {
@@ -492,11 +500,6 @@ function ObsidianGraph({ animate }: { animate: boolean }) {
             n.vy = -Math.abs(n.vy) * 0.4;
           }
         }
-      }
-
-      if (!isVisibleRef.current) {
-        animRef.current = requestAnimationFrame(step);
-        return;
       }
 
       const v = viewRef.current;

@@ -528,11 +528,19 @@
 /* ── Navbar glass ── */
 .navbar-glass {
   background: hsl(var(--navbar-glass-bg));
-  backdrop-filter: blur(28px) saturate(1.5) brightness(1.02);
-  -webkit-backdrop-filter: blur(28px) saturate(1.5) brightness(1.02);
+  /* Reduced from blur(28px) — that was a very expensive per-frame
+     paint on mobile scroll. 14px still reads as frosted glass. */
+  backdrop-filter: blur(14px) saturate(1.4) brightness(1.02);
+  -webkit-backdrop-filter: blur(14px) saturate(1.4) brightness(1.02);
   border-bottom: 1px solid hsl(var(--navbar-glass-border));
   box-shadow: 0 1px 20px rgba(0,0,0,calc(var(--card-shadow-strength) * 0.9)), inset 0 -1px 0 rgba(255,255,255,0.04);
   transition: background 0.35s ease, border-color 0.35s ease;
+}
+@media (min-width: 640px) {
+  .navbar-glass {
+    backdrop-filter: blur(20px) saturate(1.5) brightness(1.02);
+    -webkit-backdrop-filter: blur(20px) saturate(1.5) brightness(1.02);
+  }
 }
 
 /* ── KPI stat card ── */
@@ -553,6 +561,15 @@
   pointer-events: none;
   z-index: 1;
   overflow: hidden;
+}
+/* Mobile: hide the front-layer (rain / snow / storm) — the animated
+   gradients over scrolling content were the single biggest paint cost
+   during vertical scroll. The back-layer (sun / cloud / fog tints)
+   stays because it's below content and doesn't invalidate on scroll. */
+@media (max-width: 767px) {
+  .weather-atmosphere[data-condition$="-front"] {
+    display: none;
+  }
 }
 
 .weather-sun-glow {

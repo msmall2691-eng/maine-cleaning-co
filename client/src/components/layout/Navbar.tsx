@@ -23,10 +23,29 @@ export default function Navbar() {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
   useEffect(() => {
-    const h = () => setScrolled(window.scrollY > 12);
-    h();
-    window.addEventListener("scroll", h, { passive: true });
-    return () => window.removeEventListener("scroll", h);
+    // rAF-throttle + only setState when the boolean flips. Previously we
+    // called setScrolled on every scroll pixel — even a no-op setState
+    // still re-renders the Navbar tree and thrashes mobile fps.
+    let raf = 0;
+    let last = window.scrollY > 12;
+    setScrolled(last);
+    const check = () => {
+      raf = 0;
+      const next = window.scrollY > 12;
+      if (next !== last) {
+        last = next;
+        setScrolled(next);
+      }
+    };
+    const onScroll = () => {
+      if (raf) return;
+      raf = requestAnimationFrame(check);
+    };
+    window.addEventListener("scroll", onScroll, { passive: true });
+    return () => {
+      window.removeEventListener("scroll", onScroll);
+      if (raf) cancelAnimationFrame(raf);
+    };
   }, []);
 
   useEffect(() => {
