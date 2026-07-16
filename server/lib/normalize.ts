@@ -17,6 +17,12 @@ export interface NormalizedIntakePayload {
   estimateRange: string | null;
   notes: string | null;
   source: string;
+  // STR turnover details (custom-quote path).
+  bedrooms: number | null;
+  guests: number | null;
+  listingUrl: string | null;
+  turnoverDay: string | null;
+  petsAllowed: string | null;
 }
 
 export function normalizeIntakePayload(raw: IntakeSubmitPayload): NormalizedIntakePayload {
@@ -54,5 +60,10 @@ export function normalizeIntakePayload(raw: IntakeSubmitPayload): NormalizedInta
     estimateRange,
     notes,
     source: raw.source ?? "website_form",
+    bedrooms: raw.bedrooms ?? null,
+    guests: raw.guests ?? null,
+    listingUrl: (raw.listingUrl ?? "").toString().trim() || null,
+    turnoverDay: raw.turnoverDay?.trim() || null,
+    petsAllowed: raw.petsAllowed?.trim() || null,
   };
 }

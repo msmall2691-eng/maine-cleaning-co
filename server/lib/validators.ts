@@ -22,6 +22,15 @@ export const intakeSubmitSchema = z.object({
   notes: z.string().max(2000).optional().nullable(),
   photos: z.array(z.string()).max(3).optional().nullable(),
   source: z.string().max(100).optional().default("website_form"),
+  // Short-term-rental turnover details (custom-quote path). Optional; the
+  // form only sends them for STR. bedrooms/guests are structured counts;
+  // listingUrl/turnoverDay/petsAllowed carry the host's specifics through to
+  // the Bright-Space request.
+  bedrooms: z.number().int().min(0).max(20).optional().nullable(),
+  guests: z.number().int().min(0).max(50).optional().nullable(),
+  listingUrl: z.string().url().max(500).optional().nullable().or(z.literal("")),
+  turnoverDay: z.string().max(50).optional().nullable(),
+  petsAllowed: z.string().max(100).optional().nullable(),
 });
 
 export type IntakeSubmitPayload = z.infer<typeof intakeSubmitSchema>;

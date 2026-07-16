@@ -505,7 +505,18 @@ export async function registerRoutes(
         condition: normalized.condition || null,
         source: "Website",
       };
-      log("INFO", "crm", "Forwarding intake to CRM", { payload: crmPayload, intakeId: submission.id });
+      // PII-safe log — don't dump name/email/phone/address into logs.
+      log("INFO", "crm", "Forwarding intake to CRM", {
+        intakeId: submission.id,
+        service: crmPayload.service,
+        frequency: crmPayload.frequency,
+        estimateMin: crmPayload.estimateMin,
+        estimateMax: crmPayload.estimateMax,
+        squareFeet: crmPayload.squareFeet,
+        hasEmail: Boolean(crmPayload.email),
+        hasPhone: Boolean(crmPayload.phone),
+        hasAddress: Boolean(crmPayload.address),
+      });
       runForward({
         sourceType: "intake",
         sourceId: submission.id,
@@ -555,6 +566,14 @@ export async function registerRoutes(
         estimateMax: normalized.estimateMax,
         notes: normalized.notes,
         source: "Website",
+        // STR turnover details (custom-quote path). bedrooms/guests land on
+        // native Bright-Space columns; listingUrl/turnoverDay/petsAllowed on
+        // its custom_fields, so the operator sees the whole turnover request.
+        bedrooms: normalized.bedrooms,
+        guests: normalized.guests,
+        listingUrl: normalized.listingUrl,
+        turnoverDay: normalized.turnoverDay,
+        petsAllowed: normalized.petsAllowed,
         // Client-supplied per-submission UUID. Passed through here so a
         // single customer submission whose Express handler forwards to
         // Bright-Space more than once (or the two-endpoint booking+intake
@@ -1264,7 +1283,7 @@ Rules:
         distanceMiles: distanceMiles ?? null,
       });
 
-      log("INFO", "booking", "New booking request created", { id: booking.id, date: data.requestedDate, name: data.name });
+      log("INFO", "booking", "New booking request created", { id: booking.id, date: data.requestedDate, serviceType: data.serviceType });
 
       // Forward to CRM for approval workflow (uses leads endpoint with booking- prefix)
       const CRM_BOOKING_URL = process.env.CRM_WEBHOOK_URL || "https://connecteam-proxy.vercel.app/api/leads";
