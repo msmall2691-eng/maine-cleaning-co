@@ -271,6 +271,16 @@ export function InstantEstimate({ defaultCategory, bookingIntent = false }: Inst
   });
   const [specialInstructions, setSpecialInstructions] = useState("");
 
+  // Short-term-rental extras. STR is a custom-quote path (no instant number),
+  // but these specifics let the operator quote a turnover accurately and the
+  // cleaner arrive prepared. They ride the intake payload as structured fields
+  // and land on the Bright-Space request (custom_fields for the free-text ones,
+  // native columns for guests/bedrooms/bathrooms).
+  const [guests, setGuests] = useState<number | "">("");
+  const [listingUrl, setListingUrl] = useState("");
+  const [turnoverDay, setTurnoverDay] = useState("");
+  const [petsAllowed, setPetsAllowed] = useState("");
+
   const [step, setStep] = useState<1 | 2 | 3 | 4>(1);
   const [portalCreated, setPortalCreated] = useState(false);
   const [portalLoggedIn, setPortalLoggedIn] = useState(false);
@@ -429,9 +439,22 @@ export function InstantEstimate({ defaultCategory, bookingIntent = false }: Inst
           frequency: isCustomQuote ? undefined : frequency,
           petHair: isCustomQuote ? undefined : petHair,
           condition: isCustomQuote ? undefined : condition,
-          bathrooms: isCustomQuote ? undefined : Math.round(bathrooms),
+          // Send the true (possibly half-) bath count the estimate was priced
+          // on — NOT Math.round(...). Rounding here made the server recompute
+          // on a different bath count and quote the operator a different price
+          // than the customer just saw. STR collects baths too (for quoting),
+          // so send it on both paths.
+          bathrooms: isCustomQuote ? (category === "str" ? bathrooms : undefined) : bathrooms,
           estimateMin: engine.min || undefined,
           estimateMax: engine.max || undefined,
+          // STR turnover details — structured so they land on the Bright-Space
+          // request instead of being buried in the free-text note. Only sent
+          // for the STR custom-quote flow.
+          bedrooms: category === "str" ? bedrooms : undefined,
+          guests: category === "str" && guests !== "" ? guests : undefined,
+          listingUrl: category === "str" && listingUrl.trim() ? listingUrl.trim() : undefined,
+          turnoverDay: category === "str" && turnoverDay ? turnoverDay : undefined,
+          petsAllowed: category === "str" && petsAllowed ? petsAllowed : undefined,
           name: contactName || null,
           email: contactEmail || null,
           phone: contactPhone || null,
@@ -491,7 +514,11 @@ export function InstantEstimate({ defaultCategory, bookingIntent = false }: Inst
           frequency: isCustomQuote ? null : frequency,
           sqft: isCustomQuote ? null : sqft[0],
           bedrooms: isCustomQuote ? null : bedrooms,
-          bathrooms: isCustomQuote ? null : Math.round(bathrooms),
+          // True (possibly half-) bath count — see the intake submit above.
+          // The server recomputes the trusted estimate on this exact value and
+          // rounds only when writing the integer column, so the operator's
+          // price matches the one the customer was shown.
+          bathrooms: isCustomQuote ? null : bathrooms,
           petHair: isCustomQuote ? null : petHair,
           condition: isCustomQuote ? null : condition,
           estimateMin: engine.min || null,
@@ -869,6 +896,57 @@ export function InstantEstimate({ defaultCategory, bookingIntent = false }: Inst
                   </p>
                 </div>
               </div>
+
+              {category === "str" && (
+                <div className="space-y-3">
+                  <p className="label-sm">Rental details <span className="font-normal text-muted-foreground">(helps us quote your turnover)</span></p>
+                  <div className="grid grid-cols-3 gap-2">
+                    <div>
+                      <label className="text-[11px] text-muted-foreground" htmlFor="str-bedrooms">Bedrooms</label>
+                      <Input id="str-bedrooms" type="number" min={0} max={20} step={1} value={bedrooms}
+                        onChange={e => setBedrooms(clamp(parseInt(e.target.value || "0", 10), 0, 20))}
+                        className="input-field" data-testid="input-str-bedrooms" />
+                    </div>
+                    <div>
+                      <label className="text-[11px] text-muted-foreground" htmlFor="str-bathrooms">Bathrooms</label>
+                      <Input id="str-bathrooms" type="number" min={0} max={20} step={0.5} value={bathrooms}
+                        onChange={e => setBathrooms(clamp(Math.round((parseFloat(e.target.value || "0")) * 2) / 2, 0, 20))}
+                        className="input-field" data-testid="input-str-bathrooms" />
+                    </div>
+                    <div>
+                      <label className="text-[11px] text-muted-foreground" htmlFor="str-guests">Max guests</label>
+                      <Input id="str-guests" type="number" min={0} max={50} step={1} value={guests}
+                        onChange={e => setGuests(e.target.value === "" ? "" : clamp(parseInt(e.target.value, 10), 0, 50))}
+                        className="input-field" data-testid="input-str-guests" />
+                    </div>
+                  </div>
+                  <Input placeholder="Airbnb / VRBO listing link (optional)" type="url" value={listingUrl}
+                    onChange={e => setListingUrl(e.target.value)} className="input-field" data-testid="input-str-listing" inputMode="url" />
+                  <div className="grid grid-cols-2 gap-2">
+                    <select value={turnoverDay} onChange={e => setTurnoverDay(e.target.value)}
+                      className="input-field" data-testid="select-str-turnover" aria-label="Turnover day">
+                      <option value="">Turnover day…</option>
+                      <option value="Flexible">Flexible</option>
+                      <option value="Same-day flip">Same-day flip</option>
+                      <option value="Monday">Monday</option>
+                      <option value="Tuesday">Tuesday</option>
+                      <option value="Wednesday">Wednesday</option>
+                      <option value="Thursday">Thursday</option>
+                      <option value="Friday">Friday</option>
+                      <option value="Saturday">Saturday</option>
+                      <option value="Sunday">Sunday</option>
+                    </select>
+                    <select value={petsAllowed} onChange={e => setPetsAllowed(e.target.value)}
+                      className="input-field" data-testid="select-str-pets" aria-label="Does the rental allow pets">
+                      <option value="">Pets allowed?…</option>
+                      <option value="No pets">No pets</option>
+                      <option value="Dogs">Dogs</option>
+                      <option value="Cats">Cats</option>
+                      <option value="Dogs & cats">Dogs & cats</option>
+                    </select>
+                  </div>
+                </div>
+              )}
 
               <div className="space-y-3">
                 <p className="label-sm">Your contact info</p>

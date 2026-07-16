@@ -52,6 +52,12 @@ interface BrightBaseLead {
   petsDetail?: string | null;
   focusAreas?: string[] | null;
   specialInstructions?: string | null;
+  // STR / vacation-rental turnover details. guests rides the native column;
+  // listingUrl/turnoverDay/petsAllowed land in Bright-Space's custom_fields.
+  guests?: number | null;
+  listingUrl?: string | null;
+  turnoverDay?: string | null;
+  petsAllowed?: string | null;
   // Per-submission UUID for Bright-Space's dedup short-circuit (see
   // Bright-Space PR #507). Same key on retries, dual-forwards, or a
   // double-click collapses to ONE Lead row instead of racing the 5-minute
@@ -122,12 +128,31 @@ export async function forwardLeadToBrightBase(
   if (body.petsDetail) payload.petsDetail = body.petsDetail;
   if (body.focusAreas && body.focusAreas.length) payload.focusAreas = body.focusAreas;
   if (body.specialInstructions) payload.specialInstructions = body.specialInstructions;
+  if (body.guests != null) payload.guests = Number(body.guests);
+  if (body.listingUrl) payload.listingUrl = body.listingUrl;
+  if (body.turnoverDay) payload.turnoverDay = body.turnoverDay;
+  if (body.petsAllowed) payload.petsAllowed = body.petsAllowed;
   if (body.idempotencyKey) payload.idempotencyKey = body.idempotencyKey;
   payload.source = body.source || "Website";
 
   const base = (BRIGHTBASE_API_URL || "").replace(/\/+$/, "");
   const url = `${base}/api/booking/submit`;
-  console.log(`[brightbase] Forwarding lead to ${url}`, JSON.stringify(payload).slice(0, 400));
+  // Log a PII-safe summary — never the customer's name/email/phone/address.
+  // Enough to trace a forward without spilling contact details into logs.
+  const logSafe = {
+    serviceType: payload.serviceType,
+    frequency: payload.frequency,
+    squareFeet: payload.squareFeet,
+    bedrooms: payload.bedrooms,
+    bathrooms: payload.bathrooms,
+    estimateMin: payload.estimateMin,
+    estimateMax: payload.estimateMax,
+    source: payload.source,
+    hasEmail: Boolean(payload.email),
+    hasPhone: Boolean(payload.phone),
+    hasAddress: Boolean(payload.address),
+  };
+  console.log(`[brightbase] Forwarding lead to ${url}`, JSON.stringify(logSafe));
 
   await runForward({
     sourceType: ctx.sourceType,
