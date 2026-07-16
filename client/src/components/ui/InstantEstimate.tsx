@@ -429,7 +429,11 @@ export function InstantEstimate({ defaultCategory, bookingIntent = false }: Inst
           frequency: isCustomQuote ? undefined : frequency,
           petHair: isCustomQuote ? undefined : petHair,
           condition: isCustomQuote ? undefined : condition,
-          bathrooms: isCustomQuote ? undefined : Math.round(bathrooms),
+          // Send the true (possibly half-) bath count the estimate was priced
+          // on — NOT Math.round(...). Rounding here made the server recompute
+          // on a different bath count and quote the operator a different price
+          // than the customer just saw.
+          bathrooms: isCustomQuote ? undefined : bathrooms,
           estimateMin: engine.min || undefined,
           estimateMax: engine.max || undefined,
           name: contactName || null,
@@ -491,7 +495,11 @@ export function InstantEstimate({ defaultCategory, bookingIntent = false }: Inst
           frequency: isCustomQuote ? null : frequency,
           sqft: isCustomQuote ? null : sqft[0],
           bedrooms: isCustomQuote ? null : bedrooms,
-          bathrooms: isCustomQuote ? null : Math.round(bathrooms),
+          // True (possibly half-) bath count — see the intake submit above.
+          // The server recomputes the trusted estimate on this exact value and
+          // rounds only when writing the integer column, so the operator's
+          // price matches the one the customer was shown.
+          bathrooms: isCustomQuote ? null : bathrooms,
           petHair: isCustomQuote ? null : petHair,
           condition: isCustomQuote ? null : condition,
           estimateMin: engine.min || null,

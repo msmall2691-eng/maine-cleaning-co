@@ -438,6 +438,37 @@ export async function registerRoutes(
       const rawPayload = parseResult.data;
       const normalized = normalizeIntakePayload(rawPayload);
 
+      // Recompute the estimate server-side — same anti-tamper guarantee the
+      // booking handler has. The intake path used to forward whatever
+      // estimateMin/estimateMax the browser POSTed straight into Bright-Space's
+      // Requests page, so a tampered client could seed the operator with a
+      // fabricated price. Recompute from the structured fields and treat THAT
+      // as the source of truth; keep the client's numbers only when the
+      // service is custom-quoted (STR/commercial) or inputs are incomplete.
+      const intakeQuote = calculateQuote({
+        serviceType: normalized.serviceType ?? "",
+        sqft: normalized.sqft,
+        bathrooms: normalized.bathrooms,
+        frequency: normalized.frequency,
+        petHair: normalized.petHair,
+        condition: normalized.condition,
+      });
+      if (estimatesDiverge(normalized.estimateMin, normalized.estimateMax, intakeQuote.estimateMin, intakeQuote.estimateMax)) {
+        log("WARN", "intake", "Client-supplied estimate diverged from server recompute", {
+          clientMin: normalized.estimateMin,
+          clientMax: normalized.estimateMax,
+          serverMin: intakeQuote.estimateMin,
+          serverMax: intakeQuote.estimateMax,
+          serviceType: normalized.serviceType,
+        });
+      }
+      const trustedMin = intakeQuote.estimateMin ?? normalized.estimateMin ?? null;
+      const trustedMax = intakeQuote.estimateMax ?? normalized.estimateMax ?? null;
+      normalized.estimateMin = trustedMin;
+      normalized.estimateMax = trustedMax;
+      normalized.estimateRange =
+        trustedMin != null && trustedMax != null ? `$${trustedMin}–$${trustedMax}` : null;
+
       const submission = await storage.createIntakeSubmission({
         source: rawPayload.source ?? "website_form",
         rawPayload: rawPayload as Record<string, any>,
@@ -1112,20 +1143,26 @@ Rules:
   });
 
   const bookingSubmitSchema = z.object({
-    name: z.string().min(1),
-    email: z.string().email().optional().nullable(),
-    phone: z.string().min(1),
-    address: z.string().min(1),
-    zip: z.string().optional().nullable(),
-    serviceType: z.string(),
-    frequency: z.string().optional().nullable(),
-    sqft: z.number().optional().nullable(),
-    bedrooms: z.number().optional().nullable(),
-    bathrooms: z.number().optional().nullable(),
-    petHair: z.string().optional().nullable(),
-    condition: z.string().optional().nullable(),
-    estimateMin: z.number().optional().nullable(),
-    estimateMax: z.number().optional().nullable(),
+    name: z.string().min(1).max(200),
+    email: z.string().email().max(300).optional().nullable(),
+    phone: z.string().min(1).max(30),
+    address: z.string().min(1).max(500),
+    zip: z.string().max(10).optional().nullable(),
+    // Constrain to the known service set (was an open string, so any garbage
+    // value flowed straight into storage and on to Bright-Space's Requests
+    // page). Mirrors the intake validator's enum.
+    serviceType: z.enum(["standard", "deep", "str", "vacation-rental", "commercial", "move-in-out"]),
+    frequency: z.enum(["weekly", "biweekly", "monthly", "one-time"]).optional().nullable(),
+    // Sane bounds so an oversized / negative input can't drive an absurd
+    // server-recomputed estimate. Half-baths are honored (0.5 steps) so the
+    // recompute prices on the same bath count the customer was shown.
+    sqft: z.number().min(100).max(20000).optional().nullable(),
+    bedrooms: z.number().int().min(0).max(20).optional().nullable(),
+    bathrooms: z.number().min(1).max(20).multipleOf(0.5).optional().nullable(),
+    petHair: z.enum(["none", "some", "heavy"]).optional().nullable(),
+    condition: z.enum(["maintenance", "moderate", "heavy"]).optional().nullable(),
+    estimateMin: z.number().min(0).max(100000).optional().nullable(),
+    estimateMax: z.number().min(0).max(100000).optional().nullable(),
     requestedDate: z.string().min(1),
     distanceMiles: z.number().optional().nullable(),
     intakeId: z.number().optional().nullable(),
@@ -1157,6 +1194,10 @@ Rules:
       }
 
       const data = parsed.data;
+      // The estimate is recomputed below on the TRUE (possibly half-) bath
+      // count so it matches the customer's quote. Persisted/forwarded columns
+      // are integer, so round only at that boundary — never before pricing.
+      const bathroomsRounded = data.bathrooms != null ? Math.round(data.bathrooms) : null;
       const requestedDate = new Date(data.requestedDate);
       const now = new Date();
       const minDate = new Date(now.getTime() + MIN_LEAD_DAYS * 24 * 60 * 60 * 1000);
@@ -1214,7 +1255,7 @@ Rules:
         serviceType: data.serviceType,
         frequency: data.frequency ?? null,
         sqft: data.sqft ?? null,
-        bathrooms: data.bathrooms ?? null,
+        bathrooms: bathroomsRounded,
         petHair: data.petHair ?? null,
         condition: data.condition ?? null,
         estimateMin,
@@ -1238,7 +1279,7 @@ Rules:
         serviceType: data.serviceType,
         frequency: data.frequency,
         sqft: data.sqft,
-        bathrooms: data.bathrooms,
+        bathrooms: bathroomsRounded,
         petHair: data.petHair,
         condition: data.condition,
         // Forward the trusted, server-computed range (falls back to the
@@ -1298,7 +1339,7 @@ Rules:
         frequency: data.frequency,
         sqft: data.sqft,
         bedrooms: data.bedrooms,
-        bathrooms: data.bathrooms,
+        bathrooms: bathroomsRounded,
         petHair: data.petHair,
         condition: data.condition,
         estimateMin,

@@ -9,7 +9,12 @@ export const intakeSubmitSchema = z.object({
   serviceType: z.enum(["standard", "deep", "str", "vacation-rental", "commercial", "move-in-out"]).optional().nullable(),
   frequency: z.enum(["weekly", "biweekly", "monthly", "one-time"]).optional().nullable(),
   sqft: z.number().int().min(100).max(20000).optional().nullable(),
-  bathrooms: z.number().int().min(1).max(20).optional().nullable(),
+  // Half-baths are a real selection in the estimator UI (e.g. 2½). Accept
+  // 0.5 steps so the value the customer priced their quote on survives to
+  // the server instead of being rounded — otherwise the server recompute
+  // (and the number the operator sees) is priced on a different bath count
+  // than the customer was shown. See quoteEngine + the /book flow.
+  bathrooms: z.number().min(1).max(20).multipleOf(0.5).optional().nullable(),
   petHair: z.enum(["none", "some", "heavy"]).optional().nullable(),
   condition: z.enum(["maintenance", "moderate", "heavy"]).optional().nullable(),
   estimateMin: z.number().int().min(0).optional().nullable(),

@@ -101,6 +101,29 @@ describe("POST /api/intake/submit rate limiting", () => {
     expect(forwardedBody.idempotencyKey).toBe(key);
   });
 
+  it("recomputes the estimate server-side, ignoring a tampered client range", async () => {
+    // Attacker claims $5–9 for a 1200 sqft / 2 bath / biweekly standard clean.
+    // The server recomputes $125–135 and forwards THAT to Bright-Space — the
+    // intake path used to trust the browser's number verbatim.
+    const { forwardLeadToBrightBase } = await import("../lib/brightbase");
+    const mock = forwardLeadToBrightBase as unknown as ReturnType<typeof vi.fn>;
+    mock.mockClear();
+
+    const res = await request(app)
+      .post("/api/intake/submit")
+      .set("X-Forwarded-For", "10.0.0.111")
+      .send({ ...goodPayload, estimateMin: 5, estimateMax: 9 });
+
+    expect(res.status).toBe(201);
+    expect(res.body.estimateMin).toBe(125);
+    expect(res.body.estimateMax).toBe(135);
+    // The forward to Bright-Space carries the trusted range, not the tamper.
+    expect(mock).toHaveBeenCalledTimes(1);
+    const forwarded = mock.mock.calls[0][0];
+    expect(forwarded.estimateMin).toBe(125);
+    expect(forwarded.estimateMax).toBe(135);
+  });
+
   it("returns 429 on the 6th request from the same IP within the window", async () => {
     for (let i = 0; i < 5; i++) {
       await request(app)

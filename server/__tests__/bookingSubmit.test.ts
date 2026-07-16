@@ -120,6 +120,43 @@ describe("POST /api/booking/submit", () => {
     expect(createdBookings[0].estimateMax).toBe(225);
   });
 
+  it("prices a half-bath (2.5) on the TRUE count, and stores the bath count rounded", async () => {
+    // Customer sees $165–175 in the browser for a 1500 sqft / 2½ bath /
+    // biweekly standard clean. Before the fix the server rounded 2.5→3 before
+    // recomputing and stored $175–185 — a price the customer never saw. The
+    // estimate must be computed on 2.5; only the integer bath COLUMN rounds.
+    const res = await request(app)
+      .post("/api/booking/submit")
+      .set("X-Forwarded-For", "10.0.0.210")
+      .send({
+        ...basePayload,
+        serviceType: "standard",
+        sqft: 1500,
+        bathrooms: 2.5,
+        frequency: "biweekly",
+        // A tampered browser range is ignored in favour of the recompute.
+        estimateMin: 1,
+        estimateMax: 5,
+      });
+
+    expect(res.status).toBe(201);
+    expect(createdBookings).toHaveLength(1);
+    expect(createdBookings[0].estimateMin).toBe(165);
+    expect(createdBookings[0].estimateMax).toBe(175);
+    // DB column is integer — the count is rounded, the price is not.
+    expect(createdBookings[0].bathrooms).toBe(3);
+  });
+
+  it("rejects an unknown serviceType (was an open string)", async () => {
+    const res = await request(app)
+      .post("/api/booking/submit")
+      .set("X-Forwarded-For", "10.0.0.211")
+      .send({ ...basePayload, serviceType: "gold-plated-mansion-scrub" });
+
+    expect(res.status).toBe(422);
+    expect(Object.keys(res.body.errors)).toContain("serviceType");
+  });
+
   it("returns 422 with field-level errors on bad input (no name)", async () => {
     const { name, ...rest } = basePayload;
     const res = await request(app).post("/api/booking/submit").send(rest);
