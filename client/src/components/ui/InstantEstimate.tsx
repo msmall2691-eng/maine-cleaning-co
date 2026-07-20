@@ -32,6 +32,7 @@ import {
 } from "lucide-react";
 import { companyInfo } from "@/lib/company-info";
 import { VoiceInput, type ParsedEstimate } from "@/components/ui/VoiceInput";
+import { computeEstimate } from "@shared/pricing";
 
 type ServiceCategory = "residential" | "deep-clean" | "str" | "commercial";
 type Frequency = "weekly" | "biweekly" | "monthly" | "one-time";
@@ -385,57 +386,25 @@ export function InstantEstimate({ defaultCategory, bookingIntent = false }: Inst
     setPhotos((prev) => prev.filter((_, i) => i !== idx));
   };
 
-  // Labor-hour pricing engine. Bright-Space has a Python port of this
-  // formula in backend/modules/booking/pricing.py that MUST stay in
-  // lock-step — the customer sees the number this engine produces, then
-  // Bright-Space recomputes to sanity-check. If the two drift, the quote
-  // the operator sees will differ from the quote the customer was shown.
-  // Any change to RATE, minJob, sqftUnits, bathAdj, condUnits, petUnits,
-  // deepMult, or freqMap must be mirrored there.
+  // Labor-hour pricing engine — the MATH lives in @shared/pricing
+  // (computeEstimate), which the server recompute (server/lib/quoteEngine.ts)
+  // imports too, so the number shown here and the number the operator is
+  // quoted are the same code and cannot drift. Bright-Space has a Python port
+  // in backend/modules/booking/pricing.py pinned to the same shared vector
+  // file (shared/pricing-vectors.json); a parity test in each repo fails if
+  // any of the three drift. Change a rate/constant ONLY in @shared/pricing,
+  // mirror it in the Python port, and regenerate the vectors.
   const engine = useMemo(() => {
     if (isCustomQuote) return { min: 0, max: 0, labor: 0, deep: 1 };
-
-    const RATE = 60; // $ per labor-unit
-    const minJob = cleanType === "standard" ? 130 : 225;
-    const sf = sqft[0];
-
-    // Piecewise sqft → labor units (three-tier, decreasing marginal rate)
-    //   ≤1500 sqft:  steep (small homes priced higher per sqft)
-    //   1500–3000:   medium
-    //   3000+:       flatter (large homes, slower marginal cost)
-    const sqftUnits =
-      sf <= 1500
-        ? sf / 680
-        : sf <= 3000
-          ? 1500 / 680 + (sf - 1500) / 1050
-          : 1500 / 680 + 1500 / 1050 + (sf - 3000) / 1400;
-
-    // Bathroom adj — supports half-baths in 0.5 steps; each increment = 0.40 units
-    const bathAdj = Math.max(0, (bathrooms - 1) * 0.40);
-
-    // Condition & pet addons
-    const condUnits: Record<HomeCondition, number> = { maintenance: 0, moderate: 0.50, heavy: 1.00 };
-    const petUnits: Record<PetHair, number>        = { none: 0, some: 0.30, heavy: 0.60 };
-
-    // Deep-clean multiplier — scales up with home size (more complexity in larger spaces)
-    const deepMult =
-      cleanType === "deep"
-        ? sf <= 1200 ? 1.60 : sf <= 2000 ? 1.65 : sf <= 3000 ? 1.75 : 1.80
-        : 1.0;
-
-    const labor = (sqftUnits + bathAdj + condUnits[condition] + petUnits[petHair]) * deepMult;
-
-    const freqMap: Record<Frequency, number> = { weekly: 0.85, biweekly: 1.0, monthly: 1.15, "one-time": 1.50 };
-    const raw     = labor * freqMap[frequency] * RATE;
-    const rounded = Math.round(raw / 5) * 5;
-    const final   = Math.max(minJob, rounded);
-
-    return {
-      min:  Math.round((final * 0.96) / 5) * 5,
-      max:  Math.round((final * 1.04) / 5) * 5,
-      labor,
-      deep: deepMult,
-    };
+    const est = computeEstimate({
+      sqft: sqft[0],
+      bathrooms,
+      cleanType,
+      frequency,
+      condition,
+      petHair,
+    });
+    return { min: est.min, max: est.max, labor: est.labor, deep: est.deepMult };
   }, [bathrooms, condition, frequency, petHair, sqft, cleanType, isCustomQuote]);
 
   const freqLabel: Record<Frequency, string> = { weekly: "Weekly", biweekly: "Biweekly", monthly: "Monthly", "one-time": "One-Time" };

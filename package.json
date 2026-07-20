@@ -12,7 +12,8 @@
     "test": "vitest run",
     "test:watch": "vitest",
     "test:coverage": "vitest run --coverage",
-    "db:push": "drizzle-kit push"
+    "db:push": "drizzle-kit push",
+    "gen:pricing-vectors": "tsx scripts/gen-pricing-vectors.ts"
   },
   "dependencies": {
     "@hookform/resolvers": "^3.10.0",
