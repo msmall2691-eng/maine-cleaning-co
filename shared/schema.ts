@@ -1,5 +1,5 @@
 import { sql } from "drizzle-orm";
-import { pgTable, text, varchar, integer, timestamp, serial, boolean, json } from "drizzle-orm/pg-core";
+import { pgTable, text, varchar, integer, real, timestamp, serial, boolean, json } from "drizzle-orm/pg-core";
 import { createInsertSchema } from "drizzle-zod";
 import { z } from "zod";
 
@@ -174,7 +174,10 @@ export const bookingRequests = pgTable("booking_requests", {
   serviceType: text("service_type").notNull(),
   frequency: text("frequency"),
   sqft: integer("sqft"),
-  bathrooms: integer("bathrooms"),
+  // Real, not integer — the form allows half-baths in 0.5 steps and an
+  // integer column silently truncated the count the customer entered.
+  bathrooms: real("bathrooms"),
+  bedrooms: integer("bedrooms"),
   petHair: text("pet_hair"),
   condition: text("condition"),
   estimateMin: integer("estimate_min"),
@@ -182,6 +185,21 @@ export const bookingRequests = pgTable("booking_requests", {
   requestedDate: timestamp("requested_date").notNull(),
   distanceMiles: integer("distance_miles"),
   status: text("status").notNull().default("pending"),
+  // The /book flow "essentials" the cleaner needs on-site. These were
+  // previously forwarded to BrightBase only and dropped locally — the
+  // operator's own DB had no record of what the customer typed.
+  entryMethod: text("entry_method"),
+  parkingNotes: text("parking_notes"),
+  petsDetail: text("pets_detail"),
+  focusAreas: text("focus_areas"),
+  specialInstructions: text("special_instructions"),
+  // Unguessable capability token for the customer self-service manage page
+  // (/booking/manage/:token). Knowing the token IS the authorization.
+  manageToken: text("manage_token").unique(),
+  // Client-generated per-visit UUID — the same key the intake + booking
+  // forwards carry so BrightBase collapses them into one Lead. Stored so
+  // manage-page edits can address the same BrightBase lead later.
+  idempotencyKey: text("idempotency_key"),
   adminNotes: text("admin_notes"),
   googleEventId: text("google_event_id"),
   connecteamShiftId: text("connecteam_shift_id"),
@@ -213,7 +231,7 @@ export const leadForwards = pgTable("lead_forwards", {
   id: serial("id").primaryKey(),
   sourceType: text("source_type").notNull(),  // 'booking' | 'intake' | 'quote'
   sourceId: integer("source_id").notNull(),   // FK-ish to booking_requests.id / intake_submissions.id / quote_leads.id
-  destination: text("destination").notNull(), // 'brightbase' | 'crm_intake' | 'crm_booking'
+  destination: text("destination").notNull(), // 'brightbase' | 'brightbase-update' | 'crm_intake' | 'crm_booking'
   status: text("status").notNull().default("pending"),  // 'pending' | 'delivered' | 'failed' | 'skipped'
   attempts: integer("attempts").notNull().default(0),
   lastError: text("last_error"),

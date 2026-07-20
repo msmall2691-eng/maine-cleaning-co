@@ -48,6 +48,11 @@ function clamp(n: number, lo: number, hi: number) {
   return Math.max(lo, Math.min(hi, n));
 }
 
+// Deliberately loose — just enough to catch "meg@gmail" / "meg gmail.com"
+// typos INLINE instead of letting the server 422 into a toast the customer
+// has to decode. The server's zod .email() remains the real gate.
+const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+
 function Seg<T extends string>({
   options,
   value,
@@ -282,6 +287,14 @@ export function InstantEstimate({ defaultCategory, bookingIntent = false }: Inst
   const [petsAllowed, setPetsAllowed] = useState("");
 
   const [step, setStep] = useState<1 | 2 | 3 | 4>(1);
+  // The intake row id returned by /api/intake/submit — passed into the
+  // booking payload so the server links booking_requests.intake_id and the
+  // operator sees one journey, not two unrelated rows.
+  const [intakeId, setIntakeId] = useState<number | null>(null);
+  // Capability URL returned by /api/booking/submit — the customer's
+  // self-service edit/cancel page. Shown on the success step (and emailed
+  // when they left an email).
+  const [manageUrl, setManageUrl] = useState<string | null>(null);
   const [portalCreated, setPortalCreated] = useState(false);
   const [portalLoggedIn, setPortalLoggedIn] = useState(false);
   const [existingAccount, setExistingAccount] = useState(false);
@@ -320,6 +333,12 @@ export function InstantEstimate({ defaultCategory, bookingIntent = false }: Inst
 
   const isCustomQuote = category === "str" || category === "commercial";
   const cleanType = category === "deep-clean" ? "deep" : "standard";
+
+  // Client-side mirror of the server's "phone or email required" refine —
+  // an uncontactable lead is a dead lead, so block submit inline instead of
+  // bouncing the customer off a 422.
+  const hasContactMethod = Boolean(contactPhone.trim() || contactEmail.trim());
+  const emailInvalid = contactEmail.trim() !== "" && !EMAIL_RE.test(contactEmail.trim());
 
   // Voice input → fill fields. Pricing formulas untouched — we're only
   // driving the same setters the manual controls drive.
@@ -479,6 +498,9 @@ export function InstantEstimate({ defaultCategory, bookingIntent = false }: Inst
     },
     onSuccess: (data) => {
       setStep(3);
+      // Remember the intake row so the follow-on booking submit can link
+      // booking_requests.intake_id back to this submission.
+      if (typeof data?.id === "number") setIntakeId(data.id);
       if (data?.portalCreated) setPortalCreated(true);
       if (data?.existingAccount) setExistingAccount(true);
       if (data?.emailSent === false) setEmailSent(false);
@@ -525,6 +547,8 @@ export function InstantEstimate({ defaultCategory, bookingIntent = false }: Inst
           estimateMax: engine.max || null,
           requestedDate: bookingDate,
           distanceMiles: addressDistance,
+          // Link this booking to the step-1/2 intake row (same visit).
+          intakeId,
           // The six essentials the cleaner needs on-site. Sent as top-level
           // fields; Bright-Space stores them in LeadIntake.custom_fields
           // (JSON), so no schema migration is required to land them.
@@ -547,9 +571,11 @@ export function InstantEstimate({ defaultCategory, bookingIntent = false }: Inst
       }
       return json;
     },
-    onSuccess: () => {
+    onSuccess: (data) => {
       setBookingSubmitted(true);
       setStep(4);
+      // Self-service edit/cancel link for the success screen.
+      if (typeof data?.manageUrl === "string") setManageUrl(data.manageUrl);
       // The visit is complete — rotate so a subsequent booking (after
       // resetForm, or a second independent /book submission in the same
       // page session) gets its own fresh key instead of colliding with
@@ -594,6 +620,11 @@ export function InstantEstimate({ defaultCategory, bookingIntent = false }: Inst
     return d.toISOString().split("T")[0];
   }, []);
 
+  // The date input's `min` stops the picker, but a typed/stale date can
+  // still land under the lead-time floor — catch it inline instead of
+  // letting the server 400 into a toast. ISO strings compare lexically.
+  const bookingDateTooSoon = bookingDate !== "" && bookingDate < minBookingDate;
+
   // Auto-run the address check as soon as step 3 has a name+phone+address
   // and hasn't been checked yet — one less click between the estimate and
   // the booking form. Runs once per unique address so re-renders don't
@@ -613,6 +644,8 @@ export function InstantEstimate({ defaultCategory, bookingIntent = false }: Inst
 
   const resetForm = () => {
     setStep(1);
+    setIntakeId(null);
+    setManageUrl(null);
     setPortalCreated(false);
     setPortalLoggedIn(false);
     setExistingAccount(false);
@@ -909,8 +942,10 @@ export function InstantEstimate({ defaultCategory, bookingIntent = false }: Inst
                     </div>
                     <div>
                       <label className="text-[11px] text-muted-foreground" htmlFor="str-bathrooms">Bathrooms</label>
-                      <Input id="str-bathrooms" type="number" min={0} max={20} step={0.5} value={bathrooms}
-                        onChange={e => setBathrooms(clamp(Math.round((parseFloat(e.target.value || "0")) * 2) / 2, 0, 20))}
+                      {/* min 1, not 0 — the server schema requires ≥1 bath and a
+                          0 here sailed all the way to a 422 after submit. */}
+                      <Input id="str-bathrooms" type="number" min={1} max={20} step={0.5} value={bathrooms}
+                        onChange={e => setBathrooms(clamp(Math.round((parseFloat(e.target.value || "1")) * 2) / 2, 1, 20))}
                         className="input-field" data-testid="input-str-bathrooms" />
                     </div>
                     <div>
@@ -949,22 +984,46 @@ export function InstantEstimate({ defaultCategory, bookingIntent = false }: Inst
               )}
 
               <div className="space-y-3">
+                {/* Real labels, not placeholder-only — placeholders vanish the
+                    moment the customer types, and screen readers never see
+                    them. Mirrors the labeled residential step-2 fields. */}
                 <p className="label-sm">Your contact info</p>
-                <Input placeholder="Your name *" value={contactName} onChange={e => setContactName(e.target.value)} className="input-field" data-testid="input-name" autoComplete="name" />
-                <Input placeholder="Phone number *" type="tel" value={contactPhone} onChange={e => setContactPhone(e.target.value)} className="input-field" data-testid="input-phone" autoComplete="tel" inputMode="tel" />
-                <Input placeholder="Email address" type="email" value={contactEmail} onChange={e => setContactEmail(e.target.value)} className="input-field" data-testid="input-email" autoComplete="email" inputMode="email" />
-                <AddressInput value={contactAddress} onChange={setContactAddress} onZipDetected={setZip} />
-                <Input
-                  placeholder={
-                    category === "str"
-                      ? "# of bedrooms, how often guests turn over, any extras..."
-                      : "Type of business, sq footage, days/times needed..."
-                  }
-                  value={contactNotes}
-                  onChange={e => setContactNotes(e.target.value)}
-                  className="input-field"
-                  data-testid="input-notes"
-                />
+                <div>
+                  <label className="text-xs font-medium text-muted-foreground mb-1 block" htmlFor="custom-name">Name</label>
+                  <Input id="custom-name" placeholder="Your name" value={contactName} onChange={e => setContactName(e.target.value)} className="input-field" data-testid="input-name" autoComplete="name" />
+                </div>
+                <div>
+                  <label className="text-xs font-medium text-muted-foreground mb-1 block" htmlFor="custom-phone">Phone</label>
+                  <Input id="custom-phone" placeholder="Phone number" type="tel" value={contactPhone} onChange={e => setContactPhone(e.target.value)} className="input-field" data-testid="input-phone" autoComplete="tel" inputMode="tel" />
+                </div>
+                <div>
+                  <label className="text-xs font-medium text-muted-foreground mb-1 block" htmlFor="custom-email">Email</label>
+                  <Input id="custom-email" placeholder="Email address" type="email" value={contactEmail} onChange={e => setContactEmail(e.target.value)} className="input-field" data-testid="input-email" autoComplete="email" inputMode="email" />
+                  {emailInvalid && (
+                    <p className="text-[11px] text-destructive mt-1 ml-1" data-testid="error-email">
+                      That email doesn't look right — double-check it before sending.
+                    </p>
+                  )}
+                </div>
+                <div>
+                  <label className="text-xs font-medium text-muted-foreground mb-1 block">Property address</label>
+                  <AddressInput value={contactAddress} onChange={setContactAddress} onZipDetected={setZip} />
+                </div>
+                <div>
+                  <label className="text-xs font-medium text-muted-foreground mb-1 block" htmlFor="custom-notes">Details</label>
+                  <Input
+                    id="custom-notes"
+                    placeholder={
+                      category === "str"
+                        ? "# of bedrooms, how often guests turn over, any extras..."
+                        : "Type of business, sq footage, days/times needed..."
+                    }
+                    value={contactNotes}
+                    onChange={e => setContactNotes(e.target.value)}
+                    className="input-field"
+                    data-testid="input-notes"
+                  />
+                </div>
               </div>
 
               <div>
@@ -1000,12 +1059,18 @@ export function InstantEstimate({ defaultCategory, bookingIntent = false }: Inst
 
               <Button
                 className="w-full h-[52px] rounded-xl text-base font-bold shadow-md group min-h-[48px]"
-                disabled={submit.isPending || (!contactName && !contactPhone)}
+                disabled={submit.isPending || !hasContactMethod || emailInvalid}
                 onClick={() => submit.mutate()}
                 data-testid="button-submit-custom"
               >
                 {submit.isPending ? <><Loader2 className="w-4 h-4 animate-spin mr-2" /> Submitting…</> : <><Send className="w-4 h-4 mr-2" /> Send Quote Request</>}
               </Button>
+              {!hasContactMethod && (
+                <p className="text-[11px] text-amber-600 dark:text-amber-400 text-center leading-relaxed flex items-center justify-center gap-1">
+                  <AlertCircle className="w-3 h-3 flex-shrink-0" />
+                  Add a phone or email so we can send your quote.
+                </p>
+              )}
               <p className="text-[11px] text-muted-foreground text-center">
                 We typically respond within 1 business day.
               </p>
@@ -1028,7 +1093,10 @@ export function InstantEstimate({ defaultCategory, bookingIntent = false }: Inst
               </div>
 
               <div className="space-y-3.5">
-                <p className="label-sm">Contact info <span className="font-normal text-muted-foreground">(all optional)</span></p>
+                {/* Not "all optional" any more — a lead with no phone AND no
+                    email is uncontactable and forwarded as "Unknown". The
+                    server enforces the same rule (intakeSubmitSchema refine). */}
+                <p className="label-sm">Contact info <span className="font-normal text-muted-foreground">(phone or email required)</span></p>
                 <div>
                   <label className="text-xs font-medium text-muted-foreground mb-1 block">Name</label>
                   <Input placeholder="Your name" value={contactName} onChange={e => setContactName(e.target.value)} className="input-field !h-11" data-testid="input-name" autoComplete="name" />
@@ -1040,7 +1108,13 @@ export function InstantEstimate({ defaultCategory, bookingIntent = false }: Inst
                 <div>
                   <label className="text-xs font-medium text-muted-foreground mb-1 block">Email</label>
                   <Input placeholder="Email address" type="email" value={contactEmail} onChange={e => setContactEmail(e.target.value)} className="input-field !h-11" data-testid="input-email" autoComplete="email" inputMode="email" />
-                  <p className="text-[11px] text-muted-foreground mt-1 ml-1">Enter your email to receive a copy of this request.</p>
+                  {emailInvalid ? (
+                    <p className="text-[11px] text-destructive mt-1 ml-1" data-testid="error-email">
+                      That email doesn't look right — double-check it before submitting.
+                    </p>
+                  ) : (
+                    <p className="text-[11px] text-muted-foreground mt-1 ml-1">Enter your email to receive a copy of this request.</p>
+                  )}
                 </div>
                 <div>
                   <label className="text-xs font-medium text-muted-foreground mb-1 block">Address</label>
@@ -1095,10 +1169,16 @@ export function InstantEstimate({ defaultCategory, bookingIntent = false }: Inst
 
               <div className="flex gap-3">
                 <Button variant="outline" className="h-[52px] px-5 sm:px-6 rounded-xl border-border text-sm font-medium" onClick={() => setStep(1)} data-testid="button-back">Back</Button>
-                <Button className="flex-1 h-[52px] text-base rounded-xl shadow-md font-bold" disabled={submit.isPending} onClick={() => submit.mutate()} data-testid="button-submit">
+                <Button className="flex-1 h-[52px] text-base rounded-xl shadow-md font-bold" disabled={submit.isPending || !hasContactMethod || emailInvalid} onClick={() => submit.mutate()} data-testid="button-submit">
                   {submit.isPending ? <><Loader2 className="w-4 h-4 animate-spin mr-2" /> Submitting…</> : <><Send className="w-4 h-4 mr-2" /> Submit Request</>}
                 </Button>
               </div>
+              {!hasContactMethod && (
+                <p className="text-[11px] text-amber-600 dark:text-amber-400 text-center leading-relaxed flex items-center justify-center gap-1 !mt-3">
+                  <AlertCircle className="w-3 h-3 flex-shrink-0" />
+                  Add a phone or email so we can send your quote.
+                </p>
+              )}
             </motion.div>
           )}
 
@@ -1303,7 +1383,7 @@ export function InstantEstimate({ defaultCategory, bookingIntent = false }: Inst
 
                       <Button
                         className="w-full h-[52px] rounded-xl text-base font-bold shadow-md"
-                        disabled={!bookingDate || bookingMutation.isPending}
+                        disabled={!bookingDate || bookingDateTooSoon || bookingMutation.isPending}
                         onClick={() => bookingMutation.mutate()}
                         data-testid="button-book-date"
                       >
@@ -1316,6 +1396,12 @@ export function InstantEstimate({ defaultCategory, bookingIntent = false }: Inst
                         <p className="text-[11px] text-amber-600 dark:text-amber-400 text-center leading-relaxed flex items-center justify-center gap-1">
                           <AlertCircle className="w-3 h-3 flex-shrink-0" />
                           Pick a preferred date above to enable booking.
+                        </p>
+                      )}
+                      {bookingDateTooSoon && (
+                        <p className="text-[11px] text-destructive text-center leading-relaxed flex items-center justify-center gap-1" data-testid="error-booking-date">
+                          <AlertCircle className="w-3 h-3 flex-shrink-0" />
+                          Please pick a date from tomorrow forward — for same-day, give us a call.
                         </p>
                       )}
                       <p className="text-[11px] text-muted-foreground text-center leading-relaxed">
@@ -1422,6 +1508,24 @@ export function InstantEstimate({ defaultCategory, bookingIntent = false }: Inst
                   </div>
                 </div>
               </div>
+
+              {/* Self-service manage link — the capability URL minted by
+                  /api/booking/submit. Also emailed when they left an email. */}
+              {manageUrl && (
+                <div className="rounded-xl bg-emerald-500/8 border border-emerald-500/20 p-4" data-testid="block-manage-link">
+                  <p className="text-sm text-foreground">
+                    Need to change something?{" "}
+                    <a href={manageUrl} className="font-semibold text-primary underline underline-offset-2 hover:opacity-80" data-testid="link-manage-booking">
+                      Manage your booking
+                    </a>
+                  </p>
+                  <p className="text-xs text-muted-foreground mt-1">
+                    {contactEmail
+                      ? `We also emailed this link to ${contactEmail} so you can reschedule or cancel any time.`
+                      : "Save this link — it's your key to reschedule or cancel without calling."}
+                  </p>
+                </div>
+              )}
 
               <div className="rounded-xl bg-muted/30 border border-border/40 px-4 py-3 space-y-1.5 text-[13px]">
                 <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground mb-2">Booking Details</p>

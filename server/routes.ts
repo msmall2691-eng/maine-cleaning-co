@@ -1,12 +1,12 @@
 import type { Express } from "express";
 import { createServer, type Server } from "http";
 import { storage } from "./storage";
-import { insertQuoteLeadSchema } from "@shared/schema";
+import { insertQuoteLeadSchema, type BookingRequest } from "@shared/schema";
 import { z } from "zod";
-import { sendLeadNotification, sendCustomerConfirmation, sendPasswordResetEmail, sendIntakeNotification } from "./email";
+import { sendLeadNotification, sendCustomerConfirmation, sendPasswordResetEmail, sendIntakeNotification, sendBookingNotification, sendBookingCustomerEmail } from "./email";
 import { intakeSubmitSchema } from "./lib/validators";
 import { normalizeIntakePayload } from "./lib/normalize";
-import { forwardLeadToBrightBase } from "./lib/brightbase";
+import { forwardLeadToBrightBase, forwardBookingUpdateToBrightBase } from "./lib/brightbase";
 import { calculateQuote, estimatesDiverge } from "./lib/quoteEngine";
 import { runForward } from "./lib/leadForward";
 import { leadForwards } from "@shared/schema";
@@ -353,7 +353,10 @@ export async function registerRoutes(
         res.status(400).json({ message: "Service type and date are required" });
         return;
       }
-      const date = new Date(scheduledDate);
+      // parseFormDate (declared below, hoisted) — a bare "YYYY-MM-DD" must
+      // not parse as UTC midnight or the cleaning lands on the previous
+      // Eastern day. preferredTime still overrides the noon default.
+      const date = parseFormDate(scheduledDate);
       if (preferredTime) {
         const [hours, minutes] = preferredTime.split(":").map(Number);
         date.setHours(hours, minutes, 0, 0);
@@ -377,7 +380,8 @@ export async function registerRoutes(
       const { scheduledDate, notes, status, preferredTime } = req.body;
       const updateData: any = {};
       if (scheduledDate) {
-        const date = new Date(scheduledDate);
+        // Same local-noon guard as the create path above.
+        const date = parseFormDate(scheduledDate);
         if (preferredTime) {
           const [hours, minutes] = preferredTime.split(":").map(Number);
           date.setHours(hours, minutes, 0, 0);
@@ -479,12 +483,26 @@ export async function registerRoutes(
         quoteLeadId: null,
       });
 
+      // sendIntakeNotification resolves `true` only when the message was
+      // actually handed to the SMTP transport. `false` = SMTP unconfigured —
+      // record "skipped", not "sent", so the admin can tell "nothing was
+      // ever sent" from "sent fine". Transport errors still reject → "failed".
       sendIntakeNotification(submission.id, normalized as unknown as Record<string, any>, rawPayload as Record<string, any>)
-        .then(() => storage.updateIntakeSubmissionEmail(submission.id, "sent"))
+        .then((sent) => storage.updateIntakeSubmissionEmail(submission.id, sent ? "sent" : "skipped"))
         .catch((err) => {
           console.error(`[intake] Email notification failed for INT-${submission.id}:`, err);
           storage.updateIntakeSubmissionEmail(submission.id, "failed").catch(() => {});
         });
+
+      // The homepage ContactForm posts here with no serviceType — a general
+      // question, not a job. Without this flag the downstream forwards would
+      // dress it up as a "residential" booking, so mark the notes clearly and
+      // (in forwardLeadToBrightBase) skip the requestedDate entirely rather
+      // than inventing "today".
+      const isContactForm = (rawPayload.source ?? "") === "contact_form";
+      const forwardNotes = isContactForm
+        ? `General inquiry (contact form): ${normalized.notes || ""}`.trim()
+        : normalized.notes;
 
       // Forward to CRM
       const freqMap: Record<string, string> = { weekly: "Weekly", biweekly: "Biweekly", monthly: "Monthly", "one-time": "One-Time" };
@@ -494,7 +512,7 @@ export async function registerRoutes(
         phone: normalized.phone || "",
         address: normalized.address || normalized.zip || "",
         service: normalized.serviceType || "custom",
-        message: normalized.notes || `Estimate: $${normalized.estimateMin || "?"}–$${normalized.estimateMax || "?"}`,
+        message: forwardNotes || `Estimate: $${normalized.estimateMin || "?"}–$${normalized.estimateMax || "?"}`,
         propertyType: normalized.serviceType === "str" ? "vacation-rental" : normalized.serviceType === "commercial" ? "commercial" : "residential",
         frequency: freqMap[normalized.frequency] || normalized.frequency || "",
         estimateMin: normalized.estimateMin || null,
@@ -564,7 +582,7 @@ export async function registerRoutes(
         condition: normalized.condition,
         estimateMin: normalized.estimateMin,
         estimateMax: normalized.estimateMax,
-        notes: normalized.notes,
+        notes: forwardNotes,
         source: "Website",
         // STR turnover details (custom-quote path). bedrooms/guests land on
         // native Bright-Space columns; listingUrl/turnoverDay/petsAllowed on
@@ -714,7 +732,12 @@ export async function registerRoutes(
           frequency: lead.frequency,
           preferredDate: "",
           notes: `${lead.sqft} sqft, ${lead.bathrooms} bath, ${lead.petHair} pets, ${lead.condition} condition. ${lead.notes || ""}`.trim(),
-          estimateRange: `$${lead.estimateMin}-$${lead.estimateMax}`,
+          // Custom-quote services have no numeric estimate — sending the raw
+          // interpolation produced the literal string "$undefined-$undefined"
+          // in the downstream CRM.
+          estimateRange: lead.estimateMin != null && lead.estimateMax != null
+            ? `$${lead.estimateMin}-$${lead.estimateMax}`
+            : "Custom quote",
         };
         const controller = new AbortController();
         const timeout = setTimeout(() => controller.abort(), 10000);
@@ -772,7 +795,10 @@ export async function registerRoutes(
             lead.notes || "",
           ].filter(Boolean).join(" · "),
           source: "instant_estimate",
-          estimateRange: `$${lead.estimateMin}–$${lead.estimateMax}`,
+          // Same "$undefined–$undefined" guard as the Asset Manager forward.
+          estimateRange: lead.estimateMin != null && lead.estimateMax != null
+            ? `$${lead.estimateMin}–$${lead.estimateMax}`
+            : "Custom quote",
           submissionId: `QT-${lead.id}`,
         };
         const railwayController = new AbortController();
@@ -1114,6 +1140,31 @@ Rules:
   // Same-day requests still get pointed at the phone by the /book copy.
   const MIN_LEAD_DAYS = 1;
 
+  // Forms send bare "YYYY-MM-DD" strings. `new Date("YYYY-MM-DD")` parses as
+  // UTC MIDNIGHT, which is the previous evening in Eastern time — so the
+  // stored timestamp (and every render of it) drifted to the day BEFORE the
+  // one the customer picked. Parse at local noon instead: DST shifts can
+  // never push noon across a date boundary.
+  function parseFormDate(value: string): Date {
+    return /^\d{4}-\d{2}-\d{2}$/.test(value) ? new Date(`${value}T12:00:00`) : new Date(value);
+  }
+
+  // Inverse of parseFormDate for API responses: the calendar date in SERVER
+  // LOCAL time (matching how parseFormDate stored it) — not toISOString(),
+  // which would re-introduce the same UTC day-shift on the way out.
+  function toFormDateString(d: Date): string {
+    const y = d.getFullYear();
+    const m = String(d.getMonth() + 1).padStart(2, "0");
+    const day = String(d.getDate()).padStart(2, "0");
+    return `${y}-${m}-${day}`;
+  }
+
+  function minBookingDate(): Date {
+    const minDate = new Date(Date.now() + MIN_LEAD_DAYS * 24 * 60 * 60 * 1000);
+    minDate.setHours(0, 0, 0, 0);
+    return minDate;
+  }
+
   function haversineDistance(lat1: number, lng1: number, lat2: number, lng2: number): number {
     const R = 3959; // Earth radius in miles
     const dLat = (lat2 - lat1) * Math.PI / 180;
@@ -1213,14 +1264,11 @@ Rules:
       }
 
       const data = parsed.data;
-      // The estimate is recomputed below on the TRUE (possibly half-) bath
-      // count so it matches the customer's quote. Persisted/forwarded columns
-      // are integer, so round only at that boundary — never before pricing.
-      const bathroomsRounded = data.bathrooms != null ? Math.round(data.bathrooms) : null;
-      const requestedDate = new Date(data.requestedDate);
-      const now = new Date();
-      const minDate = new Date(now.getTime() + MIN_LEAD_DAYS * 24 * 60 * 60 * 1000);
-      minDate.setHours(0, 0, 0, 0);
+      // Local-noon parse — see parseFormDate. The old `new Date(data.requestedDate)`
+      // parsed the form's "YYYY-MM-DD" as UTC midnight, which both stored and
+      // lead-time-compared the PREVIOUS Eastern day.
+      const requestedDate = parseFormDate(data.requestedDate);
+      const minDate = minBookingDate();
 
       if (requestedDate < minDate) {
         return res.status(400).json({ success: false, message: `Please select a date at least ${MIN_LEAD_DAYS} days from today.` });
@@ -1264,6 +1312,10 @@ Rules:
         });
       }
 
+      // Unguessable capability token — knowing it is the sole authorization
+      // for the customer's /booking/manage/:token page.
+      const manageToken = crypto.randomUUID();
+
       const booking = await storage.createBookingRequest({
         intakeId: data.intakeId ?? null,
         name: data.name,
@@ -1274,16 +1326,56 @@ Rules:
         serviceType: data.serviceType,
         frequency: data.frequency ?? null,
         sqft: data.sqft ?? null,
-        bathrooms: bathroomsRounded,
+        // The column is `real` now — persist the true (possibly half-) bath
+        // count the customer entered and the estimate was priced on.
+        bathrooms: data.bathrooms ?? null,
+        bedrooms: data.bedrooms ?? null,
         petHair: data.petHair ?? null,
         condition: data.condition ?? null,
         estimateMin,
         estimateMax,
         requestedDate: requestedDate,
         distanceMiles: distanceMiles ?? null,
+        // The /book "essentials" — previously forwarded to BrightBase only
+        // and dropped locally, leaving our own DB blind to what the customer
+        // typed. focusAreas flattens to a comma list for the text column.
+        entryMethod: data.entryMethod ?? null,
+        parkingNotes: data.parkingNotes ?? null,
+        petsDetail: data.petsDetail ?? null,
+        focusAreas: data.focusAreas?.length ? data.focusAreas.join(", ") : null,
+        specialInstructions: data.specialInstructions ?? null,
+        manageToken,
+        idempotencyKey: data.idempotencyKey ?? null,
       });
 
       log("INFO", "booking", "New booking request created", { id: booking.id, date: data.requestedDate, serviceType: data.serviceType });
+
+      // Customer-facing manage URL. PUBLIC_SITE_URL wins in production (the
+      // canonical domain); otherwise fall back to the request's own origin so
+      // dev/staging links stay on the environment they came from.
+      const proto = (req.headers["x-forwarded-proto"] as string) || req.protocol || "https";
+      const siteBase = (process.env.PUBLIC_SITE_URL || `${proto}://${req.headers.host || "maineclean.co"}`).replace(/\/+$/, "");
+      const manageUrl = `${siteBase}/booking/manage/${manageToken}`;
+
+      // Owner + customer emails, both fire-and-forget (they never throw).
+      // Bookings — the highest-intent submissions — previously sent NO owner
+      // notification at all; only the intake path did.
+      const emailDetails = {
+        bookingId: booking.id,
+        name: data.name,
+        phone: data.phone,
+        email: data.email ?? null,
+        serviceType: data.serviceType,
+        requestedDate: data.requestedDate,
+        address: data.address,
+        estimateMin,
+        estimateMax,
+        entryMethod: data.entryMethod ?? null,
+        specialInstructions: data.specialInstructions ?? null,
+        manageUrl,
+      };
+      sendBookingNotification(emailDetails, "new").catch(() => {});
+      sendBookingCustomerEmail(emailDetails).catch(() => {});
 
       // Forward to CRM for approval workflow (uses leads endpoint with booking- prefix)
       const CRM_BOOKING_URL = process.env.CRM_WEBHOOK_URL || "https://connecteam-proxy.vercel.app/api/leads";
@@ -1298,7 +1390,9 @@ Rules:
         serviceType: data.serviceType,
         frequency: data.frequency,
         sqft: data.sqft,
-        bathrooms: bathroomsRounded,
+        // True (possibly half-) bath count — both sinks accept non-integers
+        // (the intake path has always forwarded 2.5-style values).
+        bathrooms: data.bathrooms,
         petHair: data.petHair,
         condition: data.condition,
         // Forward the trusted, server-computed range (falls back to the
@@ -1358,7 +1452,7 @@ Rules:
         frequency: data.frequency,
         sqft: data.sqft,
         bedrooms: data.bedrooms,
-        bathrooms: bathroomsRounded,
+        bathrooms: data.bathrooms,
         petHair: data.petHair,
         condition: data.condition,
         estimateMin,
@@ -1378,11 +1472,194 @@ Rules:
         success: true,
         bookingId: booking.id,
         requestedDate: data.requestedDate,
+        // Capability URL for self-service edit/cancel — also emailed to the
+        // customer when they left an email address.
+        manageToken,
+        manageUrl,
         message: "Your booking request has been submitted! We'll review and confirm within 1 business day.",
       });
     } catch (error) {
       log("ERROR", "booking", "Booking submission failed", { error: String(error) });
       return res.status(500).json({ success: false, message: "Failed to submit booking request. Please try again." });
+    }
+  });
+
+  // ── CUSTOMER SELF-SERVICE BOOKING MANAGEMENT ──
+  //
+  // Public endpoints secured by the capability URL: the unguessable
+  // manageToken (a UUID minted at submit time) is the sole credential.
+  // The summary deliberately omits email/phone so a leaked/forwarded link
+  // exposes as little as possible.
+
+  const TERMINAL_BOOKING_STATUSES = new Set(["cancelled", "rejected", "completed"]);
+
+  function bookingManageSummary(b: BookingRequest) {
+    return {
+      id: b.id,
+      name: b.name,
+      serviceType: b.serviceType,
+      requestedDate: toFormDateString(new Date(b.requestedDate)),
+      address: b.address,
+      status: b.status,
+      bedrooms: b.bedrooms,
+      entryMethod: b.entryMethod,
+      parkingNotes: b.parkingNotes,
+      petsDetail: b.petsDetail,
+      focusAreas: b.focusAreas,
+      specialInstructions: b.specialInstructions,
+      estimateMin: b.estimateMin,
+      estimateMax: b.estimateMax,
+    };
+  }
+
+  app.get("/api/booking/manage/:token", async (req, res) => {
+    try {
+      const booking = await storage.getBookingRequestByManageToken(req.params.token);
+      if (!booking) return res.status(404).json({ message: "Booking not found" });
+      res.json(bookingManageSummary(booking));
+    } catch (error) {
+      log("ERROR", "booking-manage", "Lookup failed", { error: String(error) });
+      res.status(500).json({ message: "Failed to load booking" });
+    }
+  });
+
+  // Only the fields a customer may self-edit. Everything else (price,
+  // address, service type) requires a call — those change the quote.
+  const bookingManageUpdateSchema = z.object({
+    requestedDate: z.string().regex(/^\d{4}-\d{2}-\d{2}$/, "Use YYYY-MM-DD").optional(),
+    entryMethod: z.string().max(100).optional().nullable(),
+    parkingNotes: z.string().max(500).optional().nullable(),
+    petsDetail: z.string().max(500).optional().nullable(),
+    focusAreas: z.array(z.string().max(100)).max(10).optional().nullable(),
+    specialInstructions: z.string().max(2000).optional().nullable(),
+    bedrooms: z.number().int().min(0).max(20).optional().nullable(),
+  });
+
+  app.patch("/api/booking/manage/:token", async (req, res) => {
+    try {
+      const ip = req.ip || req.socket.remoteAddress || "unknown";
+      if (!checkRateLimit(ip)) {
+        return res.status(429).json({ message: "Too many requests. Please try again later." });
+      }
+      const booking = await storage.getBookingRequestByManageToken(req.params.token);
+      if (!booking) return res.status(404).json({ message: "Booking not found" });
+      if (TERMINAL_BOOKING_STATUSES.has(booking.status)) {
+        return res.status(409).json({ message: "This booking can no longer be edited. Call or text us at 207-572-0502 to rebook." });
+      }
+
+      const parsed = bookingManageUpdateSchema.safeParse(req.body);
+      if (!parsed.success) {
+        return res.status(422).json({ message: "Validation failed", errors: parsed.error.flatten().fieldErrors });
+      }
+      const changes = parsed.data;
+
+      const patch: Record<string, any> = {};
+      if (changes.requestedDate !== undefined) {
+        // Same local-noon parse + lead-time gate as submit — a reschedule
+        // must not slip inside the confirmation window either.
+        const newDate = parseFormDate(changes.requestedDate);
+        if (newDate < minBookingDate()) {
+          return res.status(400).json({ message: `Please select a date at least ${MIN_LEAD_DAYS} days from today.` });
+        }
+        patch.requestedDate = newDate;
+      }
+      if (changes.entryMethod !== undefined) patch.entryMethod = changes.entryMethod;
+      if (changes.parkingNotes !== undefined) patch.parkingNotes = changes.parkingNotes;
+      if (changes.petsDetail !== undefined) patch.petsDetail = changes.petsDetail;
+      if (changes.focusAreas !== undefined) patch.focusAreas = changes.focusAreas?.length ? changes.focusAreas.join(", ") : null;
+      if (changes.specialInstructions !== undefined) patch.specialInstructions = changes.specialInstructions;
+      if (changes.bedrooms !== undefined) patch.bedrooms = changes.bedrooms;
+
+      if (Object.keys(patch).length === 0) {
+        return res.status(400).json({ message: "Nothing to update" });
+      }
+
+      const updated = await storage.updateBookingRequestFields(booking.id, patch);
+      if (!updated) return res.status(404).json({ message: "Booking not found" });
+      log("INFO", "booking-manage", "Customer updated booking", { id: booking.id, fields: Object.keys(patch) });
+
+      // Mirror the change into BrightBase so the operator's Requests page
+      // matches what the customer now expects. Addressable only when the
+      // original submit carried an idempotencyKey (older rows won't have one).
+      if (booking.idempotencyKey) {
+        forwardBookingUpdateToBrightBase({
+          idempotencyKey: booking.idempotencyKey,
+          requestedDate: changes.requestedDate,
+          specialInstructions: changes.specialInstructions ?? undefined,
+          entryMethod: changes.entryMethod ?? undefined,
+          parkingNotes: changes.parkingNotes ?? undefined,
+          petsDetail: changes.petsDetail ?? undefined,
+          focusAreas: changes.focusAreas ?? undefined,
+          bedrooms: changes.bedrooms ?? undefined,
+        }, { sourceType: "booking", sourceId: booking.id }).catch(() => {});
+      }
+
+      // Tell the office a customer changed their own booking — fire-and-forget.
+      sendBookingNotification({
+        bookingId: booking.id,
+        name: booking.name,
+        phone: booking.phone,
+        email: booking.email,
+        serviceType: booking.serviceType,
+        requestedDate: toFormDateString(new Date(updated.requestedDate)),
+        address: booking.address,
+        estimateMin: booking.estimateMin,
+        estimateMax: booking.estimateMax,
+        entryMethod: updated.entryMethod,
+        specialInstructions: updated.specialInstructions,
+      }, "updated").catch(() => {});
+
+      res.json({ success: true, booking: bookingManageSummary(updated) });
+    } catch (error) {
+      log("ERROR", "booking-manage", "Update failed", { error: String(error) });
+      res.status(500).json({ message: "Failed to update booking" });
+    }
+  });
+
+  app.post("/api/booking/manage/:token/cancel", async (req, res) => {
+    try {
+      const ip = req.ip || req.socket.remoteAddress || "unknown";
+      if (!checkRateLimit(ip)) {
+        return res.status(429).json({ message: "Too many requests. Please try again later." });
+      }
+      const booking = await storage.getBookingRequestByManageToken(req.params.token);
+      if (!booking) return res.status(404).json({ message: "Booking not found" });
+      // Cancelling twice is a no-op, not an error — a double-tap or a stale
+      // tab shouldn't show the customer a scary failure.
+      if (booking.status === "cancelled") {
+        return res.json({ success: true, booking: bookingManageSummary(booking) });
+      }
+      if (TERMINAL_BOOKING_STATUSES.has(booking.status)) {
+        return res.status(409).json({ message: "This booking can no longer be changed. Call or text us at 207-572-0502." });
+      }
+
+      const updated = await storage.updateBookingRequestStatus(booking.id, "cancelled");
+      if (!updated) return res.status(404).json({ message: "Booking not found" });
+      log("INFO", "booking-manage", "Customer cancelled booking", { id: booking.id });
+
+      if (booking.idempotencyKey) {
+        forwardBookingUpdateToBrightBase(
+          { idempotencyKey: booking.idempotencyKey, cancel: true },
+          { sourceType: "booking", sourceId: booking.id },
+        ).catch(() => {});
+      }
+
+      sendBookingNotification({
+        bookingId: booking.id,
+        name: booking.name,
+        phone: booking.phone,
+        email: booking.email,
+        serviceType: booking.serviceType,
+        requestedDate: toFormDateString(new Date(booking.requestedDate)),
+        address: booking.address,
+        estimateMin: booking.estimateMin,
+        estimateMax: booking.estimateMax,
+      }, "cancelled").catch(() => {});
+
+      res.json({ success: true, booking: bookingManageSummary(updated) });
+    } catch (error) {
+      log("ERROR", "booking-manage", "Cancel failed", { error: String(error) });
+      res.status(500).json({ message: "Failed to cancel booking" });
     }
   });
 

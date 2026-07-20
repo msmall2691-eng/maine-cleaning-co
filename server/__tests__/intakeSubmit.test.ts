@@ -22,8 +22,11 @@ vi.mock("../email", () => ({
   sendLeadNotification: vi.fn(async () => {}),
   sendCustomerConfirmation: vi.fn(async () => {}),
   sendPasswordResetEmail: vi.fn(async () => {}),
-  sendIntakeNotification: vi.fn(async () => {}),
+  // Resolves `true` = handed to SMTP transport (the new boolean contract).
+  sendIntakeNotification: vi.fn(async () => true),
   sendForwardFailureAlert: vi.fn(async () => {}),
+  sendBookingNotification: vi.fn(async () => {}),
+  sendBookingCustomerEmail: vi.fn(async () => {}),
 }));
 vi.mock("../lib/normalize", () => ({
   normalizeIntakePayload: (p: any) => p,
@@ -151,5 +154,152 @@ describe("POST /api/intake/submit rate limiting", () => {
       .set("X-Forwarded-For", "10.0.0.102")
       .send(goodPayload);
     expect(res.status).toBe(201);
+  });
+});
+
+describe("POST /api/intake/submit contact requirement", () => {
+  const goodPayload = {
+    name: "Test",
+    email: "t@x.co",
+    phone: "2075551234",
+    serviceType: "standard",
+    sqft: 1200,
+    frequency: "biweekly",
+    petHair: "none",
+    condition: "maintenance",
+    bathrooms: 2,
+  };
+
+  it("rejects a submission with neither phone nor email (uncontactable lead)", async () => {
+    const { email, phone, ...rest } = goodPayload;
+    const res = await request(app)
+      .post("/api/intake/submit")
+      .set("X-Forwarded-For", "10.0.0.120")
+      .send(rest);
+
+    expect(res.status).toBe(422);
+    expect(res.body.errors.email).toBeDefined();
+    expect(String(res.body.errors.email)).toMatch(/phone number or email/i);
+  });
+
+  it("treats empty-string contact fields as missing", async () => {
+    const res = await request(app)
+      .post("/api/intake/submit")
+      .set("X-Forwarded-For", "10.0.0.121")
+      .send({ ...goodPayload, email: "", phone: "  " });
+
+    expect(res.status).toBe(422);
+  });
+
+  it("accepts email-only submissions", async () => {
+    const { phone, ...rest } = goodPayload;
+    const res = await request(app)
+      .post("/api/intake/submit")
+      .set("X-Forwarded-For", "10.0.0.122")
+      .send(rest);
+
+    expect(res.status).toBe(201);
+  });
+
+  it("accepts phone-only submissions", async () => {
+    const { email, ...rest } = goodPayload;
+    const res = await request(app)
+      .post("/api/intake/submit")
+      .set("X-Forwarded-For", "10.0.0.123")
+      .send(rest);
+
+    expect(res.status).toBe(201);
+  });
+});
+
+describe("POST /api/intake/submit email notification status", () => {
+  const goodPayload = {
+    name: "Test",
+    email: "t@x.co",
+    phone: "2075551234",
+    serviceType: "standard",
+    sqft: 1200,
+    frequency: "biweekly",
+    petHair: "none",
+    condition: "maintenance",
+    bathrooms: 2,
+  };
+
+  it("records 'skipped' when SMTP is unconfigured (sendEmail returned false)", async () => {
+    // Regression: this used to record "sent" even though sendEmail silently
+    // returned without sending anything.
+    const { sendIntakeNotification } = await import("../email");
+    const { storage } = await import("../storage");
+    const emailMock = sendIntakeNotification as unknown as ReturnType<typeof vi.fn>;
+    const statusMock = storage.updateIntakeSubmissionEmail as unknown as ReturnType<typeof vi.fn>;
+    emailMock.mockResolvedValueOnce(false);
+    statusMock.mockClear();
+
+    const res = await request(app)
+      .post("/api/intake/submit")
+      .set("X-Forwarded-For", "10.0.0.130")
+      .send(goodPayload);
+    expect(res.status).toBe(201);
+
+    // The notification is fire-and-forget — wait for the chained update.
+    await vi.waitFor(() => expect(statusMock).toHaveBeenCalledWith(1, "skipped"));
+  });
+
+  it("records 'sent' when the transport actually accepted the message", async () => {
+    const { storage } = await import("../storage");
+    const statusMock = storage.updateIntakeSubmissionEmail as unknown as ReturnType<typeof vi.fn>;
+    statusMock.mockClear();
+
+    const res = await request(app)
+      .post("/api/intake/submit")
+      .set("X-Forwarded-For", "10.0.0.131")
+      .send(goodPayload);
+    expect(res.status).toBe(201);
+
+    await vi.waitFor(() => expect(statusMock).toHaveBeenCalledWith(1, "sent"));
+  });
+
+  it("records 'failed' when the send throws", async () => {
+    const { sendIntakeNotification } = await import("../email");
+    const { storage } = await import("../storage");
+    const emailMock = sendIntakeNotification as unknown as ReturnType<typeof vi.fn>;
+    const statusMock = storage.updateIntakeSubmissionEmail as unknown as ReturnType<typeof vi.fn>;
+    emailMock.mockRejectedValueOnce(new Error("SMTP down"));
+    statusMock.mockClear();
+
+    const res = await request(app)
+      .post("/api/intake/submit")
+      .set("X-Forwarded-For", "10.0.0.132")
+      .send(goodPayload);
+    expect(res.status).toBe(201);
+
+    await vi.waitFor(() => expect(statusMock).toHaveBeenCalledWith(1, "failed"));
+  });
+});
+
+describe("POST /api/intake/submit contact-form forwarding", () => {
+  it("prefixes contact-form notes and omits requestedDate in the BrightBase forward", async () => {
+    // A homepage contact-form question used to land in BrightBase as a
+    // "residential" job dated TODAY. The general-inquiry prefix and the
+    // dropped requestedDate keep it recognizable as a question.
+    const { forwardLeadToBrightBase } = await import("../lib/brightbase");
+    const mock = forwardLeadToBrightBase as unknown as ReturnType<typeof vi.fn>;
+    mock.mockClear();
+
+    const res = await request(app)
+      .post("/api/intake/submit")
+      .set("X-Forwarded-For", "10.0.0.140")
+      .send({
+        name: "Curious Customer",
+        email: "curious@x.co",
+        notes: "Do you clean ovens?",
+        source: "contact_form",
+      });
+
+    expect(res.status).toBe(201);
+    expect(mock).toHaveBeenCalledTimes(1);
+    const forwarded = mock.mock.calls[0][0];
+    expect(forwarded.notes).toBe("General inquiry (contact form): Do you clean ovens?");
+    expect(forwarded.requestedDate ?? null).toBeNull();
   });
 });

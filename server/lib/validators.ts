@@ -31,6 +31,16 @@ export const intakeSubmitSchema = z.object({
   listingUrl: z.string().url().max(500).optional().nullable().or(z.literal("")),
   turnoverDay: z.string().max(50).optional().nullable(),
   petsAllowed: z.string().max(100).optional().nullable(),
-});
+}).refine(
+  // At least one way to reach the customer. "All optional" contact info
+  // produced leads forwarded as "Unknown" with no phone/email — the
+  // operator literally could not follow up. The client forms mirror this
+  // rule with an inline hint before submit.
+  (d) => Boolean(d.email?.trim() || d.phone?.trim()),
+  {
+    message: "Please provide a phone number or email so we can reach you.",
+    path: ["email"],
+  },
+);
 
 export type IntakeSubmitPayload = z.infer<typeof intakeSubmitSchema>;

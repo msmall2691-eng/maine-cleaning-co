@@ -8,6 +8,7 @@ import Navbar from "@/components/layout/Navbar";
 import Footer from "@/components/layout/Footer";
 import Home from "@/pages/Home";
 import Book from "@/pages/Book";
+import ManageBooking from "@/pages/ManageBooking";
 import Portal from "@/pages/Portal";
 import PortalLogin from "@/pages/PortalLogin";
 import ResetPassword from "@/pages/ResetPassword";
@@ -52,6 +53,9 @@ function Router() {
     <Switch>
       <Route path="/" component={Home} />
       <Route path="/book" component={Book} />
+      {/* Capability URL from the booking confirmation email — the token in
+          the path is the customer's only credential. */}
+      <Route path="/booking/manage/:token" component={ManageBooking} />
       {/* Customer portal — the components + all /api/portal/* server
           handlers were already built and shipped in code; they just
           weren't reachable via the router. Adding these three routes

@@ -84,8 +84,10 @@ function isConfigured(): boolean {
  * columns on BrightBase's BookingSubmit schema now that it's set to
  * extra="ignore" — no reliance on schema laxity.
  *
- * If requestedDate is missing (intake form may not collect it),
- * defaults to today's ISO string. BrightBase requires the field.
+ * If requestedDate is missing (intake form may not collect it), it's
+ * OMITTED — BrightBase's BookingSubmit treats it as optional. We used to
+ * default it to "today", which made every contact-form question show up
+ * on the Requests page as a job dated today.
  *
  * ctx describes the source row so a failure lands in lead_forwards
  * with enough info for the admin to look it up.
@@ -103,16 +105,19 @@ export async function forwardLeadToBrightBase(
   const requestedDate =
     body.requestedDate instanceof Date
       ? body.requestedDate.toISOString()
-      : (body.requestedDate || new Date().toISOString());
+      : (body.requestedDate || null);
 
   const payload: Record<string, any> = {
     name: body.name || "Unknown",
     email: body.email || "",
     phone: body.phone || "",
     address: body.address || "",
+    // Last-resort label only — BrightBase wants some serviceType string;
+    // general inquiries keep their real nature via the notes prefix the
+    // intake handler adds for contact_form submissions.
     serviceType: body.serviceType || "residential",
-    requestedDate,
   };
+  if (requestedDate) payload.requestedDate = requestedDate;
 
   if (body.bathrooms != null) payload.bathrooms = Number(body.bathrooms);
   if (body.bedrooms != null) payload.bedrooms = Number(body.bedrooms);
@@ -176,6 +181,95 @@ export async function forwardLeadToBrightBase(
         const text = await res.text().catch(() => "");
         if (!res.ok) {
           // 4xx = fatal (won't fix by retrying), 5xx = retryable.
+          const fatal = res.status >= 400 && res.status < 500;
+          return {
+            ok: false,
+            statusCode: res.status,
+            responseSnippet: text.slice(0, 300),
+            error: `HTTP ${res.status}: ${text.slice(0, 200)}`,
+            fatal,
+          };
+        }
+        return { ok: true, statusCode: res.status, responseSnippet: text.slice(0, 300) };
+      } catch (err) {
+        return { ok: false, error: err instanceof Error ? err.message : String(err) };
+      }
+    },
+  });
+}
+
+// Change-set for a customer's manage-page edit. idempotencyKey addresses the
+// original Lead in BrightBase (the same key the submit forwards carried);
+// cancel:true marks the whole booking cancelled.
+export interface BrightBaseBookingUpdate {
+  idempotencyKey: string;
+  requestedDate?: string | null;
+  specialInstructions?: string | null;
+  entryMethod?: string | null;
+  parkingNotes?: string | null;
+  petsDetail?: string | null;
+  focusAreas?: string[] | null;
+  bedrooms?: number | null;
+  cancel?: boolean;
+}
+
+/**
+ * Fire-and-forget forward of a customer self-service edit/cancel to
+ * BrightBase's POST /api/booking/update. Same retry + ledger treatment as
+ * the submit forward, under its own destination ("brightbase-update") so
+ * the admin ledger distinguishes "the lead never arrived" from "the lead
+ * arrived but a later edit didn't".
+ */
+export async function forwardBookingUpdateToBrightBase(
+  update: BrightBaseBookingUpdate,
+  ctx: ForwardContext,
+): Promise<void> {
+  if (!isConfigured()) {
+    console.log("[brightbase] Skipping update forward — BRIGHTBASE_API_URL not set");
+    await recordSkipped(ctx.sourceType, ctx.sourceId, "brightbase-update", "BRIGHTBASE_API_URL not set");
+    return;
+  }
+
+  const payload: Record<string, any> = { idempotencyKey: update.idempotencyKey };
+  if (update.requestedDate != null) payload.requestedDate = update.requestedDate;
+  if (update.specialInstructions != null) payload.specialInstructions = update.specialInstructions;
+  if (update.entryMethod != null) payload.entryMethod = update.entryMethod;
+  if (update.parkingNotes != null) payload.parkingNotes = update.parkingNotes;
+  if (update.petsDetail != null) payload.petsDetail = update.petsDetail;
+  if (update.focusAreas != null) payload.focusAreas = update.focusAreas;
+  if (update.bedrooms != null) payload.bedrooms = update.bedrooms;
+  if (update.cancel) payload.cancel = true;
+
+  const base = (BRIGHTBASE_API_URL || "").replace(/\/+$/, "");
+  const url = `${base}/api/booking/update`;
+  // PII-safe: the change-set carries no name/email/phone/address anyway,
+  // but log only the field NAMES being changed, not their values.
+  console.log(`[brightbase] Forwarding booking update to ${url}`, JSON.stringify({
+    fields: Object.keys(payload).filter((k) => k !== "idempotencyKey"),
+    cancel: Boolean(update.cancel),
+  }));
+
+  await runForward({
+    sourceType: ctx.sourceType,
+    sourceId: ctx.sourceId,
+    destination: "brightbase-update",
+    attempt: async () => {
+      try {
+        const controller = new AbortController();
+        const timer = setTimeout(() => controller.abort(), 15_000);
+        let res: Response;
+        try {
+          res = await fetch(url, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify(payload),
+            signal: controller.signal,
+          });
+        } finally {
+          clearTimeout(timer);
+        }
+        const text = await res.text().catch(() => "");
+        if (!res.ok) {
           const fatal = res.status >= 400 && res.status < 500;
           return {
             ok: false,

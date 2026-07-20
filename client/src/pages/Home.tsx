@@ -118,13 +118,28 @@ function WaveDividerCream({ flip = false }: { flip?: boolean }) {
   );
 }
 
+// Loose on purpose — inline typo-catching only; the server's zod .email()
+// stays the real validator. Same pattern InstantEstimate uses.
+const CONTACT_EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+
 function ContactForm() {
   const [form, setForm] = useState({ name: "", email: "", phone: "", message: "" });
   const [status, setStatus] = useState<"idle" | "sending" | "sent" | "error">("idle");
+  const [showContactHint, setShowContactHint] = useState(false);
+
+  // Mirrors the server's intakeSubmitSchema refine: a message with no phone
+  // AND no email can never be answered.
+  const hasContactMethod = Boolean(form.email.trim() || form.phone.trim());
+  const emailInvalid = form.email.trim() !== "" && !CONTACT_EMAIL_RE.test(form.email.trim());
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!form.name.trim() || !form.message.trim()) return;
+    if (!hasContactMethod || emailInvalid) {
+      setShowContactHint(true);
+      return;
+    }
+    setShowContactHint(false);
     setStatus("sending");
     try {
       const res = await fetch("/api/intake/submit", {
@@ -187,6 +202,9 @@ function ContactForm() {
             className="w-full rounded-xl border border-border bg-background px-4 py-2.5 text-sm text-foreground placeholder:text-muted-foreground/50 focus:outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary/50 transition-all"
             placeholder="you@example.com"
           />
+          {emailInvalid && (
+            <p className="text-xs text-red-400 mt-1.5">That email doesn't look right — double-check it.</p>
+          )}
         </div>
       </div>
       <div>
@@ -214,6 +232,9 @@ function ContactForm() {
           placeholder="How can we help?"
         />
       </div>
+      {showContactHint && !hasContactMethod && (
+        <p className="text-sm text-amber-500">Please add a phone number or email so we can get back to you.</p>
+      )}
       {status === "error" && (
         <p className="text-sm text-red-400">Something went wrong. Please try again or call us directly.</p>
       )}
