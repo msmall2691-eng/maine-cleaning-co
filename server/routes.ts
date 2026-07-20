@@ -512,7 +512,15 @@ export async function registerRoutes(
         phone: normalized.phone || "",
         address: normalized.address || normalized.zip || "",
         service: normalized.serviceType || "custom",
-        message: forwardNotes || `Estimate: $${normalized.estimateMin || "?"}–$${normalized.estimateMax || "?"}`,
+        // When there are no notes AND no numeric estimate (custom-quote
+        // services), fall back to a clean label — never the literal
+        // "Estimate: $?–$?" the old interpolation produced and baked into
+        // the stored message the operator sees on the CRM card.
+        message: forwardNotes || (
+          normalized.estimateMin != null && normalized.estimateMax != null
+            ? `Estimate: $${normalized.estimateMin}–$${normalized.estimateMax}`
+            : "Custom quote request"
+        ),
         propertyType: normalized.serviceType === "str" ? "vacation-rental" : normalized.serviceType === "commercial" ? "commercial" : "residential",
         frequency: freqMap[normalized.frequency] || normalized.frequency || "",
         estimateMin: normalized.estimateMin || null,
