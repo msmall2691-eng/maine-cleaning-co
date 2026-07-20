@@ -8,7 +8,7 @@ import { intakeSubmitSchema } from "./lib/validators";
 import { normalizeIntakePayload } from "./lib/normalize";
 import { forwardLeadToBrightBase, forwardBookingUpdateToBrightBase } from "./lib/brightbase";
 import { calculateQuote, estimatesDiverge } from "./lib/quoteEngine";
-import { runForward } from "./lib/leadForward";
+import { runForward, retryFailedForwards } from "./lib/leadForward";
 import { leadForwards } from "@shared/schema";
 import { db } from "./db";
 import { desc, eq } from "drizzle-orm";
@@ -1698,6 +1698,48 @@ Rules:
       res.status(500).json({ message: "Failed to fetch lead forwards" });
     }
   });
+
+  // Retry the durable outbox — re-send forwards that FAILED, using the exact
+  // payload persisted on each ledger row. Two ways in:
+  //   • an admin session/JWT (the "Retry failed forwards" button), or
+  //   • a scheduled cron carrying x-cron-secret: $CRON_SECRET (set CRON_SECRET
+  //     and point a Railway/Vercel cron at this every ~10 min for hands-off
+  //     durability across process restarts).
+  // A late delivery still captures BrightBase's returned lead id onto our row.
+  app.post("/api/admin/forwards/retry", async (req, res) => {
+    const cronSecret = process.env.CRON_SECRET;
+    const viaCron = Boolean(cronSecret) && req.header("x-cron-secret") === cronSecret;
+    if (!viaCron) {
+      // Fall back to the normal admin gate (session/JWT). requireAdmin writes
+      // the response itself when unauthorized, so only continue if it calls next.
+      return requireAdmin(req, res, () => runRetrySweep(req, res));
+    }
+    return runRetrySweep(req, res);
+  });
+
+  async function runRetrySweep(req: any, res: any) {
+    try {
+      if (!db) return res.status(503).json({ message: "Database not configured" });
+      const limit = Math.min(Math.max(parseInt(String(req.body?.limit ?? req.query?.limit ?? "100"), 10) || 100, 1), 500);
+      const summary = await retryFailedForwards({
+        limit,
+        // A forward that lands on retry still needs its post-delivery side
+        // effect — capture BrightBase's returned booking id onto our row.
+        onDelivered: async (row, result) => {
+          if (row.destination !== "brightbase" || row.sourceType !== "booking" || !row.sourceId || !result.responseSnippet) return;
+          try {
+            const bookingId = JSON.parse(result.responseSnippet)?.bookingId;
+            if (bookingId != null) await storage.updateBookingRequestExternalIds(row.sourceId, { crmBookingId: String(bookingId) });
+          } catch { /* non-JSON response — nothing to capture */ }
+        },
+      });
+      log("INFO", "forwards-retry", "Retry sweep complete", summary);
+      res.json({ success: true, ...summary });
+    } catch (error) {
+      log("ERROR", "forwards-retry", "Retry sweep failed", { error: String(error) });
+      res.status(500).json({ message: "Retry sweep failed" });
+    }
+  }
 
   // Admin: list booking requests
   app.get("/api/admin/bookings", requireAdmin, async (req, res) => {

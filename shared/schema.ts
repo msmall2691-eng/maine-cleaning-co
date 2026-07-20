@@ -238,6 +238,12 @@ export const leadForwards = pgTable("lead_forwards", {
   lastStatusCode: integer("last_status_code"),
   lastAttemptedAt: timestamp("last_attempted_at"),
   deliveredAt: timestamp("delivered_at"),
+  // Exact request body + destination URL of the forward, so the retry sweep
+  // can re-POST a failed delivery verbatim without reconstructing it from the
+  // source row (the source may have changed, or not exist for external
+  // webhooks). Nullable for legacy rows written before this column existed.
+  payload: json("payload").$type<Record<string, any>>(),
+  targetUrl: text("target_url"),
   createdAt: timestamp("created_at").notNull().defaultNow(),
 });
 

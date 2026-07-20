@@ -23,7 +23,7 @@
  * marked "skipped" in the ledger and returns immediately.
  */
 
-import { runForward, recordSkipped, type ForwardSourceType } from "./leadForward";
+import { runForward, recordSkipped, type ForwardSourceType, type ForwardAttemptResult } from "./leadForward";
 
 const BRIGHTBASE_API_URL = process.env.BRIGHTBASE_API_URL;
 
@@ -195,7 +195,32 @@ export async function forwardLeadToBrightBase(
         return { ok: false, error: err instanceof Error ? err.message : String(err) };
       }
     },
+    // Persist the exact body + URL so the retry sweep can re-send this verbatim
+    // if it fails now and the process dies before the inline retries finish.
+    payload,
+    targetUrl: url,
+    onSuccess: (result) => captureBrightbaseId(ctx, result),
   });
+}
+
+/**
+ * When BrightBase accepts a booking forward it returns its created lead id as
+ * `bookingId`. Store it on our booking row (crmBookingId) so the two systems
+ * are linked both directions — we can jump from our record to theirs, and a
+ * delivered forward is provably delivered (not just "no error"). Best-effort:
+ * a parse/store failure never affects the forward result.
+ */
+async function captureBrightbaseId(ctx: ForwardContext, result: ForwardAttemptResult): Promise<void> {
+  if (ctx.sourceType !== "booking" || !ctx.sourceId || !result.responseSnippet) return;
+  let bookingId: unknown;
+  try {
+    bookingId = JSON.parse(result.responseSnippet)?.bookingId;
+  } catch {
+    return; // response wasn't JSON (or was truncated) — nothing to capture
+  }
+  if (bookingId == null) return;
+  const { storage } = await import("../storage");
+  await storage.updateBookingRequestExternalIds(ctx.sourceId, { crmBookingId: String(bookingId) });
 }
 
 // Change-set for a customer's manage-page edit. idempotencyKey addresses the
