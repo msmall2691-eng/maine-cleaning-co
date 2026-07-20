@@ -27,7 +27,7 @@ import { eq } from "drizzle-orm";
 import { sendForwardFailureAlert } from "../email";
 
 export type ForwardSourceType = "booking" | "intake" | "quote";
-export type ForwardDestination = "brightbase" | "crm_intake" | "crm_booking";
+export type ForwardDestination = "brightbase" | "brightbase-update" | "crm_intake" | "crm_booking";
 
 export interface ForwardAttemptResult {
   ok: boolean;

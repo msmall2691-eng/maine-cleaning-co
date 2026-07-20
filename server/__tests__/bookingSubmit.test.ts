@@ -31,8 +31,10 @@ vi.mock("../email", () => ({
   sendLeadNotification: vi.fn(async () => {}),
   sendCustomerConfirmation: vi.fn(async () => {}),
   sendPasswordResetEmail: vi.fn(async () => {}),
-  sendIntakeNotification: vi.fn(async () => {}),
+  sendIntakeNotification: vi.fn(async () => true),
   sendForwardFailureAlert: vi.fn(async () => {}),
+  sendBookingNotification: vi.fn(async () => {}),
+  sendBookingCustomerEmail: vi.fn(async () => {}),
 }));
 
 // Bypass PG session store — auth setup only touches session middleware.
@@ -120,11 +122,11 @@ describe("POST /api/booking/submit", () => {
     expect(createdBookings[0].estimateMax).toBe(225);
   });
 
-  it("prices a half-bath (2.5) on the TRUE count, and stores the bath count rounded", async () => {
+  it("prices a half-bath (2.5) on the TRUE count, and stores the true count", async () => {
     // Customer sees $165–175 in the browser for a 1500 sqft / 2½ bath /
-    // biweekly standard clean. Before the fix the server rounded 2.5→3 before
-    // recomputing and stored $175–185 — a price the customer never saw. The
-    // estimate must be computed on 2.5; only the integer bath COLUMN rounds.
+    // biweekly standard clean. The estimate must be computed on 2.5, and —
+    // now that booking_requests.bathrooms is `real` — the stored count is
+    // the customer's actual 2.5, not a rounded 3.
     const res = await request(app)
       .post("/api/booking/submit")
       .set("X-Forwarded-For", "10.0.0.210")
@@ -143,8 +145,83 @@ describe("POST /api/booking/submit", () => {
     expect(createdBookings).toHaveLength(1);
     expect(createdBookings[0].estimateMin).toBe(165);
     expect(createdBookings[0].estimateMax).toBe(175);
-    // DB column is integer — the count is rounded, the price is not.
-    expect(createdBookings[0].bathrooms).toBe(3);
+    // `real` column — the half-bath the customer entered survives verbatim.
+    expect(createdBookings[0].bathrooms).toBe(2.5);
+  });
+
+  it("parses the requestedDate at LOCAL NOON — no previous-day drift", async () => {
+    // `new Date("YYYY-MM-DD")` is UTC midnight, i.e. the prior evening in
+    // Eastern time; the stored timestamp then rendered the day BEFORE the
+    // one the customer picked.
+    const res = await request(app)
+      .post("/api/booking/submit")
+      .set("X-Forwarded-For", "10.0.0.212")
+      .send(basePayload);
+
+    expect(res.status).toBe(201);
+    const stored: Date = createdBookings[0].requestedDate;
+    expect(stored.getHours()).toBe(12);
+    const y = stored.getFullYear();
+    const m = String(stored.getMonth() + 1).padStart(2, "0");
+    const d = String(stored.getDate()).padStart(2, "0");
+    expect(`${y}-${m}-${d}`).toBe(basePayload.requestedDate);
+  });
+
+  it("persists the /book essentials + idempotencyKey and returns a manage URL", async () => {
+    // These fields were previously forwarded to BrightBase and DROPPED
+    // locally; the manageToken/manageUrl are the new self-service handle.
+    const res = await request(app)
+      .post("/api/booking/submit")
+      .set("X-Forwarded-For", "10.0.0.213")
+      .send({
+        ...basePayload,
+        bedrooms: 3,
+        entryMethod: "lockbox",
+        parkingNotes: "Driveway on the left",
+        petsDetail: "Friendly golden retriever",
+        focusAreas: ["kitchen", "floors"],
+        specialInstructions: "Alarm code 1234",
+        idempotencyKey: "visit-uuid-1",
+      });
+
+    expect(res.status).toBe(201);
+    const row = createdBookings[0];
+    expect(row.bedrooms).toBe(3);
+    expect(row.entryMethod).toBe("lockbox");
+    expect(row.parkingNotes).toBe("Driveway on the left");
+    expect(row.petsDetail).toBe("Friendly golden retriever");
+    expect(row.focusAreas).toBe("kitchen, floors");
+    expect(row.specialInstructions).toBe("Alarm code 1234");
+    expect(row.idempotencyKey).toBe("visit-uuid-1");
+    // Server-minted capability token, echoed back as a full URL.
+    expect(row.manageToken).toBeTruthy();
+    expect(res.body.manageToken).toBe(row.manageToken);
+    expect(res.body.manageUrl).toContain(`/booking/manage/${row.manageToken}`);
+  });
+
+  it("sends the owner + customer booking emails (fire-and-forget)", async () => {
+    const email = await import("../email");
+    const ownerMock = email.sendBookingNotification as unknown as ReturnType<typeof vi.fn>;
+    const customerMock = email.sendBookingCustomerEmail as unknown as ReturnType<typeof vi.fn>;
+    ownerMock.mockClear();
+    customerMock.mockClear();
+
+    const res = await request(app)
+      .post("/api/booking/submit")
+      .set("X-Forwarded-For", "10.0.0.214")
+      .send(basePayload);
+
+    expect(res.status).toBe(201);
+    expect(ownerMock).toHaveBeenCalledTimes(1);
+    expect(ownerMock.mock.calls[0][1]).toBe("new");
+    expect(ownerMock.mock.calls[0][0]).toMatchObject({
+      name: basePayload.name,
+      requestedDate: basePayload.requestedDate,
+      serviceType: basePayload.serviceType,
+    });
+    expect(customerMock).toHaveBeenCalledTimes(1);
+    expect(customerMock.mock.calls[0][0].email).toBe(basePayload.email);
+    expect(customerMock.mock.calls[0][0].manageUrl).toContain("/booking/manage/");
   });
 
   it("rejects an unknown serviceType (was an open string)", async () => {

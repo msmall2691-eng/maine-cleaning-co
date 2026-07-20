@@ -16,10 +16,12 @@ export interface IStorage {
   createBookingRequest(data: InsertBookingRequest): Promise<BookingRequest>;
   getBookingRequests(opts?: { status?: string; limit?: number; offset?: number }): Promise<{ bookings: BookingRequest[]; total: number }>;
   getBookingRequest(id: number): Promise<BookingRequest | undefined>;
+  getBookingRequestByManageToken(token: string): Promise<BookingRequest | undefined>;
   updateBookingRequestStatus(id: number, status: string, adminNotes?: string): Promise<BookingRequest | undefined>;
+  updateBookingRequestFields(id: number, patch: Partial<InsertBookingRequest>): Promise<BookingRequest | undefined>;
   updateBookingRequestExternalIds(id: number, ids: { googleEventId?: string; connecteamShiftId?: string; crmBookingId?: string }): Promise<BookingRequest | undefined>;
   createIntakeSubmission(data: InsertIntakeSubmission): Promise<IntakeSubmission>;
-  updateIntakeSubmissionEmail(id: number, status: "sent" | "failed"): Promise<void>;
+  updateIntakeSubmissionEmail(id: number, status: "sent" | "skipped" | "failed"): Promise<void>;
   updateIntakeSubmissionQuoteLead(id: number, quoteLeadId: number): Promise<void>;
   getIntakeSubmissions(limit?: number, offset?: number): Promise<IntakeSubmission[]>;
   getUser(id: string): Promise<User | undefined>;
@@ -267,6 +269,25 @@ export class DatabaseStorage implements IStorage {
     return row;
   }
 
+  // Capability-URL lookup for the customer self-service manage page — the
+  // token is the only credential, so this is the ONLY lookup path exposed
+  // to unauthenticated traffic.
+  async getBookingRequestByManageToken(token: string): Promise<BookingRequest | undefined> {
+    const [row] = await db.select().from(bookingRequests).where(eq(bookingRequests.manageToken, token));
+    return row;
+  }
+
+  // Customer-editable field patch from the manage page. Callers restrict
+  // WHICH fields land here (routes validate with zod); this just writes
+  // them plus updatedAt.
+  async updateBookingRequestFields(id: number, patch: Partial<InsertBookingRequest>): Promise<BookingRequest | undefined> {
+    const [row] = await db.update(bookingRequests)
+      .set({ ...patch, updatedAt: new Date() })
+      .where(eq(bookingRequests.id, id))
+      .returning();
+    return row;
+  }
+
   async updateBookingRequestStatus(id: number, status: string, adminNotes?: string): Promise<BookingRequest | undefined> {
     const updates: Partial<BookingRequest> = { status, updatedAt: new Date() };
     if (adminNotes !== undefined) updates.adminNotes = adminNotes;
@@ -288,7 +309,7 @@ export class DatabaseStorage implements IStorage {
     return row;
   }
 
-  async updateIntakeSubmissionEmail(id: number, status: "sent" | "failed"): Promise<void> {
+  async updateIntakeSubmissionEmail(id: number, status: "sent" | "skipped" | "failed"): Promise<void> {
     await db.update(intakeSubmissions)
       .set({ emailNotificationStatus: status })
       .where(eq(intakeSubmissions.id, id));

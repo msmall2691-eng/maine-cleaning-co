@@ -14,10 +14,14 @@ const transporter = nodemailer.createTransport({
 const FROM_ADDRESS = process.env.SMTP_FROM || process.env.SMTP_USER || 'office@mainecleaningco.com';
 const NOTIFY_ADDRESS = process.env.NOTIFY_EMAIL || 'office@mainecleaningco.com';
 
-async function sendEmail(to: string, subject: string, html: string, replyTo?: string) {
+// Returns whether the message was actually handed to the SMTP transport.
+// `false` means SMTP isn't configured (nothing was sent — callers should
+// record "skipped", not "sent"); a transport failure still THROWS so the
+// existing catch-paths (reset email, intake "failed" status) keep working.
+async function sendEmail(to: string, subject: string, html: string, replyTo?: string): Promise<boolean> {
   if (!process.env.SMTP_USER || !process.env.SMTP_PASS) {
     console.warn('[email] SMTP not configured — skipping email send. Set SMTP_USER and SMTP_PASS env vars.');
-    return;
+    return false;
   }
 
   await transporter.sendMail({
@@ -27,6 +31,7 @@ async function sendEmail(to: string, subject: string, html: string, replyTo?: st
     html,
     ...(replyTo ? { replyTo } : {}),
   });
+  return true;
 }
 
 function buildLeadEmailHtml(lead: QuoteLead): string {
@@ -267,7 +272,7 @@ export async function sendIntakeNotification(
   submissionId: number,
   normalized: Record<string, any>,
   raw: Record<string, any>
-): Promise<void> {
+): Promise<boolean> {
   const to = NOTIFY_ADDRESS;
   const replyTo = normalized.email || undefined;
   // Only surface a service label when the customer actually picked one —
@@ -356,7 +361,151 @@ export async function sendIntakeNotification(
 </body></html>`;
 
   const subject = `New Intake #INT-${submissionId}${normalized.name ? ` — ${normalized.name}` : ""}${normalized.estimateMin != null ? ` · $${normalized.estimateMin}–$${normalized.estimateMax}` : ""}`;
-  await sendEmail(to, subject, html, replyTo);
+  return sendEmail(to, subject, html, replyTo);
+}
+
+// Everything the booking emails need, passed explicitly so the email layer
+// stays decoupled from the drizzle row shape (tests pass plain objects).
+export interface BookingEmailDetails {
+  bookingId: number;
+  name?: string | null;
+  phone?: string | null;
+  email?: string | null;
+  serviceType: string;
+  requestedDate: string; // YYYY-MM-DD as the customer picked it
+  address?: string | null;
+  estimateMin?: number | null;
+  estimateMax?: number | null;
+  entryMethod?: string | null;
+  specialInstructions?: string | null;
+  manageUrl?: string | null;
+}
+
+const bookingServiceLabels: Record<string, string> = {
+  standard: "Standard Clean", deep: "Deep Clean", str: "Vacation Rental Turnover",
+  "vacation-rental": "Vacation Rental Turnover", commercial: "Commercial Cleaning",
+  "move-in-out": "Move-In/Move-Out Clean",
+};
+
+// Render "Friday, August 7, 2026" from the customer's YYYY-MM-DD without a
+// previous-day drift — parse at local noon, never UTC midnight.
+function formatBookingDate(requestedDate: string): string {
+  const d = new Date(`${requestedDate}T12:00:00`);
+  return isNaN(d.getTime())
+    ? requestedDate
+    : d.toLocaleDateString("en-US", { weekday: "long", month: "long", day: "numeric", year: "numeric" });
+}
+
+/**
+ * Owner notification for booking activity. The intake path has had this
+ * for a while; bookings — the highest-intent submissions on the site —
+ * previously sent NOTHING to the office. `variant` reuses the same
+ * template for manage-page edits ("updated") and cancellations.
+ * Fire-and-forget: never throws.
+ */
+export async function sendBookingNotification(
+  details: BookingEmailDetails,
+  variant: "new" | "updated" | "cancelled" = "new",
+): Promise<void> {
+  try {
+    const svcLabel = bookingServiceLabels[details.serviceType] || details.serviceType;
+    const dateLabel = formatBookingDate(details.requestedDate);
+    const estimate = details.estimateMin != null && details.estimateMax != null
+      ? `$${details.estimateMin} – $${details.estimateMax}` : "Custom quote";
+    const heading = variant === "new" ? "New Booking Request"
+      : variant === "updated" ? "Booking Updated by Customer"
+      : "Booking Cancelled by Customer";
+    const accent = variant === "cancelled" ? "#b91c1c" : "#1e3a5f";
+
+    const row = (label: string, value: string | null | undefined) =>
+      value ? `<tr><td style="padding:7px 0;color:#6b7280;width:150px;vertical-align:top;">${label}</td><td style="padding:7px 0;font-weight:600;color:#374151;">${value}</td></tr>` : "";
+
+    const html = `<!DOCTYPE html>
+<html><head><meta charset="utf-8"></head>
+<body style="margin:0;padding:0;font-family:'Helvetica Neue',Arial,sans-serif;background:#f8f8f6;">
+<div style="max-width:580px;margin:32px auto;background:#fff;border-radius:16px;overflow:hidden;border:1px solid #e8e8e6;">
+  <div style="background:${accent};padding:28px 32px;">
+    <h1 style="color:#fff;font-size:20px;margin:0;font-weight:600;">${heading}</h1>
+    <p style="color:rgba(255,255,255,0.65);font-size:13px;margin:6px 0 0;">Booking BK-${details.bookingId} · The Maine Cleaning Co.</p>
+  </div>
+  <div style="padding:28px 32px;">
+    <table style="width:100%;font-size:14px;border-collapse:collapse;">
+      ${row("Name", details.name)}
+      ${row("Phone", details.phone)}
+      ${row("Email", details.email)}
+      ${row("Service", svcLabel)}
+      ${row("Requested date", dateLabel)}
+      ${row("Address", details.address)}
+      ${row("Estimate", estimate)}
+      ${row("Entry method", details.entryMethod)}
+      ${row("Special instructions", details.specialInstructions)}
+      ${row("Customer manage link", details.manageUrl ? `<a href="${details.manageUrl}">${details.manageUrl}</a>` : null)}
+    </table>
+  </div>
+  <div style="background:#f9fafb;border-top:1px solid #e8e8e6;padding:16px 32px;text-align:center;">
+    <p style="font-size:12px;color:#9ca3af;margin:0;">Booking BK-${details.bookingId} · Captured ${new Date().toLocaleString("en-US", { timeZone: "America/New_York" })} ET</p>
+  </div>
+</div>
+</body></html>`;
+
+    const subjectPrefix = variant === "new" ? "New Booking" : variant === "updated" ? "Booking UPDATED" : "Booking CANCELLED";
+    const subject = `${subjectPrefix} BK-${details.bookingId}: ${svcLabel} · ${dateLabel}`;
+    await sendEmail(NOTIFY_ADDRESS, subject, html, details.email || undefined);
+    console.log(`[email] Booking ${variant} notification sent for BK-${details.bookingId}`);
+  } catch (error) {
+    console.error(`[email] Failed to send booking ${variant} notification for BK-${details.bookingId}:`, error);
+  }
+}
+
+/**
+ * Short customer-facing confirmation with the requested date and the
+ * manage-booking link so they can edit/cancel later without calling.
+ * No-op when the customer didn't leave an email. Fire-and-forget.
+ */
+export async function sendBookingCustomerEmail(details: BookingEmailDetails): Promise<void> {
+  if (!details.email) return;
+  try {
+    const svcLabel = bookingServiceLabels[details.serviceType] || details.serviceType;
+    const dateLabel = formatBookingDate(details.requestedDate);
+    const firstName = details.name?.split(" ")[0] || "there";
+
+    const html = `<!DOCTYPE html>
+<html><head><meta charset="utf-8"></head>
+<body style="margin:0;padding:0;font-family:'Helvetica Neue',Arial,sans-serif;background:#f8f8f6;">
+<div style="max-width:560px;margin:32px auto;background:#fff;border-radius:16px;overflow:hidden;border:1px solid #e8e8e6;">
+  <div style="background:#3a4f5c;padding:28px 32px;text-align:center;">
+    <h1 style="color:#fff;font-size:22px;margin:0;font-weight:600;">Booking Request Received!</h1>
+    <p style="color:rgba(255,255,255,0.7);font-size:13px;margin:8px 0 0;">The Maine Cleaning Co.</p>
+  </div>
+  <div style="padding:28px 32px;">
+    <p style="font-size:15px;color:#374151;line-height:1.6;margin:0 0 20px;">Hi ${firstName}, we've received your ${svcLabel.toLowerCase()} booking request for <strong>${dateLabel}</strong>. We'll review and confirm by phone, text, or email within 1 business day.</p>
+    ${details.manageUrl ? `
+    <div style="background:#f0f7ff;border:1px solid #bfdbfe;border-radius:10px;padding:16px 20px;margin-bottom:24px;">
+      <p style="font-size:14px;color:#374151;margin:0 0 12px;line-height:1.5;">Need to change the date, update details, or cancel? Use your personal booking link any time:</p>
+      <div style="text-align:center;">
+        <a href="${details.manageUrl}" style="display:inline-block;background:#3a4f5c;color:#ffffff;text-decoration:none;padding:12px 26px;border-radius:10px;font-size:14px;font-weight:600;">Manage My Booking</a>
+      </div>
+    </div>` : ""}
+    <div style="text-align:center;">
+      <p style="font-size:14px;color:#374151;margin:0 0 8px;">Questions? We're here to help.</p>
+      <p style="font-size:14px;margin:0;">
+        <a href="tel:207-572-0502" style="color:#3a4f5c;font-weight:600;text-decoration:none;">207-572-0502</a>
+        <span style="color:#d1d5db;margin:0 8px;">|</span>
+        <a href="mailto:office@mainecleaningco.com" style="color:#3a4f5c;font-weight:600;text-decoration:none;">office@mainecleaningco.com</a>
+      </p>
+    </div>
+  </div>
+  <div style="padding:16px 32px;background:#f9fafb;border-top:1px solid #e8e8e6;text-align:center;">
+    <p style="font-size:12px;color:#9ca3af;margin:0;">Booking BK-${details.bookingId} · The Maine Cleaning Co. · Southern Maine</p>
+  </div>
+</div>
+</body></html>`;
+
+    await sendEmail(details.email, `Your cleaning request for ${dateLabel} — The Maine Cleaning Co.`, html);
+    console.log(`[email] Booking customer confirmation sent for BK-${details.bookingId}`);
+  } catch (error) {
+    console.error(`[email] Failed to send booking customer confirmation for BK-${details.bookingId}:`, error);
+  }
 }
 
 export async function sendCustomerConfirmation(lead: QuoteLead, tempPassword?: string): Promise<void> {
