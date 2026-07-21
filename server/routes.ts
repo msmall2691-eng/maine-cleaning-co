@@ -592,6 +592,11 @@ export async function registerRoutes(
         estimateMax: normalized.estimateMax,
         notes: forwardNotes,
         source: "Website",
+        // Customer-uploaded property photos (base64 data URIs, max 3). They
+        // live on the RAW payload — normalizeIntakePayload doesn't carry them
+        // — so pull straight from rawPayload. brightbase.ts sanity-guards
+        // (image data URIs only, cap 3) before forwarding.
+        photos: rawPayload.photos ?? null,
         // STR turnover details (custom-quote path). bedrooms/guests land on
         // native Bright-Space columns; listingUrl/turnoverDay/petsAllowed on
         // its custom_fields, so the operator sees the whole turnover request.
@@ -1253,6 +1258,9 @@ Rules:
     petsDetail: z.string().optional().nullable(),
     focusAreas: z.array(z.string()).optional().nullable(),
     specialInstructions: z.string().optional().nullable(),
+    // Preferred arrival-time window. Constrained to the canonical set shared
+    // with Bright-Space (display labels live client-side).
+    arrivalWindow: z.enum(["morning", "afternoon", "evening", "flexible"]).optional().nullable(),
     // Per-submission UUID from the client. Forwarded to Bright-Space so
     // its unique-index dedup collapses retries + the dual-forward pattern
     // into one Lead. See Bright-Space PR #507.
@@ -1352,6 +1360,7 @@ Rules:
         petsDetail: data.petsDetail ?? null,
         focusAreas: data.focusAreas?.length ? data.focusAreas.join(", ") : null,
         specialInstructions: data.specialInstructions ?? null,
+        arrivalWindow: data.arrivalWindow ?? null,
         manageToken,
         idempotencyKey: data.idempotencyKey ?? null,
       });
@@ -1380,6 +1389,7 @@ Rules:
         estimateMax,
         entryMethod: data.entryMethod ?? null,
         specialInstructions: data.specialInstructions ?? null,
+        arrivalWindow: data.arrivalWindow ?? null,
         manageUrl,
       };
       sendBookingNotification(emailDetails, "new").catch(() => {});
@@ -1472,6 +1482,7 @@ Rules:
         petsDetail: data.petsDetail,
         focusAreas: data.focusAreas,
         specialInstructions: data.specialInstructions,
+        arrivalWindow: data.arrivalWindow,
         // See intake handler above — same rationale, same forward.
         idempotencyKey: data.idempotencyKey || null,
       }, { sourceType: "booking", sourceId: booking.id });
@@ -1515,6 +1526,7 @@ Rules:
       petsDetail: b.petsDetail,
       focusAreas: b.focusAreas,
       specialInstructions: b.specialInstructions,
+      arrivalWindow: b.arrivalWindow,
       estimateMin: b.estimateMin,
       estimateMax: b.estimateMax,
     };
@@ -1541,6 +1553,7 @@ Rules:
     focusAreas: z.array(z.string().max(100)).max(10).optional().nullable(),
     specialInstructions: z.string().max(2000).optional().nullable(),
     bedrooms: z.number().int().min(0).max(20).optional().nullable(),
+    arrivalWindow: z.enum(["morning", "afternoon", "evening", "flexible"]).optional().nullable(),
   });
 
   app.patch("/api/booking/manage/:token", async (req, res) => {
@@ -1577,6 +1590,7 @@ Rules:
       if (changes.focusAreas !== undefined) patch.focusAreas = changes.focusAreas?.length ? changes.focusAreas.join(", ") : null;
       if (changes.specialInstructions !== undefined) patch.specialInstructions = changes.specialInstructions;
       if (changes.bedrooms !== undefined) patch.bedrooms = changes.bedrooms;
+      if (changes.arrivalWindow !== undefined) patch.arrivalWindow = changes.arrivalWindow;
 
       if (Object.keys(patch).length === 0) {
         return res.status(400).json({ message: "Nothing to update" });
@@ -1599,6 +1613,7 @@ Rules:
           petsDetail: changes.petsDetail ?? undefined,
           focusAreas: changes.focusAreas ?? undefined,
           bedrooms: changes.bedrooms ?? undefined,
+          arrivalWindow: changes.arrivalWindow ?? undefined,
         }, { sourceType: "booking", sourceId: booking.id }).catch(() => {});
       }
 
@@ -1615,6 +1630,7 @@ Rules:
         estimateMax: booking.estimateMax,
         entryMethod: updated.entryMethod,
         specialInstructions: updated.specialInstructions,
+        arrivalWindow: updated.arrivalWindow,
       }, "updated").catch(() => {});
 
       res.json({ success: true, booking: bookingManageSummary(updated) });

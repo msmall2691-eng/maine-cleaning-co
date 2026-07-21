@@ -43,6 +43,7 @@ function seedBooking(overrides: Record<string, any> = {}) {
     petsDetail: "Friendly dog",
     focusAreas: "kitchen, floors",
     specialInstructions: null,
+    arrivalWindow: "afternoon",
     manageToken: "tok-valid",
     idempotencyKey: "idem-1",
     ...overrides,
@@ -156,6 +157,7 @@ describe("GET /api/booking/manage/:token", () => {
       parkingNotes: "Driveway",
       petsDetail: "Friendly dog",
       focusAreas: "kitchen, floors",
+      arrivalWindow: "afternoon",
       estimateMin: 250,
       estimateMax: 270,
     });
@@ -210,6 +212,35 @@ describe("PATCH /api/booking/manage/:token", () => {
     // Office hears about customer-driven changes.
     expect(ownerEmailMock).toHaveBeenCalledTimes(1);
     expect(ownerEmailMock.mock.calls[0][1]).toBe("updated");
+  });
+
+  it("updates arrivalWindow and forwards the change to Bright-Space", async () => {
+    seedBooking();
+    const res = await request(app)
+      .patch("/api/booking/manage/tok-valid")
+      .set("X-Forwarded-For", "10.1.0.9")
+      .send({ arrivalWindow: "evening" });
+
+    expect(res.status).toBe(200);
+    expect(res.body.booking.arrivalWindow).toBe("evening");
+    expect(bookings.get("tok-valid").arrivalWindow).toBe("evening");
+
+    expect(forwardMock).toHaveBeenCalledTimes(1);
+    expect(forwardMock.mock.calls[0][0]).toMatchObject({
+      idempotencyKey: "idem-1",
+      arrivalWindow: "evening",
+    });
+  });
+
+  it("rejects an unknown arrivalWindow value", async () => {
+    seedBooking();
+    const res = await request(app)
+      .patch("/api/booking/manage/tok-valid")
+      .set("X-Forwarded-For", "10.1.0.10")
+      .send({ arrivalWindow: "midnight" });
+
+    expect(res.status).toBe(422);
+    expect(forwardMock).not.toHaveBeenCalled();
   });
 
   it("rejects a requestedDate inside the MIN_LEAD_DAYS window", async () => {

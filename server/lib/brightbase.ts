@@ -52,6 +52,13 @@ interface BrightBaseLead {
   petsDetail?: string | null;
   focusAreas?: string[] | null;
   specialInstructions?: string | null;
+  // Preferred arrival-time window (canonical:
+  // "morning" | "afternoon" | "evening" | "flexible"). Rides the outgoing
+  // payload as arrivalWindow so the operator can slot the visit.
+  arrivalWindow?: string | null;
+  // Up to 3 customer-uploaded property photos as base64 data-URI strings.
+  // Forwarded so the operator sees what the customer sees. Never logged.
+  photos?: string[] | null;
   // STR / vacation-rental turnover details. guests rides the native column;
   // listingUrl/turnoverDay/petsAllowed land in Bright-Space's custom_fields.
   guests?: number | null;
@@ -133,6 +140,16 @@ export async function forwardLeadToBrightBase(
   if (body.petsDetail) payload.petsDetail = body.petsDetail;
   if (body.focusAreas && body.focusAreas.length) payload.focusAreas = body.focusAreas;
   if (body.specialInstructions) payload.specialInstructions = body.specialInstructions;
+  if (body.arrivalWindow) payload.arrivalWindow = body.arrivalWindow;
+  // Photos: sanity-guard before forwarding — cap at 3 and drop anything that
+  // isn't an image data URI, so a tampered/garbage payload can't push junk
+  // (or an unbounded blob list) onto the operator's Requests page.
+  if (body.photos && body.photos.length) {
+    const safePhotos = body.photos
+      .filter((p) => typeof p === "string" && p.startsWith("data:image/"))
+      .slice(0, 3);
+    if (safePhotos.length) payload.photos = safePhotos;
+  }
   if (body.guests != null) payload.guests = Number(body.guests);
   if (body.listingUrl) payload.listingUrl = body.listingUrl;
   if (body.turnoverDay) payload.turnoverDay = body.turnoverDay;
@@ -156,6 +173,11 @@ export async function forwardLeadToBrightBase(
     hasEmail: Boolean(payload.email),
     hasPhone: Boolean(payload.phone),
     hasAddress: Boolean(payload.address),
+    arrivalWindow: payload.arrivalWindow,
+    // Never log photo CONTENTS (base64 blobs / PII) — a count is enough
+    // to trace that photos were forwarded.
+    hasPhotos: Boolean(payload.photos && payload.photos.length),
+    photoCount: payload.photos ? payload.photos.length : 0,
   };
   console.log(`[brightbase] Forwarding lead to ${url}`, JSON.stringify(logSafe));
 
@@ -235,6 +257,7 @@ export interface BrightBaseBookingUpdate {
   petsDetail?: string | null;
   focusAreas?: string[] | null;
   bedrooms?: number | null;
+  arrivalWindow?: string | null;
   cancel?: boolean;
 }
 
@@ -263,6 +286,7 @@ export async function forwardBookingUpdateToBrightBase(
   if (update.petsDetail != null) payload.petsDetail = update.petsDetail;
   if (update.focusAreas != null) payload.focusAreas = update.focusAreas;
   if (update.bedrooms != null) payload.bedrooms = update.bedrooms;
+  if (update.arrivalWindow != null) payload.arrivalWindow = update.arrivalWindow;
   if (update.cancel) payload.cancel = true;
 
   const base = (BRIGHTBASE_API_URL || "").replace(/\/+$/, "");

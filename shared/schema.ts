@@ -193,6 +193,10 @@ export const bookingRequests = pgTable("booking_requests", {
   petsDetail: text("pets_detail"),
   focusAreas: text("focus_areas"),
   specialInstructions: text("special_instructions"),
+  // Preferred arrival-time window ("morning" | "afternoon" | "evening" |
+  // "flexible"). Collected in the /book flow so dispatch can slot the visit
+  // to the customer's expectation; also forwarded to BrightBase.
+  arrivalWindow: text("arrival_window"),
   // Unguessable capability token for the customer self-service manage page
   // (/booking/manage/:token). Knowing the token IS the authorization.
   manageToken: text("manage_token").unique(),

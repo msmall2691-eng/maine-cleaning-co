@@ -39,6 +39,7 @@ interface BookingSummary {
   petsDetail: string | null;
   focusAreas: string | null;
   specialInstructions: string | null;
+  arrivalWindow: string | null;
   estimateMin: number | null;
   estimateMax: number | null;
 }
@@ -65,6 +66,18 @@ const ENTRY_OPTIONS: { value: string; label: string }[] = [
   { value: "gate-code", label: "Gate / door code" },
   { value: "other", label: "Other" },
 ];
+
+// Canonical arrival-window values + display labels — shared contract with
+// the server + Bright-Space (mirrors InstantEstimate's booking step).
+const ARRIVAL_WINDOW_OPTIONS: { value: string; label: string }[] = [
+  { value: "morning", label: "Morning (8am–12pm)" },
+  { value: "afternoon", label: "Afternoon (12–4pm)" },
+  { value: "evening", label: "Evening (4–7pm)" },
+  { value: "flexible", label: "Flexible / any time" },
+];
+const ARRIVAL_WINDOW_LABELS: Record<string, string> = Object.fromEntries(
+  ARRIVAL_WINDOW_OPTIONS.map((o) => [o.value, o.label]),
+);
 
 function formatDate(yyyyMmDd: string): string {
   // Local-noon parse — same previous-day-drift guard the rest of the app uses.
@@ -103,6 +116,7 @@ export default function ManageBooking() {
   // Editable fields, seeded from the fetched booking.
   const [requestedDate, setRequestedDate] = useState("");
   const [entryMethod, setEntryMethod] = useState("owner-home");
+  const [arrivalWindow, setArrivalWindow] = useState("flexible");
   const [parkingNotes, setParkingNotes] = useState("");
   const [petsDetail, setPetsDetail] = useState("");
   const [specialInstructions, setSpecialInstructions] = useState("");
@@ -114,6 +128,7 @@ export default function ManageBooking() {
     if (!booking) return;
     setRequestedDate(booking.requestedDate || "");
     setEntryMethod(booking.entryMethod || "owner-home");
+    setArrivalWindow(booking.arrivalWindow || "flexible");
     setParkingNotes(booking.parkingNotes || "");
     setPetsDetail(booking.petsDetail || "");
     setSpecialInstructions(booking.specialInstructions || "");
@@ -138,6 +153,7 @@ export default function ManageBooking() {
         body: JSON.stringify({
           requestedDate: requestedDate || undefined,
           entryMethod,
+          arrivalWindow,
           parkingNotes: parkingNotes.trim() || null,
           petsDetail: petsDetail.trim() || null,
           specialInstructions: specialInstructions.trim() || null,
@@ -267,6 +283,12 @@ export default function ManageBooking() {
                     <span className="font-medium text-foreground text-right">${booking.estimateMin} – ${booking.estimateMax}</span>
                   </div>
                 )}
+                {booking.arrivalWindow && (
+                  <div className="flex justify-between gap-3">
+                    <span className="text-muted-foreground">Arrival window</span>
+                    <span className="font-medium text-foreground text-right">{ARRIVAL_WINDOW_LABELS[booking.arrivalWindow] || booking.arrivalWindow}</span>
+                  </div>
+                )}
                 {booking.focusAreas && (
                   <div className="flex justify-between gap-3">
                     <span className="text-muted-foreground">Focus areas</span>
@@ -361,6 +383,20 @@ export default function ManageBooking() {
                       data-testid="manage-select-entry"
                     >
                       {ENTRY_OPTIONS.map((o) => (
+                        <option key={o.value} value={o.value}>{o.label}</option>
+                      ))}
+                    </select>
+                  </div>
+
+                  <div>
+                    <label className="text-xs font-medium text-muted-foreground mb-1.5 block">Preferred arrival time</label>
+                    <select
+                      value={arrivalWindow}
+                      onChange={(e) => { setArrivalWindow(e.target.value); setSaved(false); }}
+                      className="w-full h-11 rounded-xl border border-border bg-card px-3 text-sm text-foreground focus:outline-none focus:ring-2 focus:ring-primary/30"
+                      data-testid="manage-select-arrival"
+                    >
+                      {ARRIVAL_WINDOW_OPTIONS.map((o) => (
                         <option key={o.value} value={o.value}>{o.label}</option>
                       ))}
                     </select>

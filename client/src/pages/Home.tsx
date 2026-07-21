@@ -131,11 +131,14 @@ function ContactForm() {
   // AND no email can never be answered.
   const hasContactMethod = Boolean(form.email.trim() || form.phone.trim());
   const emailInvalid = form.email.trim() !== "" && !CONTACT_EMAIL_RE.test(form.email.trim());
+  // Lenient typo-catcher: a non-empty phone with fewer than 7 digits can't
+  // be dialed and is silently stripped to null server-side. 7+ digits passes.
+  const phoneInvalid = form.phone.trim() !== "" && form.phone.replace(/\D/g, "").length < 7;
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!form.name.trim() || !form.message.trim()) return;
-    if (!hasContactMethod || emailInvalid) {
+    if (!hasContactMethod || emailInvalid || phoneInvalid) {
       setShowContactHint(true);
       return;
     }
@@ -219,6 +222,9 @@ function ContactForm() {
           className="w-full rounded-xl border border-border bg-background px-4 py-2.5 text-sm text-foreground placeholder:text-muted-foreground/50 focus:outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary/50 transition-all"
           placeholder="207-555-0123"
         />
+        {phoneInvalid && (
+          <p className="text-xs text-red-400 mt-1.5">That phone number doesn't look complete.</p>
+        )}
       </div>
       <div>
         <label htmlFor="contact-message" className="block text-sm font-medium text-foreground mb-1.5">Message *</label>

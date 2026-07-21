@@ -378,6 +378,7 @@ export interface BookingEmailDetails {
   estimateMax?: number | null;
   entryMethod?: string | null;
   specialInstructions?: string | null;
+  arrivalWindow?: string | null;
   manageUrl?: string | null;
 }
 
@@ -385,6 +386,15 @@ const bookingServiceLabels: Record<string, string> = {
   standard: "Standard Clean", deep: "Deep Clean", str: "Vacation Rental Turnover",
   "vacation-rental": "Vacation Rental Turnover", commercial: "Commercial Cleaning",
   "move-in-out": "Move-In/Move-Out Clean",
+};
+
+// Canonical arrival-window value → operator-facing display label. Shared
+// contract with the client + Bright-Space (see InstantEstimate.tsx).
+const arrivalWindowLabels: Record<string, string> = {
+  morning: "Morning (8am–12pm)",
+  afternoon: "Afternoon (12–4pm)",
+  evening: "Evening (4–7pm)",
+  flexible: "Flexible / any time",
 };
 
 // Render "Friday, August 7, 2026" from the customer's YYYY-MM-DD without a
@@ -435,6 +445,7 @@ export async function sendBookingNotification(
       ${row("Email", details.email)}
       ${row("Service", svcLabel)}
       ${row("Requested date", dateLabel)}
+      ${row("Arrival window", details.arrivalWindow ? (arrivalWindowLabels[details.arrivalWindow] || details.arrivalWindow) : null)}
       ${row("Address", details.address)}
       ${row("Estimate", estimate)}
       ${row("Entry method", details.entryMethod)}

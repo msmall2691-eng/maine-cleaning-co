@@ -40,6 +40,15 @@ type HomeCondition = "maintenance" | "moderate" | "heavy";
 type PetHair = "none" | "some" | "heavy";
 type EntryMethod = "owner-home" | "lockbox" | "hidden-key" | "gate-code" | "other";
 type FocusArea = "kitchen" | "bathrooms" | "floors" | "dusting" | "laundry";
+// Canonical arrival-window values — shared contract with the server +
+// Bright-Space. Display labels live in ARRIVAL_WINDOW_OPTIONS below.
+type ArrivalWindow = "morning" | "afternoon" | "evening" | "flexible";
+const ARRIVAL_WINDOW_OPTIONS: { value: ArrivalWindow; label: string }[] = [
+  { value: "morning", label: "Morning (8am–12pm)" },
+  { value: "afternoon", label: "Afternoon (12–4pm)" },
+  { value: "evening", label: "Evening (4–7pm)" },
+  { value: "flexible", label: "Flexible / any time" },
+];
 
 function fmt(n: number) {
   return n.toLocaleString("en-US", { style: "currency", currency: "USD", maximumFractionDigits: 0 });
@@ -270,6 +279,7 @@ export function InstantEstimate({ defaultCategory, bookingIntent = false }: Inst
   // in one place so the payload builder can spread them.
   const [bedrooms, setBedrooms] = useState(3);
   const [entryMethod, setEntryMethod] = useState<EntryMethod>("owner-home");
+  const [arrivalWindow, setArrivalWindow] = useState<ArrivalWindow>("flexible");
   const [parkingNotes, setParkingNotes] = useState("");
   const [petsDetail, setPetsDetail] = useState("");
   const [focusAreas, setFocusAreas] = useState<Record<FocusArea, boolean>>({
@@ -340,6 +350,11 @@ export function InstantEstimate({ defaultCategory, bookingIntent = false }: Inst
   // bouncing the customer off a 422.
   const hasContactMethod = Boolean(contactPhone.trim() || contactEmail.trim());
   const emailInvalid = contactEmail.trim() !== "" && !EMAIL_RE.test(contactEmail.trim());
+  // Lenient typo-catcher, NOT a strict validator: a non-empty phone with
+  // fewer than 7 digits ("call me", "555") can never be dialed, and the
+  // server silently strips it to null — so flag it inline before submit
+  // instead of losing the only way to reach the customer. 7+ digits passes.
+  const phoneInvalid = contactPhone.trim() !== "" && contactPhone.replace(/\D/g, "").length < 7;
 
   // Voice input → fill fields. Pricing formulas untouched — we're only
   // driving the same setters the manual controls drive.
@@ -522,6 +537,7 @@ export function InstantEstimate({ defaultCategory, bookingIntent = false }: Inst
           // fields; Bright-Space stores them in LeadIntake.custom_fields
           // (JSON), so no schema migration is required to land them.
           entryMethod: isCustomQuote ? null : entryMethod,
+          arrivalWindow: isCustomQuote ? null : arrivalWindow,
           parkingNotes: parkingNotes.trim() || null,
           petsDetail: petsDetail.trim() || null,
           focusAreas: selectedFocus.length ? selectedFocus : null,
@@ -630,6 +646,7 @@ export function InstantEstimate({ defaultCategory, bookingIntent = false }: Inst
     setContactNotes("");
     setContactAddress("");
     setPhotos([]);
+    setArrivalWindow("flexible");
     submit.reset();
     bookingMutation.reset();
     // A user who submits the intake step (gets an estimate lead), then
@@ -964,6 +981,11 @@ export function InstantEstimate({ defaultCategory, bookingIntent = false }: Inst
                 <div>
                   <label className="text-xs font-medium text-muted-foreground mb-1 block" htmlFor="custom-phone">Phone</label>
                   <Input id="custom-phone" placeholder="Phone number" type="tel" value={contactPhone} onChange={e => setContactPhone(e.target.value)} className="input-field" data-testid="input-phone" autoComplete="tel" inputMode="tel" />
+                  {phoneInvalid && (
+                    <p className="text-[11px] text-destructive mt-1 ml-1" data-testid="error-phone">
+                      That phone number doesn't look complete.
+                    </p>
+                  )}
                 </div>
                 <div>
                   <label className="text-xs font-medium text-muted-foreground mb-1 block" htmlFor="custom-email">Email</label>
@@ -1028,7 +1050,7 @@ export function InstantEstimate({ defaultCategory, bookingIntent = false }: Inst
 
               <Button
                 className="w-full h-[52px] rounded-xl text-base font-bold shadow-md group min-h-[48px]"
-                disabled={submit.isPending || !hasContactMethod || emailInvalid}
+                disabled={submit.isPending || !hasContactMethod || emailInvalid || phoneInvalid}
                 onClick={() => submit.mutate()}
                 data-testid="button-submit-custom"
               >
@@ -1073,6 +1095,11 @@ export function InstantEstimate({ defaultCategory, bookingIntent = false }: Inst
                 <div>
                   <label className="text-xs font-medium text-muted-foreground mb-1 block">Phone</label>
                   <Input placeholder="Phone number" type="tel" value={contactPhone} onChange={e => setContactPhone(e.target.value)} className="input-field !h-11" data-testid="input-phone" autoComplete="tel" inputMode="tel" />
+                  {phoneInvalid && (
+                    <p className="text-[11px] text-destructive mt-1 ml-1" data-testid="error-phone">
+                      That phone number doesn't look complete.
+                    </p>
+                  )}
                 </div>
                 <div>
                   <label className="text-xs font-medium text-muted-foreground mb-1 block">Email</label>
@@ -1138,7 +1165,7 @@ export function InstantEstimate({ defaultCategory, bookingIntent = false }: Inst
 
               <div className="flex gap-3">
                 <Button variant="outline" className="h-[52px] px-5 sm:px-6 rounded-xl border-border text-sm font-medium" onClick={() => setStep(1)} data-testid="button-back">Back</Button>
-                <Button className="flex-1 h-[52px] text-base rounded-xl shadow-md font-bold" disabled={submit.isPending || !hasContactMethod || emailInvalid} onClick={() => submit.mutate()} data-testid="button-submit">
+                <Button className="flex-1 h-[52px] text-base rounded-xl shadow-md font-bold" disabled={submit.isPending || !hasContactMethod || emailInvalid || phoneInvalid} onClick={() => submit.mutate()} data-testid="button-submit">
                   {submit.isPending ? <><Loader2 className="w-4 h-4 animate-spin mr-2" /> Submitting…</> : <><Send className="w-4 h-4 mr-2" /> Submit Request</>}
                 </Button>
               </div>
@@ -1273,6 +1300,20 @@ export function InstantEstimate({ defaultCategory, bookingIntent = false }: Inst
                           <option value="hidden-key">Hidden key</option>
                           <option value="gate-code">Gate / door code</option>
                           <option value="other">Other (tell us below)</option>
+                        </select>
+                      </div>
+
+                      <div>
+                        <label className="text-xs font-medium text-muted-foreground mb-1.5 block">Preferred arrival time</label>
+                        <select
+                          value={arrivalWindow}
+                          onChange={(e) => setArrivalWindow(e.target.value as ArrivalWindow)}
+                          className="w-full h-11 rounded-xl border border-border bg-card px-3 text-sm text-foreground focus:outline-none focus:ring-2 focus:ring-primary/30"
+                          data-testid="select-arrival-window"
+                        >
+                          {ARRIVAL_WINDOW_OPTIONS.map((o) => (
+                            <option key={o.value} value={o.value}>{o.label}</option>
+                          ))}
                         </select>
                       </div>
 
