@@ -315,6 +315,12 @@ export function InstantEstimate({ defaultCategory, bookingIntent = false }: Inst
   const [addressDistance, setAddressDistance] = useState<number | null>(null);
   const [addressCheckMsg, setAddressCheckMsg] = useState("");
   const [checkingAddress, setCheckingAddress] = useState(false);
+  // Distinguishes "the eligibility lookup couldn't determine an answer"
+  // (network error / rate limit / timeout / un-geocodable address) from a
+  // POSITIVE out-of-area determination. When true we fail OPEN — the booking
+  // form is enabled anyway (the server re-checks on submit and also fails
+  // open) and a gentle note tells the customer we'll confirm the area.
+  const [addressCheckFailed, setAddressCheckFailed] = useState(false);
   const [bookingSubmitted, setBookingSubmitted] = useState(false);
   const { toast } = useToast();
 
@@ -576,19 +582,45 @@ export function InstantEstimate({ defaultCategory, bookingIntent = false }: Inst
   const checkAddressEligibility = useCallback(async (address: string) => {
     if (address.length < 10) return;
     setCheckingAddress(true);
+    setAddressCheckFailed(false);
+    // Helper: couldn't determine → fail OPEN. Leave addressEligible null (no
+    // green "you're in the area" claim) but flag the fallback so the booking
+    // form still opens with a soft note.
+    const failOpen = () => {
+      setAddressEligible(null);
+      setAddressDistance(null);
+      setAddressCheckMsg("");
+      setAddressCheckFailed(true);
+    };
     try {
       const res = await fetch("/api/booking/validate-address", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ address }),
       });
+      // Server error (5xx/4xx) — flaky lookup, not a real answer. Fail open.
+      if (!res.ok) { failOpen(); return; }
       const data = await res.json();
-      setAddressEligible(data.eligible);
-      setAddressDistance(data.distanceMiles ?? null);
-      setAddressCheckMsg(data.message || "");
+      if (data.eligible === true) {
+        setAddressEligible(true);
+        setAddressDistance(data.distanceMiles ?? null);
+        setAddressCheckMsg(data.message || "");
+        setAddressCheckFailed(false);
+      } else if (data.eligible === false && data.distanceMiles != null) {
+        // POSITIVE out-of-area: geocoded successfully AND beyond the radius.
+        // This is the ONLY case that hard-blocks booking.
+        setAddressEligible(false);
+        setAddressDistance(data.distanceMiles ?? null);
+        setAddressCheckMsg(data.message || "");
+        setAddressCheckFailed(false);
+      } else {
+        // eligible=false with no distance → geocode returned nothing / couldn't
+        // determine. Not a positive rejection — fail open.
+        failOpen();
+      }
     } catch {
-      setAddressEligible(null);
-      setAddressCheckMsg("");
+      // Network error / timeout — fail open.
+      failOpen();
     } finally {
       setCheckingAddress(false);
     }
@@ -619,13 +651,14 @@ export function InstantEstimate({ defaultCategory, bookingIntent = false }: Inst
       step === 3 &&
       !isCustomQuote &&
       addressEligible === null &&
+      !addressCheckFailed &&
       !checkingAddress &&
       contactAddress && contactAddress.length >= 10 &&
       contactName && contactPhone
     ) {
       checkAddressEligibility(contactAddress);
     }
-  }, [step, isCustomQuote, addressEligible, checkingAddress, contactAddress, contactName, contactPhone, checkAddressEligibility]);
+  }, [step, isCustomQuote, addressEligible, addressCheckFailed, checkingAddress, contactAddress, contactName, contactPhone, checkAddressEligibility]);
 
   const resetForm = () => {
     setStep(1);
@@ -639,6 +672,7 @@ export function InstantEstimate({ defaultCategory, bookingIntent = false }: Inst
     setAddressEligible(null);
     setAddressDistance(null);
     setAddressCheckMsg("");
+    setAddressCheckFailed(false);
     setBookingSubmitted(false);
     setContactName("");
     setContactEmail("");
@@ -656,8 +690,25 @@ export function InstantEstimate({ defaultCategory, bookingIntent = false }: Inst
     rotateIdempotencyKey();
   };
 
+  // Screen-reader announcement for the multi-step wizard. A visually-hidden
+  // aria-live region (below) reads this whenever the step changes so
+  // non-visual users know the form advanced. Custom-quote is a 2-step flow
+  // (details → confirmation); the estimate/booking flow is 4 steps.
+  const bookingDone = step === 4 || (step === 3 && bookingSubmitted);
+  const stepAnnouncement = isCustomQuote
+    ? (bookingDone || step >= 3 ? "Quote request sent" : "Step 1 of 2: your details")
+    : bookingDone
+      ? "Step 4 of 4: booking confirmed"
+      : step === 1
+        ? "Step 1 of 4: build your estimate"
+        : step === 2
+          ? "Step 2 of 4: your details"
+          : "Step 3 of 4: request sent — book your cleaning";
+
   return (
     <div className="bg-card/90 backdrop-blur-md rounded-2xl border border-border shadow-[0_2px_16px_rgba(0,0,0,0.15),0_8px_32px_rgba(0,0,0,0.1)] w-full max-w-full overflow-hidden card-gradient-border" data-testid="card-instant-estimate">
+      {/* Wizard step announcer — visually hidden, read by screen readers on step change. */}
+      <div className="sr-only" role="status" aria-live="polite" data-testid="wizard-step-status">{stepAnnouncement}</div>
       <div className="px-4 sm:px-6 pt-5 sm:pt-6 pb-4 border-b border-border/50">
         <div className="flex items-start justify-between gap-3">
           <div className="min-w-0">
@@ -733,7 +784,7 @@ export function InstantEstimate({ defaultCategory, bookingIntent = false }: Inst
                     <span className="text-xs font-medium text-muted-foreground ml-1">sq ft</span>
                   </span>
                 </div>
-                <Slider value={sqft} onValueChange={setSqft} min={500} max={6000} step={100} className="w-full" data-testid="slider-sqft" />
+                <Slider value={sqft} onValueChange={setSqft} min={500} max={6000} step={100} className="w-full" data-testid="slider-sqft" aria-label={`Square footage, currently ${sqft[0].toLocaleString()} square feet`} aria-valuetext={`${sqft[0].toLocaleString()} square feet`} />
                 <div className="flex justify-between items-center mt-1.5">
                   <span className="text-[10px] text-muted-foreground">500</span>
                   <span className="text-[10.5px] text-muted-foreground/80 font-medium">
@@ -761,13 +812,17 @@ export function InstantEstimate({ defaultCategory, bookingIntent = false }: Inst
                     </span>
                   </span>
                 </div>
-                <div className="flex items-center gap-2">
+                <div
+                  className="flex items-center gap-2"
+                  role="group"
+                  aria-label={`Bathrooms, currently ${bathrooms % 1 === 0.5 ? `${Math.floor(bathrooms)} and a half` : bathrooms}`}
+                >
                   <button
                     type="button"
                     className="stepper-btn"
                     onClick={() => setBathrooms(v => Math.max(1, Math.round((v - 0.5) * 2) / 2))}
                     data-testid="button-bath-minus"
-                    aria-label="Fewer bathrooms"
+                    aria-label={`Decrease bathrooms, currently ${bathrooms % 1 === 0.5 ? `${Math.floor(bathrooms)} and a half` : bathrooms}`}
                   >&minus;</button>
                   <div className="flex-1 h-10 rounded-lg bg-muted/30 border border-border/40 flex items-center justify-center gap-1 px-2">
                     {[1, 1.5, 2, 2.5, 3, 3.5, 4, 4.5, 5, 5.5, 6].map(n => {
@@ -790,7 +845,7 @@ export function InstantEstimate({ defaultCategory, bookingIntent = false }: Inst
                     className="stepper-btn"
                     onClick={() => setBathrooms(v => Math.min(6, Math.round((v + 0.5) * 2) / 2))}
                     data-testid="button-bath-plus"
-                    aria-label="More bathrooms"
+                    aria-label={`Increase bathrooms, currently ${bathrooms % 1 === 0.5 ? `${Math.floor(bathrooms)} and a half` : bathrooms}`}
                   >+</button>
                 </div>
                 <p className="text-[10.5px] text-muted-foreground/70 mt-1.5 text-center">
@@ -980,18 +1035,18 @@ export function InstantEstimate({ defaultCategory, bookingIntent = false }: Inst
                 </div>
                 <div>
                   <label className="text-xs font-medium text-muted-foreground mb-1 block" htmlFor="custom-phone">Phone</label>
-                  <Input id="custom-phone" placeholder="Phone number" type="tel" value={contactPhone} onChange={e => setContactPhone(e.target.value)} className="input-field" data-testid="input-phone" autoComplete="tel" inputMode="tel" />
+                  <Input id="custom-phone" placeholder="Phone number" type="tel" value={contactPhone} onChange={e => setContactPhone(e.target.value)} className="input-field" data-testid="input-phone" autoComplete="tel" inputMode="tel" aria-invalid={phoneInvalid || undefined} aria-describedby={phoneInvalid ? "custom-phone-error" : undefined} />
                   {phoneInvalid && (
-                    <p className="text-[11px] text-destructive mt-1 ml-1" data-testid="error-phone">
+                    <p id="custom-phone-error" role="alert" className="text-[11px] text-destructive mt-1 ml-1" data-testid="error-phone">
                       That phone number doesn't look complete.
                     </p>
                   )}
                 </div>
                 <div>
                   <label className="text-xs font-medium text-muted-foreground mb-1 block" htmlFor="custom-email">Email</label>
-                  <Input id="custom-email" placeholder="Email address" type="email" value={contactEmail} onChange={e => setContactEmail(e.target.value)} className="input-field" data-testid="input-email" autoComplete="email" inputMode="email" />
+                  <Input id="custom-email" placeholder="Email address" type="email" value={contactEmail} onChange={e => setContactEmail(e.target.value)} className="input-field" data-testid="input-email" autoComplete="email" inputMode="email" aria-invalid={emailInvalid || undefined} aria-describedby={emailInvalid ? "custom-email-error" : undefined} />
                   {emailInvalid && (
-                    <p className="text-[11px] text-destructive mt-1 ml-1" data-testid="error-email">
+                    <p id="custom-email-error" role="alert" className="text-[11px] text-destructive mt-1 ml-1" data-testid="error-email">
                       That email doesn't look right — double-check it before sending.
                     </p>
                   )}
@@ -1026,6 +1081,7 @@ export function InstantEstimate({ defaultCategory, bookingIntent = false }: Inst
                       <button
                         type="button"
                         onClick={() => removePhoto(idx)}
+                        aria-label={`Remove photo ${idx + 1}`}
                         className="absolute top-1 right-1 w-5 h-5 rounded-full bg-black/60 text-white flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity"
                         data-testid={`button-remove-photo-${idx}`}
                       >
@@ -1093,19 +1149,19 @@ export function InstantEstimate({ defaultCategory, bookingIntent = false }: Inst
                   <Input placeholder="Your name" value={contactName} onChange={e => setContactName(e.target.value)} className="input-field !h-11" data-testid="input-name" autoComplete="name" />
                 </div>
                 <div>
-                  <label className="text-xs font-medium text-muted-foreground mb-1 block">Phone</label>
-                  <Input placeholder="Phone number" type="tel" value={contactPhone} onChange={e => setContactPhone(e.target.value)} className="input-field !h-11" data-testid="input-phone" autoComplete="tel" inputMode="tel" />
+                  <label htmlFor="step2-phone" className="text-xs font-medium text-muted-foreground mb-1 block">Phone</label>
+                  <Input id="step2-phone" placeholder="Phone number" type="tel" value={contactPhone} onChange={e => setContactPhone(e.target.value)} className="input-field !h-11" data-testid="input-phone" autoComplete="tel" inputMode="tel" aria-invalid={phoneInvalid || undefined} aria-describedby={phoneInvalid ? "step2-phone-error" : undefined} />
                   {phoneInvalid && (
-                    <p className="text-[11px] text-destructive mt-1 ml-1" data-testid="error-phone">
+                    <p id="step2-phone-error" role="alert" className="text-[11px] text-destructive mt-1 ml-1" data-testid="error-phone">
                       That phone number doesn't look complete.
                     </p>
                   )}
                 </div>
                 <div>
-                  <label className="text-xs font-medium text-muted-foreground mb-1 block">Email</label>
-                  <Input placeholder="Email address" type="email" value={contactEmail} onChange={e => setContactEmail(e.target.value)} className="input-field !h-11" data-testid="input-email" autoComplete="email" inputMode="email" />
+                  <label htmlFor="step2-email" className="text-xs font-medium text-muted-foreground mb-1 block">Email</label>
+                  <Input id="step2-email" placeholder="Email address" type="email" value={contactEmail} onChange={e => setContactEmail(e.target.value)} className="input-field !h-11" data-testid="input-email" autoComplete="email" inputMode="email" aria-invalid={emailInvalid || undefined} aria-describedby={emailInvalid ? "step2-email-error" : undefined} />
                   {emailInvalid ? (
-                    <p className="text-[11px] text-destructive mt-1 ml-1" data-testid="error-email">
+                    <p id="step2-email-error" role="alert" className="text-[11px] text-destructive mt-1 ml-1" data-testid="error-email">
                       That email doesn't look right — double-check it before submitting.
                     </p>
                   ) : (
@@ -1135,6 +1191,7 @@ export function InstantEstimate({ defaultCategory, bookingIntent = false }: Inst
                       <button
                         type="button"
                         onClick={() => removePhoto(idx)}
+                        aria-label={`Remove photo ${idx + 1}`}
                         className="absolute top-1 right-1 w-5 h-5 rounded-full bg-black/60 text-white flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity"
                         data-testid={`button-remove-photo-${idx}`}
                       >
@@ -1235,7 +1292,7 @@ export function InstantEstimate({ defaultCategory, bookingIntent = false }: Inst
                   </p>
 
                   {/* Address eligibility check */}
-                  {addressEligible === null && !checkingAddress && (
+                  {addressEligible === null && !addressCheckFailed && !checkingAddress && (
                     <Button
                       variant="outline"
                       className="w-full h-10 rounded-xl text-sm"
@@ -1249,20 +1306,31 @@ export function InstantEstimate({ defaultCategory, bookingIntent = false }: Inst
                       <Loader2 className="w-4 h-4 animate-spin" /> Checking your location...
                     </div>
                   )}
-                  {addressEligible === true && (
+                  {(addressEligible === true || addressCheckFailed) && (
                     <>
-                      <div className="flex items-start gap-2 px-3 py-2 rounded-lg bg-emerald-500/10 border border-emerald-500/20">
-                        <CheckCircle2 className="w-4 h-4 text-green-500 mt-0.5 flex-shrink-0" />
-                        <p className="text-xs text-green-400">{addressCheckMsg}</p>
-                      </div>
+                      {addressEligible === true ? (
+                        <div className="flex items-start gap-2 px-3 py-2 rounded-lg bg-emerald-500/10 border border-emerald-500/20">
+                          <CheckCircle2 className="w-4 h-4 text-green-500 mt-0.5 flex-shrink-0" />
+                          <p className="text-xs text-green-400">{addressCheckMsg}</p>
+                        </div>
+                      ) : (
+                        // Fail-open fallback: the lookup couldn't confirm the
+                        // service area (flaky geocoder), so we let the customer
+                        // book anyway and confirm the area when we reach out.
+                        <div className="flex items-start gap-2 px-3 py-2 rounded-lg bg-blue-500/10 border border-blue-500/20" data-testid="note-address-check-failed">
+                          <Info className="w-4 h-4 text-blue-400 mt-0.5 flex-shrink-0" />
+                          <p className="text-xs text-blue-400">We'll confirm your service area when we reach out.</p>
+                        </div>
+                      )}
 
                       {/* Essentials: bedrooms, entry, parking, pets, focus, notes.
                           Cleaners need these on-site — asking now, not after the
                           booking is accepted, keeps the whole flow one step. */}
                       <div className="grid grid-cols-2 gap-3">
                         <div>
-                          <label className="text-xs font-medium text-muted-foreground mb-1.5 block">Bedrooms</label>
+                          <label htmlFor="booking-bedrooms" className="text-xs font-medium text-muted-foreground mb-1.5 block">Bedrooms</label>
                           <input
+                            id="booking-bedrooms"
                             type="number" min={1} max={10} step={1}
                             value={bedrooms}
                             onChange={(e) => setBedrooms(clamp(parseInt(e.target.value || "0", 10), 1, 10))}
@@ -1271,16 +1339,19 @@ export function InstantEstimate({ defaultCategory, bookingIntent = false }: Inst
                           />
                         </div>
                         <div>
-                          <label className="text-xs font-medium text-muted-foreground mb-1.5 block">
+                          <label htmlFor="booking-date" className="text-xs font-medium text-muted-foreground mb-1.5 block">
                             Preferred date <span className="text-destructive">*</span>
                           </label>
                           <input
+                            id="booking-date"
                             type="date"
                             min={minBookingDate}
                             value={bookingDate}
                             onChange={(e) => setBookingDate(e.target.value)}
                             required
                             aria-required="true"
+                            aria-invalid={bookingDateTooSoon || undefined}
+                            aria-describedby={bookingDateTooSoon ? "booking-date-error" : undefined}
                             className="w-full h-11 rounded-xl border border-border bg-card px-3 text-sm text-foreground focus:outline-none focus:ring-2 focus:ring-primary/30"
                             data-testid="input-booking-date"
                           />
@@ -1288,8 +1359,9 @@ export function InstantEstimate({ defaultCategory, bookingIntent = false }: Inst
                       </div>
 
                       <div>
-                        <label className="text-xs font-medium text-muted-foreground mb-1.5 block">How will we get in?</label>
+                        <label htmlFor="select-entry-method" className="text-xs font-medium text-muted-foreground mb-1.5 block">How will we get in?</label>
                         <select
+                          id="select-entry-method"
                           value={entryMethod}
                           onChange={(e) => setEntryMethod(e.target.value as EntryMethod)}
                           className="w-full h-11 rounded-xl border border-border bg-card px-3 text-sm text-foreground focus:outline-none focus:ring-2 focus:ring-primary/30"
@@ -1304,8 +1376,9 @@ export function InstantEstimate({ defaultCategory, bookingIntent = false }: Inst
                       </div>
 
                       <div>
-                        <label className="text-xs font-medium text-muted-foreground mb-1.5 block">Preferred arrival time</label>
+                        <label htmlFor="select-arrival-window" className="text-xs font-medium text-muted-foreground mb-1.5 block">Preferred arrival time</label>
                         <select
+                          id="select-arrival-window"
                           value={arrivalWindow}
                           onChange={(e) => setArrivalWindow(e.target.value as ArrivalWindow)}
                           className="w-full h-11 rounded-xl border border-border bg-card px-3 text-sm text-foreground focus:outline-none focus:ring-2 focus:ring-primary/30"
@@ -1409,7 +1482,7 @@ export function InstantEstimate({ defaultCategory, bookingIntent = false }: Inst
                         </p>
                       )}
                       {bookingDateTooSoon && (
-                        <p className="text-[11px] text-destructive text-center leading-relaxed flex items-center justify-center gap-1" data-testid="error-booking-date">
+                        <p id="booking-date-error" role="alert" className="text-[11px] text-destructive text-center leading-relaxed flex items-center justify-center gap-1" data-testid="error-booking-date">
                           <AlertCircle className="w-3 h-3 flex-shrink-0" />
                           Please pick a date from tomorrow forward — for same-day, give us a call.
                         </p>

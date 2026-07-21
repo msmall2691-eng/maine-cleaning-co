@@ -70,6 +70,11 @@ interface BrightBaseLead {
   // double-click collapses to ONE Lead row instead of racing the 5-minute
   // recency SELECT.
   idempotencyKey?: string | null;
+  // Customer self-service edit/cancel URL minted by /api/booking/submit.
+  // Bright-Space includes it in the confirmation SMS it sends the customer.
+  // A plain capability URL — the token in the path IS a credential, so the
+  // value is never logged (only its presence).
+  manageUrl?: string | null;
 }
 
 interface ForwardContext {
@@ -155,6 +160,7 @@ export async function forwardLeadToBrightBase(
   if (body.turnoverDay) payload.turnoverDay = body.turnoverDay;
   if (body.petsAllowed) payload.petsAllowed = body.petsAllowed;
   if (body.idempotencyKey) payload.idempotencyKey = body.idempotencyKey;
+  if (body.manageUrl) payload.manageUrl = body.manageUrl;
   payload.source = body.source || "Website";
 
   const base = (BRIGHTBASE_API_URL || "").replace(/\/+$/, "");
@@ -178,6 +184,8 @@ export async function forwardLeadToBrightBase(
     // to trace that photos were forwarded.
     hasPhotos: Boolean(payload.photos && payload.photos.length),
     photoCount: payload.photos ? payload.photos.length : 0,
+    // Presence only — the token in the URL is a capability credential.
+    hasManageUrl: Boolean(payload.manageUrl),
   };
   console.log(`[brightbase] Forwarding lead to ${url}`, JSON.stringify(logSafe));
 

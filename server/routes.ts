@@ -1485,6 +1485,9 @@ Rules:
         arrivalWindow: data.arrivalWindow,
         // See intake handler above — same rationale, same forward.
         idempotencyKey: data.idempotencyKey || null,
+        // Customer self-service edit/cancel link — Bright-Space includes it
+        // in the confirmation SMS it sends the customer.
+        manageUrl,
       }, { sourceType: "booking", sourceId: booking.id });
 
       return res.status(201).json({
