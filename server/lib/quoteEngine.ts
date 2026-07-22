@@ -1,19 +1,27 @@
 /**
  * Server-side quote engine.
  *
- * Mirror of the client-side estimator in
- * client/src/components/ui/InstantEstimate.tsx (search for `const engine =`).
- * Kept in sync manually — if you touch RATE, minJob, sqftUnits, bathAdj,
- * condUnits, petUnits, deepMult, or freqMap in one file, update the other
- * in the same commit or the price the operator sees will differ from the
- * price shown to the customer.
+ * The pricing MATH is no longer duplicated here — it lives in @shared/pricing
+ * (computeEstimate), which the browser calculator imports too, so the customer-
+ * facing number and this recompute are literally the same code and cannot drift.
+ * This module adds the server-only concerns on top: service-type routing,
+ * input validation, confidence, and the breakdown shape.
  *
- * Why a server-side copy exists at all: /api/booking/submit used to trust
+ * Why a server-side recompute exists at all: /api/booking/submit used to trust
  * whatever `estimateMin`/`estimateMax` the browser POSTed, so a tampered
  * client could book at $0. This module recomputes the price server-side
  * and the booking handler uses THIS result as the source of truth. The
  * client's number is kept only for a divergence log so we notice drift.
  */
+
+import {
+  computeEstimate,
+  sqftLaborUnits,
+  CONDITION_UNITS,
+  PET_UNITS,
+  FREQUENCY_FACTOR,
+  BATH_UNIT,
+} from "@shared/pricing";
 
 export type ServiceType =
   | "standard"
@@ -44,30 +52,21 @@ export interface QuoteResult {
   breakdown: Record<string, number>;
 }
 
-const RATE = 60;
-
 const isCustomService = (s: string): boolean =>
   s === "vacation-rental" || s === "str" || s === "commercial" || s === "move-in-out";
 
 const isDeep = (s: string): boolean => s === "deep";
 
-function sqftLaborUnits(sf: number): number {
-  if (sf <= 1500) return sf / 680;
-  if (sf <= 3000) return 1500 / 680 + (sf - 1500) / 1050;
-  return 1500 / 680 + 1500 / 1050 + (sf - 3000) / 1400;
-}
-
-function deepMultiplier(sf: number): number {
-  if (sf <= 1200) return 1.60;
-  if (sf <= 2000) return 1.65;
-  if (sf <= 3000) return 1.75;
-  return 1.80;
-}
-
 /**
  * Compute the estimate range. Returns nulls when the inputs are incomplete
  * or the service type is quoted manually — the caller falls back to a
  * "we'll call you" flow, never to the client's number.
+ *
+ * The math itself lives in @shared/pricing (computeEstimate), which the
+ * browser calculator imports too — so the number the customer sees and the
+ * number this recompute produces are the same code, not two copies that can
+ * drift. This function only adds the server-side concerns: service-type
+ * routing, input validation, confidence, and the breakdown shape.
  */
 export function calculateQuote(inputs: QuoteInputs): QuoteResult {
   const service = String(inputs.serviceType || "").toLowerCase();
@@ -89,40 +88,31 @@ export function calculateQuote(inputs: QuoteInputs): QuoteResult {
   }
 
   const deep = isDeep(service);
-  const minJob = deep ? 225 : 130;
-
-  const condUnits: Record<HomeCondition, number> = { maintenance: 0, moderate: 0.50, heavy: 1.00 };
-  const petUnits: Record<PetHair, number>        = { none: 0, some: 0.30, heavy: 0.60 };
-  const freqMap: Record<Frequency, number>       = { weekly: 0.85, biweekly: 1.0, monthly: 1.15, "one-time": 1.50 };
-
   const cond = (String(inputs.condition || "maintenance") as HomeCondition);
   const pet  = (String(inputs.petHair || "none") as PetHair);
   const freq = (String(inputs.frequency || "one-time") as Frequency);
-  const condU = condUnits[cond] ?? 0;
-  const petU  = petUnits[pet]   ?? 0;
-  const freqU = freqMap[freq]   ?? 1.0;
 
-  const sqftUnits = sqftLaborUnits(sqft);
-  const bathAdj = Math.max(0, (bathrooms - 1) * 0.40);
-  const deepMult = deep ? deepMultiplier(sqft) : 1.0;
-
-  const labor = (sqftUnits + bathAdj + condU + petU) * deepMult;
-  const raw = labor * freqU * RATE;
-  const rounded = Math.round(raw / 5) * 5;
-  const final = Math.max(minJob, rounded);
+  const est = computeEstimate({
+    sqft,
+    bathrooms,
+    cleanType: deep ? "deep" : "standard",
+    frequency: FREQUENCY_FACTOR[freq] != null ? freq : "one-time",
+    condition: CONDITION_UNITS[cond] != null ? cond : "maintenance",
+    petHair: PET_UNITS[pet] != null ? pet : "none",
+  });
 
   return {
-    estimateMin: Math.round((final * 0.96) / 5) * 5,
-    estimateMax: Math.round((final * 1.04) / 5) * 5,
+    estimateMin: est.min,
+    estimateMax: est.max,
     confidence: "high",
     breakdown: {
-      sqftUnits: Math.round(sqftUnits * 100) / 100,
-      bathAdj: Math.round(bathAdj * 100) / 100,
-      condUnits: condU,
-      petUnits: petU,
-      freqMultiplier: freqU,
-      deepMultiplier: deepMult,
-      finalBeforeRange: final,
+      sqftUnits: Math.round(sqftLaborUnits(sqft) * 100) / 100,
+      bathAdj: Math.round(Math.max(0, (bathrooms - 1) * BATH_UNIT) * 100) / 100,
+      condUnits: CONDITION_UNITS[cond] ?? 0,
+      petUnits: PET_UNITS[pet] ?? 0,
+      freqMultiplier: FREQUENCY_FACTOR[freq] ?? 1.0,
+      deepMultiplier: est.deepMult,
+      finalBeforeRange: est.mid,
     },
   };
 }

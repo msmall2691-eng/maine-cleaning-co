@@ -8,7 +8,7 @@ import { intakeSubmitSchema } from "./lib/validators";
 import { normalizeIntakePayload } from "./lib/normalize";
 import { forwardLeadToBrightBase, forwardBookingUpdateToBrightBase } from "./lib/brightbase";
 import { calculateQuote, estimatesDiverge } from "./lib/quoteEngine";
-import { runForward } from "./lib/leadForward";
+import { runForward, retryFailedForwards } from "./lib/leadForward";
 import { leadForwards } from "@shared/schema";
 import { db } from "./db";
 import { desc, eq } from "drizzle-orm";
@@ -512,7 +512,15 @@ export async function registerRoutes(
         phone: normalized.phone || "",
         address: normalized.address || normalized.zip || "",
         service: normalized.serviceType || "custom",
-        message: forwardNotes || `Estimate: $${normalized.estimateMin || "?"}–$${normalized.estimateMax || "?"}`,
+        // When there are no notes AND no numeric estimate (custom-quote
+        // services), fall back to a clean label — never the literal
+        // "Estimate: $?–$?" the old interpolation produced and baked into
+        // the stored message the operator sees on the CRM card.
+        message: forwardNotes || (
+          normalized.estimateMin != null && normalized.estimateMax != null
+            ? `Estimate: $${normalized.estimateMin}–$${normalized.estimateMax}`
+            : "Custom quote request"
+        ),
         propertyType: normalized.serviceType === "str" ? "vacation-rental" : normalized.serviceType === "commercial" ? "commercial" : "residential",
         frequency: freqMap[normalized.frequency] || normalized.frequency || "",
         estimateMin: normalized.estimateMin || null,
@@ -584,6 +592,11 @@ export async function registerRoutes(
         estimateMax: normalized.estimateMax,
         notes: forwardNotes,
         source: "Website",
+        // Customer-uploaded property photos (base64 data URIs, max 3). They
+        // live on the RAW payload — normalizeIntakePayload doesn't carry them
+        // — so pull straight from rawPayload. brightbase.ts sanity-guards
+        // (image data URIs only, cap 3) before forwarding.
+        photos: rawPayload.photos ?? null,
         // STR turnover details (custom-quote path). bedrooms/guests land on
         // native Bright-Space columns; listingUrl/turnoverDay/petsAllowed on
         // its custom_fields, so the operator sees the whole turnover request.
@@ -1245,6 +1258,9 @@ Rules:
     petsDetail: z.string().optional().nullable(),
     focusAreas: z.array(z.string()).optional().nullable(),
     specialInstructions: z.string().optional().nullable(),
+    // Preferred arrival-time window. Constrained to the canonical set shared
+    // with Bright-Space (display labels live client-side).
+    arrivalWindow: z.enum(["morning", "afternoon", "evening", "flexible"]).optional().nullable(),
     // Per-submission UUID from the client. Forwarded to Bright-Space so
     // its unique-index dedup collapses retries + the dual-forward pattern
     // into one Lead. See Bright-Space PR #507.
@@ -1344,6 +1360,7 @@ Rules:
         petsDetail: data.petsDetail ?? null,
         focusAreas: data.focusAreas?.length ? data.focusAreas.join(", ") : null,
         specialInstructions: data.specialInstructions ?? null,
+        arrivalWindow: data.arrivalWindow ?? null,
         manageToken,
         idempotencyKey: data.idempotencyKey ?? null,
       });
@@ -1372,6 +1389,7 @@ Rules:
         estimateMax,
         entryMethod: data.entryMethod ?? null,
         specialInstructions: data.specialInstructions ?? null,
+        arrivalWindow: data.arrivalWindow ?? null,
         manageUrl,
       };
       sendBookingNotification(emailDetails, "new").catch(() => {});
@@ -1464,8 +1482,12 @@ Rules:
         petsDetail: data.petsDetail,
         focusAreas: data.focusAreas,
         specialInstructions: data.specialInstructions,
+        arrivalWindow: data.arrivalWindow,
         // See intake handler above — same rationale, same forward.
         idempotencyKey: data.idempotencyKey || null,
+        // Customer self-service edit/cancel link — Bright-Space includes it
+        // in the confirmation SMS it sends the customer.
+        manageUrl,
       }, { sourceType: "booking", sourceId: booking.id });
 
       return res.status(201).json({
@@ -1507,6 +1529,7 @@ Rules:
       petsDetail: b.petsDetail,
       focusAreas: b.focusAreas,
       specialInstructions: b.specialInstructions,
+      arrivalWindow: b.arrivalWindow,
       estimateMin: b.estimateMin,
       estimateMax: b.estimateMax,
     };
@@ -1533,6 +1556,7 @@ Rules:
     focusAreas: z.array(z.string().max(100)).max(10).optional().nullable(),
     specialInstructions: z.string().max(2000).optional().nullable(),
     bedrooms: z.number().int().min(0).max(20).optional().nullable(),
+    arrivalWindow: z.enum(["morning", "afternoon", "evening", "flexible"]).optional().nullable(),
   });
 
   app.patch("/api/booking/manage/:token", async (req, res) => {
@@ -1569,6 +1593,7 @@ Rules:
       if (changes.focusAreas !== undefined) patch.focusAreas = changes.focusAreas?.length ? changes.focusAreas.join(", ") : null;
       if (changes.specialInstructions !== undefined) patch.specialInstructions = changes.specialInstructions;
       if (changes.bedrooms !== undefined) patch.bedrooms = changes.bedrooms;
+      if (changes.arrivalWindow !== undefined) patch.arrivalWindow = changes.arrivalWindow;
 
       if (Object.keys(patch).length === 0) {
         return res.status(400).json({ message: "Nothing to update" });
@@ -1591,6 +1616,7 @@ Rules:
           petsDetail: changes.petsDetail ?? undefined,
           focusAreas: changes.focusAreas ?? undefined,
           bedrooms: changes.bedrooms ?? undefined,
+          arrivalWindow: changes.arrivalWindow ?? undefined,
         }, { sourceType: "booking", sourceId: booking.id }).catch(() => {});
       }
 
@@ -1607,6 +1633,7 @@ Rules:
         estimateMax: booking.estimateMax,
         entryMethod: updated.entryMethod,
         specialInstructions: updated.specialInstructions,
+        arrivalWindow: updated.arrivalWindow,
       }, "updated").catch(() => {});
 
       res.json({ success: true, booking: bookingManageSummary(updated) });
@@ -1690,6 +1717,48 @@ Rules:
       res.status(500).json({ message: "Failed to fetch lead forwards" });
     }
   });
+
+  // Retry the durable outbox — re-send forwards that FAILED, using the exact
+  // payload persisted on each ledger row. Two ways in:
+  //   • an admin session/JWT (the "Retry failed forwards" button), or
+  //   • a scheduled cron carrying x-cron-secret: $CRON_SECRET (set CRON_SECRET
+  //     and point a Railway/Vercel cron at this every ~10 min for hands-off
+  //     durability across process restarts).
+  // A late delivery still captures BrightBase's returned lead id onto our row.
+  app.post("/api/admin/forwards/retry", async (req, res) => {
+    const cronSecret = process.env.CRON_SECRET;
+    const viaCron = Boolean(cronSecret) && req.header("x-cron-secret") === cronSecret;
+    if (!viaCron) {
+      // Fall back to the normal admin gate (session/JWT). requireAdmin writes
+      // the response itself when unauthorized, so only continue if it calls next.
+      return requireAdmin(req, res, () => runRetrySweep(req, res));
+    }
+    return runRetrySweep(req, res);
+  });
+
+  async function runRetrySweep(req: any, res: any) {
+    try {
+      if (!db) return res.status(503).json({ message: "Database not configured" });
+      const limit = Math.min(Math.max(parseInt(String(req.body?.limit ?? req.query?.limit ?? "100"), 10) || 100, 1), 500);
+      const summary = await retryFailedForwards({
+        limit,
+        // A forward that lands on retry still needs its post-delivery side
+        // effect — capture BrightBase's returned booking id onto our row.
+        onDelivered: async (row, result) => {
+          if (row.destination !== "brightbase" || row.sourceType !== "booking" || !row.sourceId || !result.responseSnippet) return;
+          try {
+            const bookingId = JSON.parse(result.responseSnippet)?.bookingId;
+            if (bookingId != null) await storage.updateBookingRequestExternalIds(row.sourceId, { crmBookingId: String(bookingId) });
+          } catch { /* non-JSON response — nothing to capture */ }
+        },
+      });
+      log("INFO", "forwards-retry", "Retry sweep complete", summary);
+      res.json({ success: true, ...summary });
+    } catch (error) {
+      log("ERROR", "forwards-retry", "Retry sweep failed", { error: String(error) });
+      res.status(500).json({ message: "Retry sweep failed" });
+    }
+  }
 
   // Admin: list booking requests
   app.get("/api/admin/bookings", requireAdmin, async (req, res) => {

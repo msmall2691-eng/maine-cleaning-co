@@ -131,11 +131,14 @@ function ContactForm() {
   // AND no email can never be answered.
   const hasContactMethod = Boolean(form.email.trim() || form.phone.trim());
   const emailInvalid = form.email.trim() !== "" && !CONTACT_EMAIL_RE.test(form.email.trim());
+  // Lenient typo-catcher: a non-empty phone with fewer than 7 digits can't
+  // be dialed and is silently stripped to null server-side. 7+ digits passes.
+  const phoneInvalid = form.phone.trim() !== "" && form.phone.replace(/\D/g, "").length < 7;
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!form.name.trim() || !form.message.trim()) return;
-    if (!hasContactMethod || emailInvalid) {
+    if (!hasContactMethod || emailInvalid || phoneInvalid) {
       setShowContactHint(true);
       return;
     }
@@ -199,11 +202,13 @@ function ContactForm() {
             inputMode="email"
             value={form.email}
             onChange={(e) => setForm({ ...form, email: e.target.value })}
+            aria-invalid={emailInvalid || undefined}
+            aria-describedby={emailInvalid ? "contact-email-error" : undefined}
             className="w-full rounded-xl border border-border bg-background px-4 py-2.5 text-sm text-foreground placeholder:text-muted-foreground/50 focus:outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary/50 transition-all"
             placeholder="you@example.com"
           />
           {emailInvalid && (
-            <p className="text-xs text-red-400 mt-1.5">That email doesn't look right — double-check it.</p>
+            <p id="contact-email-error" role="alert" className="text-xs text-red-400 mt-1.5">That email doesn't look right — double-check it.</p>
           )}
         </div>
       </div>
@@ -216,9 +221,14 @@ function ContactForm() {
           inputMode="tel"
           value={form.phone}
           onChange={(e) => setForm({ ...form, phone: e.target.value })}
+          aria-invalid={phoneInvalid || undefined}
+          aria-describedby={phoneInvalid ? "contact-phone-error" : undefined}
           className="w-full rounded-xl border border-border bg-background px-4 py-2.5 text-sm text-foreground placeholder:text-muted-foreground/50 focus:outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary/50 transition-all"
           placeholder="207-555-0123"
         />
+        {phoneInvalid && (
+          <p id="contact-phone-error" role="alert" className="text-xs text-red-400 mt-1.5">That phone number doesn't look complete.</p>
+        )}
       </div>
       <div>
         <label htmlFor="contact-message" className="block text-sm font-medium text-foreground mb-1.5">Message *</label>
@@ -233,10 +243,10 @@ function ContactForm() {
         />
       </div>
       {showContactHint && !hasContactMethod && (
-        <p className="text-sm text-amber-500">Please add a phone number or email so we can get back to you.</p>
+        <p role="alert" className="text-sm text-amber-500">Please add a phone number or email so we can get back to you.</p>
       )}
       {status === "error" && (
-        <p className="text-sm text-red-400">Something went wrong. Please try again or call us directly.</p>
+        <p role="alert" className="text-sm text-red-400">Something went wrong. Please try again or call us directly.</p>
       )}
       <Button
         type="submit"

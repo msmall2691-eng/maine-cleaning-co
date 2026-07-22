@@ -302,4 +302,36 @@ describe("POST /api/intake/submit contact-form forwarding", () => {
     expect(forwarded.notes).toBe("General inquiry (contact form): Do you clean ovens?");
     expect(forwarded.requestedDate ?? null).toBeNull();
   });
+
+  it("forwards the customer's uploaded photos to Bright-Space", async () => {
+    // Photos were captured client-side and stored on the intake row but never
+    // forwarded, so the operator never saw them. The forward body now carries
+    // them (pulled from the raw payload; normalize doesn't keep them).
+    const { forwardLeadToBrightBase } = await import("../lib/brightbase");
+    const mock = forwardLeadToBrightBase as unknown as ReturnType<typeof vi.fn>;
+    mock.mockClear();
+
+    const photos = [
+      "data:image/jpeg;base64,/9j/aaa",
+      "data:image/png;base64,iVBORbbb",
+    ];
+    const res = await request(app)
+      .post("/api/intake/submit")
+      .set("X-Forwarded-For", "10.0.0.141")
+      .send({
+        name: "Photo Sender",
+        email: "photos@x.co",
+        serviceType: "standard",
+        sqft: 1200,
+        frequency: "biweekly",
+        petHair: "none",
+        condition: "maintenance",
+        bathrooms: 2,
+        photos,
+      });
+
+    expect(res.status).toBe(201);
+    expect(mock).toHaveBeenCalledTimes(1);
+    expect(mock.mock.calls[0][0].photos).toEqual(photos);
+  });
 });

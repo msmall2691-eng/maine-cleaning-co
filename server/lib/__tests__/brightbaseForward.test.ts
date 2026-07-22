@@ -64,6 +64,27 @@ describe("forwardLeadToBrightBase requestedDate handling", () => {
 
     expect(sentBody().requestedDate).toBe("2027-09-10");
   });
+
+  it("forwards manageUrl on the booking path when set", async () => {
+    const { forwardLeadToBrightBase } = await loadModule();
+    const manageUrl = "https://maineclean.co/booking/manage/abc-123";
+    await forwardLeadToBrightBase(
+      { name: "Booker", phone: "207", requestedDate: "2027-09-10", manageUrl },
+      { sourceType: "booking", sourceId: 3 },
+    );
+
+    expect(sentBody().manageUrl).toBe(manageUrl);
+  });
+
+  it("omits manageUrl when not provided", async () => {
+    const { forwardLeadToBrightBase } = await loadModule();
+    await forwardLeadToBrightBase(
+      { name: "Booker", phone: "207", requestedDate: "2027-09-10" },
+      { sourceType: "booking", sourceId: 4 },
+    );
+
+    expect(sentBody()).not.toHaveProperty("manageUrl");
+  });
 });
 
 describe("forwardBookingUpdateToBrightBase", () => {

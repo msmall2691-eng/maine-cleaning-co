@@ -46,10 +46,19 @@ interface RunForwardOpts {
   attempt: () => Promise<ForwardAttemptResult>;
   /** Number of attempts total including the first. Default 3. */
   retries?: number;
+  /** Exact request body + URL — persisted so the retry sweep can re-POST a
+   *  failed delivery verbatim. Omit for forwards that aren't retryable. */
+  payload?: Record<string, any>;
+  targetUrl?: string;
+  /** Called once when the forward is delivered (initial run OR a later retry),
+   *  with the successful attempt result — used to capture the returned CRM id.
+   *  Best-effort: throwing here is logged, never surfaced. */
+  onSuccess?: (result: ForwardAttemptResult) => Promise<void>;
 }
 
 async function createRow(sourceType: ForwardSourceType, sourceId: number | null,
-                        destination: ForwardDestination): Promise<number | null> {
+                        destination: ForwardDestination,
+                        payload?: Record<string, any>, targetUrl?: string): Promise<number | null> {
   if (!db) return null;
   try {
     const [row] = await db.insert(leadForwards).values({
@@ -57,6 +66,8 @@ async function createRow(sourceType: ForwardSourceType, sourceId: number | null,
       sourceId: sourceId ?? 0,
       destination,
       status: "pending",
+      payload: payload ?? null,
+      targetUrl: targetUrl ?? null,
     }).returning({ id: leadForwards.id });
     return row?.id ?? null;
   } catch (err) {
@@ -87,8 +98,8 @@ const delay = (ms: number) => new Promise(resolve => setTimeout(resolve, ms));
  * a retry won't fix anything.
  */
 export async function runForward(opts: RunForwardOpts): Promise<number | null> {
-  const { sourceType, sourceId, destination, attempt, retries = 3 } = opts;
-  const id = await createRow(sourceType, sourceId, destination);
+  const { sourceType, sourceId, destination, attempt, retries = 3, payload, targetUrl, onSuccess } = opts;
+  const id = await createRow(sourceType, sourceId, destination, payload, targetUrl);
   let attempts = 0;
   let lastResult: ForwardAttemptResult | null = null;
   const maxAttempts = Math.max(1, retries);
@@ -107,6 +118,10 @@ export async function runForward(opts: RunForwardOpts): Promise<number | null> {
         deliveredAt: new Date(),
       });
       console.log(`[leadForward] delivered ${destination} for ${sourceType}#${sourceId} after ${attempts} attempt(s)`);
+      if (onSuccess) {
+        try { await onSuccess(result); }
+        catch (err) { console.error(`[leadForward] onSuccess hook failed for ${destination} ${sourceType}#${sourceId}`, err); }
+      }
       return id;
     }
 
@@ -161,4 +176,114 @@ export async function recordSkipped(
 ): Promise<void> {
   const id = await createRow(sourceType, sourceId, destination);
   await updateRow(id, { status: "skipped", lastError: reason });
+}
+
+export interface RetrySweepResult {
+  scanned: number;
+  delivered: number;
+  stillFailing: number;
+  skipped: number;   // rows with no stored payload (legacy) or a fatal 4xx — not retried
+}
+
+/** Called when a retried forward finally lands, so late deliveries still
+ *  capture the CRM id / any post-delivery side effect. Keyed by destination. */
+type RetryDeliveredHook = (row: typeof leadForwards.$inferSelect, result: ForwardAttemptResult) => Promise<void>;
+
+/**
+ * Re-send forwards that previously FAILED, using the exact payload + URL
+ * persisted on the ledger row. This is the durability layer the inline
+ * retries lack: an in-request backoff loop dies with the process, but a
+ * failed row sits in the ledger until this sweep (admin button or cron)
+ * picks it up. Never throws — returns a summary.
+ *
+ * Skips rows with no stored payload (written before the column existed) and
+ * rows whose last failure was a 4xx (a client error won't fix on retry —
+ * BrightBase rejected the body, so re-sending it is pointless). Only the most
+ * recent failed attempt per (source, destination) is retried, so a row that
+ * already succeeded on a later attempt isn't re-sent.
+ */
+export async function retryFailedForwards(
+  opts: { limit?: number; onDelivered?: RetryDeliveredHook } = {},
+): Promise<RetrySweepResult> {
+  const summary: RetrySweepResult = { scanned: 0, delivered: 0, stillFailing: 0, skipped: 0 };
+  if (!db) return summary;
+  const limit = Math.min(500, Math.max(1, opts.limit ?? 100));
+
+  let rows: Array<typeof leadForwards.$inferSelect>;
+  try {
+    rows = await db.select().from(leadForwards)
+      .where(eq(leadForwards.status, "failed"))
+      .limit(limit);
+  } catch (err) {
+    console.error("[leadForward] retry sweep query failed", err);
+    return summary;
+  }
+
+  // Collapse to the latest failed row per (sourceType, sourceId, destination)
+  // so we don't re-send the same lead multiple times when it failed in more
+  // than one batch.
+  const latest = new Map<string, typeof leadForwards.$inferSelect>();
+  for (const r of rows) {
+    const key = `${r.sourceType}|${r.sourceId}|${r.destination}`;
+    const ex = latest.get(key);
+    if (!ex || (r.id ?? 0) > (ex.id ?? 0)) latest.set(key, r);
+  }
+
+  for (const row of Array.from(latest.values())) {
+    summary.scanned += 1;
+    // Not retryable: no body to replay, or a 4xx the peer already rejected.
+    if (!row.payload || !row.targetUrl || (row.lastStatusCode != null && row.lastStatusCode >= 400 && row.lastStatusCode < 500)) {
+      summary.skipped += 1;
+      continue;
+    }
+    const result = await postJson(row.targetUrl, row.payload);
+    const attempts = (row.attempts ?? 0) + 1;
+    if (result.ok) {
+      await updateRow(row.id, {
+        status: "delivered", attempts, lastError: null,
+        lastStatusCode: result.statusCode ?? null, lastAttemptedAt: new Date(), deliveredAt: new Date(),
+      });
+      summary.delivered += 1;
+      console.log(`[leadForward] retry delivered ${row.destination} for ${row.sourceType}#${row.sourceId}`);
+      if (opts.onDelivered) {
+        try { await opts.onDelivered(row, result); }
+        catch (err) { console.error(`[leadForward] retry onDelivered hook failed for row ${row.id}`, err); }
+      }
+    } else {
+      await updateRow(row.id, {
+        attempts, lastError: result.error || `HTTP ${result.statusCode}`,
+        lastStatusCode: result.statusCode ?? null, lastAttemptedAt: new Date(),
+      });
+      summary.stillFailing += 1;
+    }
+  }
+  return summary;
+}
+
+/** One POST attempt with the same 15s timeout + fatal-4xx semantics the
+ *  forwards use, factored so the retry sweep and future callers share it. */
+export async function postJson(url: string, payload: Record<string, any>): Promise<ForwardAttemptResult> {
+  try {
+    const controller = new AbortController();
+    const timer = setTimeout(() => controller.abort(), 15_000);
+    let res: Response;
+    try {
+      res = await fetch(url, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(payload),
+        signal: controller.signal,
+      });
+    } finally {
+      clearTimeout(timer);
+    }
+    const text = await res.text().catch(() => "");
+    if (!res.ok) {
+      const fatal = res.status >= 400 && res.status < 500;
+      return { ok: false, statusCode: res.status, responseSnippet: text.slice(0, 300), error: `HTTP ${res.status}: ${text.slice(0, 200)}`, fatal };
+    }
+    return { ok: true, statusCode: res.status, responseSnippet: text.slice(0, 300) };
+  } catch (err) {
+    return { ok: false, error: err instanceof Error ? err.message : String(err) };
+  }
 }

@@ -262,6 +262,44 @@ describe("POST /api/booking/submit", () => {
     expect(res.body.message).toMatch(/service area/i);
   });
 
+  it("persists arrivalWindow and forwards it to Bright-Space", async () => {
+    const { forwardLeadToBrightBase } = await import("../lib/brightbase");
+    const mock = forwardLeadToBrightBase as unknown as ReturnType<typeof vi.fn>;
+    mock.mockClear();
+
+    const res = await request(app)
+      .post("/api/booking/submit")
+      .set("X-Forwarded-For", "10.0.0.220")
+      .send({ ...basePayload, arrivalWindow: "morning" });
+
+    expect(res.status).toBe(201);
+    // Persisted on the booking row…
+    expect(createdBookings[0].arrivalWindow).toBe("morning");
+    // …and forwarded to Bright-Space under the canonical key.
+    expect(mock).toHaveBeenCalledTimes(1);
+    expect(mock.mock.calls[0][0].arrivalWindow).toBe("morning");
+  });
+
+  it("rejects an unknown arrivalWindow value", async () => {
+    const res = await request(app)
+      .post("/api/booking/submit")
+      .set("X-Forwarded-For", "10.0.0.221")
+      .send({ ...basePayload, arrivalWindow: "midnight" });
+
+    expect(res.status).toBe(422);
+    expect(Object.keys(res.body.errors)).toContain("arrivalWindow");
+  });
+
+  it("defaults arrivalWindow to null when omitted", async () => {
+    const res = await request(app)
+      .post("/api/booking/submit")
+      .set("X-Forwarded-For", "10.0.0.222")
+      .send(basePayload);
+
+    expect(res.status).toBe(201);
+    expect(createdBookings[0].arrivalWindow).toBeNull();
+  });
+
   it("forwards the client-supplied idempotencyKey to Bright-Space", async () => {
     // Bright-Space PR #507 relies on this to collapse retries + the dual-
     // forward pattern into one Lead. Without it, the audit's M2 duplicate-

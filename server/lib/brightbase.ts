@@ -23,7 +23,7 @@
  * marked "skipped" in the ledger and returns immediately.
  */
 
-import { runForward, recordSkipped, type ForwardSourceType } from "./leadForward";
+import { runForward, recordSkipped, type ForwardSourceType, type ForwardAttemptResult } from "./leadForward";
 
 const BRIGHTBASE_API_URL = process.env.BRIGHTBASE_API_URL;
 
@@ -52,6 +52,13 @@ interface BrightBaseLead {
   petsDetail?: string | null;
   focusAreas?: string[] | null;
   specialInstructions?: string | null;
+  // Preferred arrival-time window (canonical:
+  // "morning" | "afternoon" | "evening" | "flexible"). Rides the outgoing
+  // payload as arrivalWindow so the operator can slot the visit.
+  arrivalWindow?: string | null;
+  // Up to 3 customer-uploaded property photos as base64 data-URI strings.
+  // Forwarded so the operator sees what the customer sees. Never logged.
+  photos?: string[] | null;
   // STR / vacation-rental turnover details. guests rides the native column;
   // listingUrl/turnoverDay/petsAllowed land in Bright-Space's custom_fields.
   guests?: number | null;
@@ -63,6 +70,11 @@ interface BrightBaseLead {
   // double-click collapses to ONE Lead row instead of racing the 5-minute
   // recency SELECT.
   idempotencyKey?: string | null;
+  // Customer self-service edit/cancel URL minted by /api/booking/submit.
+  // Bright-Space includes it in the confirmation SMS it sends the customer.
+  // A plain capability URL — the token in the path IS a credential, so the
+  // value is never logged (only its presence).
+  manageUrl?: string | null;
 }
 
 interface ForwardContext {
@@ -133,11 +145,22 @@ export async function forwardLeadToBrightBase(
   if (body.petsDetail) payload.petsDetail = body.petsDetail;
   if (body.focusAreas && body.focusAreas.length) payload.focusAreas = body.focusAreas;
   if (body.specialInstructions) payload.specialInstructions = body.specialInstructions;
+  if (body.arrivalWindow) payload.arrivalWindow = body.arrivalWindow;
+  // Photos: sanity-guard before forwarding — cap at 3 and drop anything that
+  // isn't an image data URI, so a tampered/garbage payload can't push junk
+  // (or an unbounded blob list) onto the operator's Requests page.
+  if (body.photos && body.photos.length) {
+    const safePhotos = body.photos
+      .filter((p) => typeof p === "string" && p.startsWith("data:image/"))
+      .slice(0, 3);
+    if (safePhotos.length) payload.photos = safePhotos;
+  }
   if (body.guests != null) payload.guests = Number(body.guests);
   if (body.listingUrl) payload.listingUrl = body.listingUrl;
   if (body.turnoverDay) payload.turnoverDay = body.turnoverDay;
   if (body.petsAllowed) payload.petsAllowed = body.petsAllowed;
   if (body.idempotencyKey) payload.idempotencyKey = body.idempotencyKey;
+  if (body.manageUrl) payload.manageUrl = body.manageUrl;
   payload.source = body.source || "Website";
 
   const base = (BRIGHTBASE_API_URL || "").replace(/\/+$/, "");
@@ -156,6 +179,13 @@ export async function forwardLeadToBrightBase(
     hasEmail: Boolean(payload.email),
     hasPhone: Boolean(payload.phone),
     hasAddress: Boolean(payload.address),
+    arrivalWindow: payload.arrivalWindow,
+    // Never log photo CONTENTS (base64 blobs / PII) — a count is enough
+    // to trace that photos were forwarded.
+    hasPhotos: Boolean(payload.photos && payload.photos.length),
+    photoCount: payload.photos ? payload.photos.length : 0,
+    // Presence only — the token in the URL is a capability credential.
+    hasManageUrl: Boolean(payload.manageUrl),
   };
   console.log(`[brightbase] Forwarding lead to ${url}`, JSON.stringify(logSafe));
 
@@ -195,7 +225,32 @@ export async function forwardLeadToBrightBase(
         return { ok: false, error: err instanceof Error ? err.message : String(err) };
       }
     },
+    // Persist the exact body + URL so the retry sweep can re-send this verbatim
+    // if it fails now and the process dies before the inline retries finish.
+    payload,
+    targetUrl: url,
+    onSuccess: (result) => captureBrightbaseId(ctx, result),
   });
+}
+
+/**
+ * When BrightBase accepts a booking forward it returns its created lead id as
+ * `bookingId`. Store it on our booking row (crmBookingId) so the two systems
+ * are linked both directions — we can jump from our record to theirs, and a
+ * delivered forward is provably delivered (not just "no error"). Best-effort:
+ * a parse/store failure never affects the forward result.
+ */
+async function captureBrightbaseId(ctx: ForwardContext, result: ForwardAttemptResult): Promise<void> {
+  if (ctx.sourceType !== "booking" || !ctx.sourceId || !result.responseSnippet) return;
+  let bookingId: unknown;
+  try {
+    bookingId = JSON.parse(result.responseSnippet)?.bookingId;
+  } catch {
+    return; // response wasn't JSON (or was truncated) — nothing to capture
+  }
+  if (bookingId == null) return;
+  const { storage } = await import("../storage");
+  await storage.updateBookingRequestExternalIds(ctx.sourceId, { crmBookingId: String(bookingId) });
 }
 
 // Change-set for a customer's manage-page edit. idempotencyKey addresses the
@@ -210,6 +265,7 @@ export interface BrightBaseBookingUpdate {
   petsDetail?: string | null;
   focusAreas?: string[] | null;
   bedrooms?: number | null;
+  arrivalWindow?: string | null;
   cancel?: boolean;
 }
 
@@ -238,6 +294,7 @@ export async function forwardBookingUpdateToBrightBase(
   if (update.petsDetail != null) payload.petsDetail = update.petsDetail;
   if (update.focusAreas != null) payload.focusAreas = update.focusAreas;
   if (update.bedrooms != null) payload.bedrooms = update.bedrooms;
+  if (update.arrivalWindow != null) payload.arrivalWindow = update.arrivalWindow;
   if (update.cancel) payload.cancel = true;
 
   const base = (BRIGHTBASE_API_URL || "").replace(/\/+$/, "");
