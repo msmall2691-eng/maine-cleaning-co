@@ -18,6 +18,108 @@ import OpenAI from "openai";
 
 const CRM_WEBHOOK_URL = process.env.CRM_WEBHOOK_URL || "https://connecteam-proxy.vercel.app/api/leads";
 
+/** Service keys as the CRM wants to read them. */
+const TWENTY_SERVICE_LABELS: Record<string, string> = {
+  standard: "Standard Clean",
+  deep: "Deep Clean",
+  str: "Vacation Rental Turnover",
+  "vacation-rental": "Vacation Rental Turnover",
+  commercial: "Commercial Cleaning",
+  "move-in-out": "Move-In/Move-Out Clean",
+};
+
+type TwentyLead = {
+  name?: string | null;
+  email?: string | null;
+  phone?: string | null;
+  address?: string | null;
+  zip?: string | null;
+  serviceType?: string | null;
+  frequency?: string | null;
+  sqft?: number | null;
+  bathrooms?: number | null;
+  petHair?: string | null;
+  condition?: string | null;
+  estimateMin?: number | null;
+  estimateMax?: number | null;
+  notes?: string | null;
+};
+
+/**
+ * Fire-and-forget forward to the Twenty CRM.
+ *
+ * A THIRD destination, independent of CRM_WEBHOOK_URL (BrightBase intake) and
+ * BRIGHTBASE_API_URL (BrightBase Ops). It never throws and never blocks the
+ * response, so a slow or dead CRM cannot cost us a customer's submission — the
+ * lead is already committed to our own database before this runs.
+ *
+ * Inert unless both WEBHOOK_URL and WEBHOOK_SECRET are set.
+ */
+function forwardLeadToTwenty(lead: TwentyLead, context: { source: string; id: number | string }) {
+  const webhookUrl = process.env.WEBHOOK_URL;
+  const webhookSecret = process.env.WEBHOOK_SECRET;
+
+  if (!webhookUrl || !webhookSecret) return;
+
+  // Each part is dropped when absent rather than interpolated blind. The
+  // contact form carries no sqft/bathrooms/pets/condition at all, and the old
+  // inline version would have sent the operator "null sqft, null bath".
+  const details = [
+    lead.sqft != null ? `${lead.sqft} sqft` : null,
+    lead.bathrooms != null ? `${lead.bathrooms} bath` : null,
+    lead.petHair ? `${lead.petHair} pets` : null,
+    lead.condition ? `${lead.condition} condition` : null,
+  ]
+    .filter(Boolean)
+    .join(", ");
+
+  const payload = {
+    source: "website",
+    customerName: lead.name || "",
+    customerEmail: lead.email || "",
+    customerPhone: lead.phone || "",
+    propertyAddress: lead.address || lead.zip || "",
+    serviceType: TWENTY_SERVICE_LABELS[lead.serviceType ?? ""] || lead.serviceType,
+    frequency: lead.frequency,
+    preferredDate: "",
+    notes: [details ? `${details}.` : "", lead.notes || ""].filter(Boolean).join(" ").trim(),
+    // Custom-quote services have no numeric estimate; sending the raw
+    // interpolation put the literal "$undefined-$undefined" in the CRM.
+    estimateRange:
+      lead.estimateMin != null && lead.estimateMax != null
+        ? `$${lead.estimateMin}-$${lead.estimateMax}`
+        : "Custom quote",
+  };
+
+  const controller = new AbortController();
+  const timeout = setTimeout(() => controller.abort(), 10000);
+
+  fetch(webhookUrl, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      // The CRM reads this header specifically — not a bearer token.
+      "x-webhook-secret": webhookSecret,
+    },
+    body: JSON.stringify(payload),
+    signal: controller.signal,
+  })
+    .then(async (r) => {
+      clearTimeout(timeout);
+      if (r.ok) {
+        log("INFO", "webhook", "Lead forwarded to Twenty CRM", { status: r.status, ...context });
+      } else {
+        const body = await r.text().catch(() => "");
+        log("WARN", "webhook", "Twenty CRM rejected lead", { status: r.status, ...context, body: body.slice(0, 200) });
+      }
+    })
+    .catch((err) => {
+      clearTimeout(timeout);
+      log("ERROR", "webhook", "Failed to forward lead to Twenty CRM", { error: String(err), ...context });
+    });
+}
+
+
 function log(level: "INFO" | "WARN" | "ERROR", context: string, message: string, data?: Record<string, any>) {
   const ts = new Date().toISOString();
   const extra = data ? ` ${JSON.stringify(data)}` : "";
@@ -612,6 +714,29 @@ export async function registerRoutes(
         idempotencyKey: (req.body as any)?.idempotencyKey || null,
       }, { sourceType: "intake", sourceId: submission.id });
 
+      // Forward to the Twenty CRM (non-blocking) — lands in the Inbox as a
+      // new conversation. Independent of both BrightBase forwards above.
+      forwardLeadToTwenty(
+        {
+          name: normalized.name,
+          email: normalized.email,
+          phone: normalized.phone,
+          address: normalized.address,
+          zip: normalized.zip,
+          serviceType: normalized.serviceType,
+          frequency: normalized.frequency,
+          sqft: normalized.sqft,
+          bathrooms: normalized.bathrooms,
+          petHair: normalized.petHair,
+          condition: normalized.condition,
+          estimateMin: normalized.estimateMin,
+          estimateMax: normalized.estimateMax,
+          // Already carries the "General inquiry (contact form)" prefix.
+          notes: forwardNotes,
+        },
+        { source: "intake", id: submission.id },
+      );
+
       return res.status(201).json({
         success: true,
         id: submission.id,
@@ -724,59 +849,7 @@ export async function registerRoutes(
         })
         .catch(err => log("ERROR", "crm", `CRM forward failed`, { error: String(err), leadId: lead.id }));
 
-      const webhookUrl = process.env.WEBHOOK_URL;
-      const webhookSecret = process.env.WEBHOOK_SECRET;
-      if (webhookUrl && webhookSecret) {
-        const serviceTypeMap: Record<string, string> = {
-          standard: "Standard Clean",
-          deep: "Deep Clean",
-          str: "Vacation Rental Turnover",
-          "vacation-rental": "Vacation Rental Turnover",
-          commercial: "Commercial Cleaning",
-          "move-in-out": "Move-In/Move-Out Clean",
-        };
-        const webhookPayload = {
-          source: "website",
-          customerName: lead.name || "",
-          customerEmail: lead.email || "",
-          customerPhone: lead.phone || "",
-          propertyAddress: lead.address || (lead as any).zip || "",
-          serviceType: serviceTypeMap[lead.serviceType] || lead.serviceType,
-          frequency: lead.frequency,
-          preferredDate: "",
-          notes: `${lead.sqft} sqft, ${lead.bathrooms} bath, ${lead.petHair} pets, ${lead.condition} condition. ${lead.notes || ""}`.trim(),
-          // Custom-quote services have no numeric estimate — sending the raw
-          // interpolation produced the literal string "$undefined-$undefined"
-          // in the downstream CRM.
-          estimateRange: lead.estimateMin != null && lead.estimateMax != null
-            ? `$${lead.estimateMin}-$${lead.estimateMax}`
-            : "Custom quote",
-        };
-        const controller = new AbortController();
-        const timeout = setTimeout(() => controller.abort(), 10000);
-        fetch(webhookUrl, {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-            "x-webhook-secret": webhookSecret,
-          },
-          body: JSON.stringify(webhookPayload),
-          signal: controller.signal,
-        })
-          .then(async (r) => {
-            clearTimeout(timeout);
-            if (r.ok) {
-              log("INFO", "webhook", "Lead forwarded to Asset Manager", { status: r.status, leadId: lead.id });
-            } else {
-              const body = await r.text().catch(() => "");
-              log("WARN", "webhook", "Asset Manager rejected lead", { status: r.status, leadId: lead.id, body: body.slice(0, 200) });
-            }
-          })
-          .catch((err) => {
-            clearTimeout(timeout);
-            log("ERROR", "webhook", "Failed to forward lead", { error: String(err), leadId: lead.id });
-          });
-      }
+      forwardLeadToTwenty(lead, { source: "quote", id: lead.id });
 
       const railwayUrl = "https://maine-cleaning-admin-production.up.railway.app/api/intake";
       {
