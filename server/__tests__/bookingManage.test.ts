@@ -119,9 +119,11 @@ vi.mock("openai", () => ({ default: class {} }));
 import { registerRoutes } from "../routes";
 import { createServer } from "http";
 import { forwardBookingUpdateToBrightBase } from "../lib/brightbase";
+import { recordSkipped } from "../lib/leadForward";
 import { sendBookingNotification } from "../email";
 
 const forwardMock = forwardBookingUpdateToBrightBase as unknown as ReturnType<typeof vi.fn>;
+const skippedMock = recordSkipped as unknown as ReturnType<typeof vi.fn>;
 const ownerEmailMock = sendBookingNotification as unknown as ReturnType<typeof vi.fn>;
 
 // A reschedule target far enough out to always clear MIN_LEAD_DAYS.
@@ -131,6 +133,7 @@ let app: Express;
 beforeEach(async () => {
   bookings.clear();
   forwardMock.mockClear();
+  skippedMock.mockClear();
   ownerEmailMock.mockClear();
   app = express();
   app.set("trust proxy", true);
@@ -286,6 +289,16 @@ describe("PATCH /api/booking/manage/:token", () => {
 
     expect(res.status).toBe(200);
     expect(forwardMock).not.toHaveBeenCalled();
+    // ...but the miss must be VISIBLE. Without a ledger row the operator's
+    // Requests page keeps the pre-edit details and nothing records why.
+    expect(skippedMock).toHaveBeenCalledTimes(1);
+    const [srcType, srcId, dest, reason] = skippedMock.mock.calls[0];
+    expect({ srcType, srcId, dest }).toEqual({
+      srcType: "booking",
+      srcId: 7,
+      dest: "brightbase-update",
+    });
+    expect(reason).toMatch(/idempotencyKey/);
   });
 });
 
@@ -305,6 +318,28 @@ describe("POST /api/booking/manage/:token/cancel", () => {
 
     expect(ownerEmailMock).toHaveBeenCalledTimes(1);
     expect(ownerEmailMock.mock.calls[0][1]).toBe("cancelled");
+  });
+
+  it("records a ledger row when a cancellation cannot be mirrored", async () => {
+    // The dangerous direction: BrightBase never hears about the cancellation,
+    // so the job stays live there and a cleaner can still be dispatched. The
+    // skipped row is the only signal the operator gets.
+    seedBooking({ idempotencyKey: null });
+    const res = await request(app)
+      .post("/api/booking/manage/tok-valid/cancel")
+      .set("X-Forwarded-For", "10.1.0.9");
+
+    expect(res.status).toBe(200);
+    expect(bookings.get("tok-valid").status).toBe("cancelled");
+    expect(forwardMock).not.toHaveBeenCalled();
+    expect(skippedMock).toHaveBeenCalledTimes(1);
+    const [srcType, srcId, dest, reason] = skippedMock.mock.calls[0];
+    expect({ srcType, srcId, dest }).toEqual({
+      srcType: "booking",
+      srcId: 7,
+      dest: "brightbase-update",
+    });
+    expect(reason).toMatch(/cancellation/i);
   });
 
   it("is idempotent — cancelling an already-cancelled booking is a 200 no-op", async () => {

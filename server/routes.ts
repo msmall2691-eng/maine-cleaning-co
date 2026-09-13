@@ -8,7 +8,7 @@ import { intakeSubmitSchema } from "./lib/validators";
 import { normalizeIntakePayload } from "./lib/normalize";
 import { forwardLeadToBrightBase, forwardBookingUpdateToBrightBase } from "./lib/brightbase";
 import { calculateQuote, estimatesDiverge } from "./lib/quoteEngine";
-import { runForward, retryFailedForwards } from "./lib/leadForward";
+import { runForward, retryFailedForwards, recordSkipped } from "./lib/leadForward";
 import { leadForwards } from "@shared/schema";
 import { db } from "./db";
 import { desc, eq } from "drizzle-orm";
@@ -1691,6 +1691,18 @@ Rules:
           bedrooms: changes.bedrooms ?? undefined,
           arrivalWindow: changes.arrivalWindow ?? undefined,
         }, { sourceType: "booking", sourceId: booking.id }).catch(() => {});
+      } else {
+        // BrightBase addresses an update ONLY by idempotencyKey, so a booking
+        // row without one (pre-#51) can never be mirrored. Record it as
+        // skipped instead of dropping it on the floor — otherwise the
+        // operator's Requests page silently keeps the pre-edit details and
+        // nothing in the ledger says why.
+        recordSkipped(
+          "booking",
+          booking.id,
+          "brightbase-update",
+          "booking has no idempotencyKey — cannot address the BrightBase lead",
+        ).catch(() => {});
       }
 
       // Tell the office a customer changed their own booking — fire-and-forget.
@@ -1741,6 +1753,17 @@ Rules:
         forwardBookingUpdateToBrightBase(
           { idempotencyKey: booking.idempotencyKey, cancel: true },
           { sourceType: "booking", sourceId: booking.id },
+        ).catch(() => {});
+      } else {
+        // Same as the edit path, but this one is the dangerous direction: an
+        // unmirrored CANCELLATION leaves the job live in BrightBase, so a
+        // cleaner can still be dispatched to a booking the customer already
+        // cancelled. The ledger row is the operator's only chance to catch it.
+        recordSkipped(
+          "booking",
+          booking.id,
+          "brightbase-update",
+          "cancellation not mirrored — booking has no idempotencyKey",
         ).catch(() => {});
       }
 
