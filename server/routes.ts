@@ -157,9 +157,6 @@ setInterval(() => {
   }
 }, 60_000);
 
-let weatherCache: { data: any; timestamp: number } | null = null;
-const WEATHER_TTL = 30 * 60 * 1000;
-
 export async function registerRoutes(
   httpServer: Server,
   app: Express
@@ -1010,88 +1007,6 @@ export async function registerRoutes(
     } catch (error) {
       log("ERROR", "admin", "Failed to archive quote lead", { id: req.params.id, error: String(error) });
       res.status(500).json({ message: "Failed to archive quote lead" });
-    }
-  });
-
-  const weatherCodeMap: Record<number, { label: string; icon: string }> = {
-    0: { label: "Clear", icon: "sun" },
-    1: { label: "Mostly Clear", icon: "sun" },
-    2: { label: "Partly Cloudy", icon: "cloud-sun" },
-    3: { label: "Overcast", icon: "cloud" },
-    45: { label: "Foggy", icon: "cloud-fog" },
-    48: { label: "Icy Fog", icon: "cloud-fog" },
-    51: { label: "Light Drizzle", icon: "cloud-drizzle" },
-    53: { label: "Drizzle", icon: "cloud-drizzle" },
-    55: { label: "Heavy Drizzle", icon: "cloud-drizzle" },
-    61: { label: "Light Rain", icon: "cloud-rain" },
-    63: { label: "Rain", icon: "cloud-rain" },
-    65: { label: "Heavy Rain", icon: "cloud-rain" },
-    71: { label: "Light Snow", icon: "cloud-snow" },
-    73: { label: "Snow", icon: "cloud-snow" },
-    75: { label: "Heavy Snow", icon: "cloud-snow" },
-    77: { label: "Snow Grains", icon: "cloud-snow" },
-    80: { label: "Light Showers", icon: "cloud-rain" },
-    81: { label: "Showers", icon: "cloud-rain" },
-    82: { label: "Heavy Showers", icon: "cloud-rain" },
-    85: { label: "Snow Showers", icon: "cloud-snow" },
-    86: { label: "Heavy Snow Showers", icon: "cloud-snow" },
-    95: { label: "Thunderstorm", icon: "cloud-lightning" },
-    96: { label: "Thunderstorm w/ Hail", icon: "cloud-lightning" },
-    99: { label: "Severe Thunderstorm", icon: "cloud-lightning" },
-  };
-
-  app.get("/api/weather", async (_req, res) => {
-    try {
-      const now = Date.now();
-      if (weatherCache && now - weatherCache.timestamp < WEATHER_TTL) {
-        res.json(weatherCache.data);
-        return;
-      }
-
-      const response = await fetch(
-        "https://api.open-meteo.com/v1/forecast?latitude=43.66&longitude=-70.26&current=temperature_2m,weather_code,relative_humidity_2m,wind_speed_10m&daily=temperature_2m_max,temperature_2m_min,weather_code&temperature_unit=fahrenheit&wind_speed_unit=mph&timezone=America/New_York&forecast_days=5"
-      );
-
-      if (!response.ok) {
-        res.status(502).json({ message: "Weather service unavailable" });
-        return;
-      }
-
-      const raw = await response.json();
-      const current = raw.current;
-      const daily = raw.daily;
-
-      const currentCode = current.weather_code;
-      const currentInfo = weatherCodeMap[currentCode] || { label: "Unknown", icon: "cloud" };
-
-      const forecast = daily.time.map((date: string, i: number) => {
-        const code = daily.weather_code[i];
-        const info = weatherCodeMap[code] || { label: "Unknown", icon: "cloud" };
-        return {
-          date,
-          high: Math.round(daily.temperature_2m_max[i]),
-          low: Math.round(daily.temperature_2m_min[i]),
-          label: info.label,
-          icon: info.icon,
-        };
-      });
-
-      const data = {
-        current: {
-          temp: Math.round(current.temperature_2m),
-          label: currentInfo.label,
-          icon: currentInfo.icon,
-          humidity: current.relative_humidity_2m,
-          windSpeed: Math.round(current.wind_speed_10m),
-        },
-        forecast,
-        location: "Portland, ME",
-      };
-
-      weatherCache = { data, timestamp: now };
-      res.json(data);
-    } catch (error) {
-      res.status(502).json({ message: "Weather service unavailable" });
     }
   });
 
