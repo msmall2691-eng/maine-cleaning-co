@@ -10,6 +10,8 @@ import { Button } from "@/components/ui/button";
 import { Certifications } from "@/components/ui/Certifications";
 import { AICleaningTip } from "@/components/ui/AICleaningTip";
 import { companyInfo } from "@/lib/company-info";
+import { galleryItems } from "@/lib/gallery-data";
+import { FacebookFeed } from "@/components/ui/FacebookFeed";
 
 const fadeUp = {
   hidden: { opacity: 0, y: 20 },
@@ -269,50 +271,60 @@ export default function About() {
         </div>
       </section>
 
-      {/* ── Instagram Gallery ── */}
+      {/* ── Our Work + live social ── */}
       <section className="py-16 sm:py-24">
         <div className="container mx-auto px-4 sm:px-6 max-w-4xl">
           <div className="text-center mb-10">
-            <div className="inline-flex items-center justify-center w-16 h-16 rounded-2xl bg-gradient-to-br from-pink-500/20 to-orange-500/20 border border-pink-500/20 mb-6">
-              <Instagram className="w-7 h-7 text-pink-400" />
-            </div>
-            <p className="text-pink-400/80 text-xs font-semibold uppercase tracking-[0.2em] mb-3">@mainecleaningco</p>
             <h2 className="text-[1.75rem] sm:text-3xl font-serif font-bold text-foreground tracking-[-0.01em] mb-4">
-              See Our Work on Instagram
+              See Our Work
             </h2>
             <p className="text-muted-foreground text-[15px] leading-relaxed max-w-md mx-auto">
-              Before & afters, behind-the-scenes cleaning tips, and real homes across Southern Maine. 1,900+ followers and growing.
+              Real homes, rentals and commercial spaces across Southern Maine — photographed
+              on the job, not staged in a studio.
             </p>
           </div>
 
-          <div className="grid grid-cols-2 sm:grid-cols-3 gap-2 sm:gap-3 mb-8">
-            {[
-              { src: "/images/vacation-rental-bathroom-clean.jpeg", alt: "Guest-ready vacation rental bathroom" },
-              { src: "/images/commercial-floor-cleaning.jpeg", alt: "Commercial floor cleaning" },
-              { src: "/images/prolux-hepa-vacuum-fleet.jpeg", alt: "Professional vacuum equipment" },
-              { src: "/images/ecosense-cleaning-products.jpeg", alt: "Eco-friendly cleaning products" },
-              { src: "/images/before-after-deep-clean.jpeg", alt: "Before and after deep clean" },
-              { src: "/images/cleaning-toolkit-supplies.jpeg", alt: "Cleaning toolkit and supplies" },
-            ].map((img, i) => (
+          {/* Our own photos. Each tile deep-links to the matching post when we
+              have one (GalleryItem.postUrl) and otherwise opens the profile. */}
+          <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 sm:gap-3 mb-14">
+            {galleryItems.map((item) => (
               <a
-                key={i}
-                href={companyInfo.socials.instagram}
+                key={item.id}
+                href={item.postUrl ?? companyInfo.socials.instagram}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="group relative aspect-square rounded-xl overflow-hidden border border-white/5"
-                data-testid={`ig-gallery-${i}`}
+                className="group relative aspect-square rounded-xl overflow-hidden border border-border/60"
+                data-testid={`work-gallery-${item.id}`}
+                title={item.caption}
               >
                 <img
-                  src={img.src}
-                  alt={img.alt}
+                  src={item.image}
+                  alt={item.alt}
                   className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
                   loading="lazy"
                 />
-                <div className="absolute inset-0 bg-black/0 group-hover:bg-black/30 transition-colors duration-300 flex items-center justify-center">
-                  <Instagram className="w-6 h-6 text-white opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
+                <div className="absolute inset-0 flex items-end bg-gradient-to-t from-black/70 via-black/0 to-black/0 opacity-0 group-hover:opacity-100 transition-opacity duration-300">
+                  <span className="p-3 text-[11px] sm:text-xs font-medium text-white leading-snug">
+                    {item.caption}
+                  </span>
                 </div>
               </a>
             ))}
+          </div>
+
+          {/* Genuinely live: the Page Plugin renders our actual Facebook
+              timeline, so this stays current without anyone updating the site. */}
+          <div className="text-center mb-8">
+            <h3 className="text-xl sm:text-2xl font-serif font-bold text-foreground tracking-[-0.01em] mb-3">
+              What we've been up to
+            </h3>
+            <p className="text-muted-foreground text-[15px] leading-relaxed max-w-md mx-auto">
+              Straight from our Facebook page — jobs, tips and updates as we post them.
+            </p>
+          </div>
+
+          <div className="mb-10">
+            <FacebookFeed />
           </div>
 
           <div className="flex flex-col sm:flex-row gap-3 justify-center">
@@ -323,7 +335,7 @@ export default function About() {
               </Button>
             </a>
             <a href={companyInfo.socials.facebook} target="_blank" rel="noopener noreferrer" data-testid="link-facebook-follow">
-              <Button variant="outline" className="rounded-full h-12 px-8 font-semibold gap-2 border-border">
+              <Button variant="outline" className="rounded-full h-12 px-8 font-semibold gap-2 border-2 border-primary">
                 Facebook Page
               </Button>
             </a>
