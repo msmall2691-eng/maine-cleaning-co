@@ -25,7 +25,6 @@ import Terms from "@/pages/Terms";
 import NotFound from "@/pages/not-found";
 import { StickyMobileBar } from "@/components/ui/StickyMobileBar";
 import { AIChatWidget } from "@/components/ui/AIChatWidget";
-import { WeatherAtmosphere } from "@/components/ui/WeatherAtmosphere";
 import { ThemeProvider } from "@/lib/theme";
 import { AuthProvider } from "@/lib/auth";
 
@@ -86,7 +85,6 @@ function App() {
       <QueryClientProvider client={queryClient}>
         <AuthProvider>
           <TooltipProvider>
-            <WeatherAtmosphere />
             <div className="relative z-10 flex min-h-screen flex-col text-foreground selection:bg-primary/30">
               <Navbar />
               <main className="flex-1 pb-20 lg:pb-0">
