@@ -25,7 +25,7 @@ import {
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { companyInfo } from "@/lib/company-info";
-import { InstantEstimate } from "@/components/ui/InstantEstimate";
+import { EstimateCTA } from "@/components/ui/EstimateCTA";
 
 const fadeUp = {
   hidden: { opacity: 0, y: 20 },
@@ -65,7 +65,7 @@ function FadeSection({ className = "", children, id, ...rest }: { className?: st
 function WaveDivider({ flip = false }: { flip?: boolean }) {
   return (
     <div className={`w-full overflow-hidden leading-[0] wave-divider-cream ${flip ? "rotate-180" : ""}`} aria-hidden="true">
-      <svg viewBox="0 0 1440 80" preserveAspectRatio="none" className="w-full h-[35px] sm:h-[50px] md:h-[70px]">
+      <svg viewBox="0 0 1440 80" preserveAspectRatio="none" aria-hidden="true" focusable="false" className="w-full h-[22px] sm:h-[32px] md:h-[42px]">
         <path d="M0,50 C180,80 360,20 540,45 C720,70 900,15 1080,40 C1200,55 1350,25 1440,35 L1440,80 L0,80 Z" fill="currentColor" opacity="0.6" />
         <path d="M0,55 C240,75 480,25 720,50 C960,75 1200,20 1440,45 L1440,80 L0,80 Z" fill="currentColor" />
       </svg>
@@ -76,7 +76,7 @@ function WaveDivider({ flip = false }: { flip?: boolean }) {
 function WaveDividerCream({ flip = false }: { flip?: boolean }) {
   return (
     <div className={`w-full overflow-hidden leading-[0] wave-divider-warm ${flip ? "rotate-180" : ""}`} aria-hidden="true">
-      <svg viewBox="0 0 1440 80" preserveAspectRatio="none" className="w-full h-[35px] sm:h-[50px] md:h-[70px]">
+      <svg viewBox="0 0 1440 80" preserveAspectRatio="none" aria-hidden="true" focusable="false" className="w-full h-[22px] sm:h-[32px] md:h-[42px]">
         <path d="M0,40 C180,70 360,10 540,35 C720,60 900,20 1080,50 C1260,70 1380,30 1440,40 L1440,80 L0,80 Z" fill="currentColor" opacity="0.5" />
         <path d="M0,50 C240,75 480,15 720,45 C960,70 1200,25 1440,50 L1440,80 L0,80 Z" fill="currentColor" />
       </svg>
@@ -104,13 +104,9 @@ const managementServices = [
 
 const whyChooseUs = [
   "Local Southern Maine team with 7+ years in vacation rental care",
-  "iCal integration with Airbnb, VRBO, Booking.com, and more",
   "Fully insured & bonded — protecting your property investment",
-  "Eco-friendly, guest-safe cleaning products, every clean",
   "Consistent team who knows your property inside and out",
   "Transparent pricing with no hidden fees",
-  "Same-day turnovers available 7 days a week",
-  "Trusted by hosts across York & Cumberland County",
 ];
 
 const strReviews = [
@@ -142,7 +138,7 @@ export default function ShortTermRentals() {
     <div className="w-full overflow-x-hidden">
 
       {/* ── Hero ── */}
-      <section className="relative pt-32 sm:pt-40 pb-20 sm:pb-28 overflow-hidden">
+      <section className="relative pt-28 sm:pt-32 pb-12 sm:pb-16 overflow-hidden">
         <div className="hero-aurora" aria-hidden="true" />
         <div className="hero-dot-grid" aria-hidden="true" />
 
@@ -162,7 +158,7 @@ export default function ShortTermRentals() {
             initial={{ opacity: 0, y: 24 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.8, ease: [0.22, 1, 0.36, 1] }}
-            className="text-[2.5rem] sm:text-[3.25rem] md:text-[4rem] lg:text-[5rem] font-extrabold leading-[1.02] tracking-[-0.04em] text-foreground mb-6"
+            className="text-[2.25rem] sm:text-[3rem] md:text-[3.5rem] lg:text-[4.25rem] font-extrabold leading-[1.04] tracking-[-0.04em] text-foreground mb-5"
             data-testid="text-str-title"
           >
             Airbnb & Short-Term{" "}
@@ -173,7 +169,7 @@ export default function ShortTermRentals() {
             initial={{ opacity: 0, y: 14 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.7, delay: 0.15 }}
-            className="text-[15px] sm:text-lg text-muted-foreground max-w-md sm:max-w-xl mx-auto leading-relaxed mb-10"
+            className="text-[15px] sm:text-lg text-muted-foreground max-w-md sm:max-w-xl mx-auto leading-relaxed mb-8"
             data-testid="text-str-subtitle"
           >
             Same-day turnovers, automated scheduling via iCal sync, property management, and full-service hosting support — everything Southern Maine vacation rental hosts need to earn 5-star reviews and maximize revenue.
@@ -183,7 +179,7 @@ export default function ShortTermRentals() {
             initial={{ opacity: 0, y: 14 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.5, delay: 0.3 }}
-            className="flex flex-col sm:flex-row justify-center gap-3 sm:gap-4 mb-12"
+            className="flex flex-col sm:flex-row justify-center gap-3 sm:gap-4 mb-8"
           >
             <Button size="lg" className="h-13 sm:h-14 px-8 sm:px-10 rounded-full text-base sm:text-[17px] font-semibold shadow-[0_2px_12px_rgba(0,0,0,0.12)]" onClick={scrollToEstimate} data-testid="button-str-hero-estimate">
               Get an Estimate <ArrowRight className="ml-2.5 w-4 h-4" />
@@ -220,7 +216,7 @@ export default function ShortTermRentals() {
       <WaveDivider />
 
       {/* ── Why STR is Booming in Southern Maine ── */}
-      <FadeSection className="py-14 sm:py-20 section-white">
+      <FadeSection className="py-12 sm:py-16 section-white">
         <div className="container mx-auto px-4 sm:px-6 max-w-4xl">
           <div className="grid lg:grid-cols-2 gap-12 lg:gap-16 items-center">
             <div>
@@ -273,9 +269,9 @@ export default function ShortTermRentals() {
 
       {/* ── Turnover Cleaning Features ── */}
       <WaveDividerCream />
-      <FadeSection className="py-14 sm:py-20 section-cream" id="turnover-cleaning">
+      <FadeSection className="py-12 sm:py-16 section-cream" id="turnover-cleaning">
         <div className="container mx-auto px-4 sm:px-6">
-          <div className="text-center max-w-lg mx-auto mb-12 sm:mb-16">
+          <div className="text-center max-w-lg mx-auto mb-9 sm:mb-12">
             <span className="text-[11px] font-semibold uppercase tracking-[0.2em] text-primary/80 mb-3 block">Turnover Cleaning</span>
             <h2 className="text-[1.75rem] sm:text-4xl md:text-[2.5rem] font-serif font-bold text-foreground tracking-[-0.01em] mb-5 section-heading-accent">
               Guest-Ready, Every Single Time
@@ -313,9 +309,9 @@ export default function ShortTermRentals() {
 
       {/* ── Management Services ── */}
       <WaveDivider />
-      <FadeSection className="py-14 sm:py-20 section-white" id="property-management">
+      <FadeSection className="py-12 sm:py-16 section-white" id="property-management">
         <div className="container mx-auto px-4 sm:px-6">
-          <div className="text-center max-w-lg mx-auto mb-12 sm:mb-16">
+          <div className="text-center max-w-lg mx-auto mb-9 sm:mb-12">
             <span className="text-[11px] font-semibold uppercase tracking-[0.2em] text-primary/80 mb-3 block">Full-Service Management</span>
             <h2 className="text-[1.75rem] sm:text-4xl md:text-[2.5rem] font-serif font-bold text-foreground tracking-[-0.01em] mb-5 section-heading-accent">
               Beyond Cleaning — Hybrid Hosting Management
@@ -325,7 +321,7 @@ export default function ShortTermRentals() {
             </p>
           </div>
 
-          <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-5 max-w-5xl mx-auto mb-14">
+          <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-5 max-w-5xl mx-auto mb-10">
             {managementServices.map((svc, i) => {
               const Icon = svc.icon;
               return (
@@ -370,10 +366,10 @@ export default function ShortTermRentals() {
           <h2 className="text-[1.75rem] sm:text-3xl font-serif font-bold text-foreground tracking-[-0.01em] mb-4 section-heading-accent">
             We Sync With Your Calendar
           </h2>
-          <p className="text-muted-foreground text-[15px] leading-relaxed mb-10 max-w-lg mx-auto">
+          <p className="text-muted-foreground text-[15px] leading-relaxed mb-8 max-w-lg mx-auto">
             Connect your Airbnb, VRBO, or any OTA calendar once via iCal. We automatically schedule turnover cleans for every checkout — no manual coordination needed.
           </p>
-          <div className="grid sm:grid-cols-4 gap-4 sm:gap-6 mb-8">
+          <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 sm:gap-6">
             {[
               { step: "1", title: "Share your link", desc: "Copy your iCal URL from Airbnb or VRBO" },
               { step: "2", title: "We sync", desc: "Bookings auto-schedule cleans" },
@@ -394,19 +390,16 @@ export default function ShortTermRentals() {
 
       {/* ── Why Choose Us ── */}
       <WaveDivider />
-      <FadeSection className="py-14 sm:py-20 section-white" id="why-us">
+      <FadeSection className="py-12 sm:py-16 section-white" id="why-us">
         <div className="container mx-auto px-4 sm:px-6 max-w-4xl">
-          <div className="text-center max-w-md mx-auto mb-12 sm:mb-16">
+          <div className="text-center max-w-md mx-auto mb-9 sm:mb-12">
             <span className="text-[11px] font-semibold uppercase tracking-[0.2em] text-primary/80 mb-3 block">Why Hosts Choose Us</span>
             <h2 className="text-[1.75rem] sm:text-4xl md:text-[2.5rem] font-serif font-bold text-foreground tracking-[-0.01em] mb-5 section-heading-accent">
               Built for the STR Business
             </h2>
-            <p className="text-muted-foreground text-[15px] leading-relaxed">
-              We've spent years understanding what Airbnb and VRBO hosts in Southern Maine actually need.
-            </p>
           </div>
 
-          <div className="grid sm:grid-cols-2 gap-3 sm:gap-4 max-w-3xl mx-auto mb-14">
+          <div className="grid sm:grid-cols-2 gap-3 sm:gap-4 max-w-3xl mx-auto mb-10">
             {whyChooseUs.map((item, i) => (
               <motion.div
                 key={i}
@@ -447,9 +440,9 @@ export default function ShortTermRentals() {
 
       {/* ── Reviews from STR Hosts ── */}
       <WaveDividerCream />
-      <FadeSection className="py-14 sm:py-20 section-cream">
+      <FadeSection className="py-12 sm:py-16 section-cream">
         <div className="container mx-auto px-4 sm:px-6">
-          <div className="text-center max-w-md mx-auto mb-12 sm:mb-16">
+          <div className="text-center max-w-md mx-auto mb-9 sm:mb-12">
             <span className="text-[11px] font-semibold uppercase tracking-[0.2em] text-primary/80 mb-3 block">Host Reviews</span>
             <h2 className="text-[1.75rem] sm:text-4xl md:text-[2.5rem] font-serif font-bold text-foreground tracking-[-0.01em] mb-5 section-heading-accent">
               What Hosts Are Saying
@@ -469,7 +462,7 @@ export default function ShortTermRentals() {
                 data-testid={`review-str-${i}`}
               >
                 <div className="flex gap-0.5 mb-3">
-                  {[1,2,3,4,5].map(s => <Star key={s} className="w-3.5 h-3.5 fill-yellow-400 text-yellow-400" />)}
+                  {[1,2,3,4,5].map(s => <Star key={s} className="w-3.5 h-3.5 fill-yellow-400 text-yellow-500 dark:text-yellow-400" />)}
                 </div>
                 <p className="text-sm text-foreground leading-relaxed mb-4 italic">"{review.text}"</p>
                 <div>
@@ -480,10 +473,10 @@ export default function ShortTermRentals() {
             ))}
           </div>
 
-          <div className="text-center mt-10">
+          <div className="text-center mt-8">
             <a href="https://g.page/r/CYnY6ulFfvDtEAE/review" target="_blank" rel="noopener noreferrer" data-testid="link-str-reviews">
               <Button variant="outline" className="h-10 px-6 rounded-full border-border text-sm font-semibold gap-2 shadow-[0_1px_4px_rgba(0,0,0,0.15)]">
-                <Star className="w-4 h-4 fill-yellow-400 text-yellow-400" />
+                <Star className="w-4 h-4 fill-yellow-400 text-yellow-500 dark:text-yellow-400" />
                 See all host reviews on Google
               </Button>
             </a>
@@ -513,19 +506,22 @@ export default function ShortTermRentals() {
       <section className="py-12 sm:py-16 relative">
         <div id="str-estimate-section" className="absolute -top-32" />
         <div className="container mx-auto px-4 sm:px-6 max-w-xl">
-          <h2 className="text-xl sm:text-2xl font-serif font-bold text-foreground mb-5 text-center">Get Your Rental Cleaning Quote</h2>
-          <InstantEstimate defaultCategory="str" />
+          <EstimateCTA
+            service="str"
+            heading="Get your rental cleaning quote"
+            sub="Turnovers are quoted per property — tell us about the place and we'll come back with a number, usually same day."
+          />
         </div>
       </section>
 
       {/* ── Final CTA ── */}
-      <section className="py-14 sm:py-20 bg-primary text-primary-foreground">
+      <section className="py-12 sm:py-16 bg-primary text-primary-foreground">
         <div className="container mx-auto px-4 sm:px-6 text-center max-w-lg">
           <Home className="w-10 h-10 mx-auto mb-5 opacity-80" />
           <h2 className="text-[1.75rem] sm:text-4xl md:text-[2.5rem] font-serif font-bold mb-5 tracking-[-0.01em]">
             Ready to take your STR to the next level?
           </h2>
-          <p className="text-base opacity-85 mb-10 leading-relaxed">
+          <p className="text-base opacity-85 mb-8 leading-relaxed">
             Whether you host one cabin or ten beachfront properties — we're your Southern Maine short-term rental partner.
           </p>
           <div className="flex flex-col sm:flex-row justify-center gap-3 sm:gap-4">

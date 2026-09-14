@@ -4,7 +4,7 @@ import { servicesData } from "@/lib/services-data";
 import { Button } from "@/components/ui/button";
 import { CheckCircle2, Phone, Mail, MessageSquare, ChevronRight, Calendar } from "lucide-react";
 import { motion } from "framer-motion";
-import { InstantEstimate } from "@/components/ui/InstantEstimate";
+import { EstimateCTA } from "@/components/ui/EstimateCTA";
 import { CleaningChecklist } from "@/components/ui/CleaningChecklist";
 import { companyInfo } from "@/lib/company-info";
 import { useSEO } from "@/hooks/use-seo";
@@ -178,8 +178,7 @@ export default function ServiceDetail() {
         {showEstimate ? (
           <section className="relative">
             <div id="estimate-section-anchor" className="absolute -top-32" />
-            <h2 className="text-xl sm:text-2xl font-serif font-bold text-foreground mb-5">Get Your Estimate</h2>
-            <InstantEstimate defaultCategory={estimateCategory} />
+            <EstimateCTA service={estimateCategory} />
           </section>
         ) : (
           <section>

@@ -5,7 +5,7 @@ import { Link } from "wouter";
 import { getServicesList } from "@/lib/services-data";
 import { motion } from "framer-motion";
 import { CleaningQuiz } from "@/components/ui/CleaningQuiz";
-import { InstantEstimate } from "@/components/ui/InstantEstimate";
+import { EstimateCTA } from "@/components/ui/EstimateCTA";
 
 export default function Services() {
   useSEO({ title: "Residential, Commercial & Airbnb Cleaning Services", description: "Residential, deep cleaning, Airbnb turnovers, commercial janitorial, and move-in/move-out cleaning across Southern Maine. Eco-friendly products, transparent pricing." });
@@ -70,24 +70,22 @@ export default function Services() {
 
         <div className="max-w-xl mx-auto mb-14 sm:mb-20 relative">
           <div id="estimate-section-anchor" className="absolute -top-32" />
-          <h2 className="text-2xl sm:text-3xl font-serif font-bold text-foreground mb-2 text-center">Get an Instant Estimate</h2>
-          <p className="text-muted-foreground text-sm text-center mb-6">Tell us about your space and get a price range in seconds.</p>
-          <InstantEstimate />
+          <EstimateCTA />
         </div>
 
         <div className="max-w-3xl mx-auto">
           <div className="bg-emerald-500/10 border border-emerald-500/30 rounded-2xl p-6 sm:p-8 flex flex-col sm:flex-row gap-5 items-start">
-            <div className="w-12 h-12 rounded-xl bg-card flex items-center justify-center flex-shrink-0 shadow-sm text-emerald-400">
+            <div className="w-12 h-12 rounded-xl bg-card flex items-center justify-center flex-shrink-0 shadow-sm text-emerald-600 dark:text-emerald-400">
               <Leaf className="w-6 h-6" />
             </div>
             <div>
-              <h2 className="font-bold text-emerald-300 mb-2">Our Cleaning Approach</h2>
-              <p className="text-sm text-emerald-400/80 leading-relaxed mb-3">
+              <h2 className="font-bold text-emerald-700 dark:text-emerald-300 mb-2">Our Cleaning Approach</h2>
+              <p className="text-sm text-emerald-600/80 dark:text-emerald-400/80 leading-relaxed mb-3">
                 We exclusively use Melaleuca EcoSense & Sal Suds — eco-friendly products that deliver a thorough clean without harsh chemicals.
               </p>
               <div className="flex flex-wrap gap-2">
                 {["Melaleuca EcoSense", "Sal Suds", "Safe for kids & pets", "No harsh chemicals"].map((tag) => (
-                  <span key={tag} className="text-xs font-medium text-emerald-300 bg-card/80 border border-emerald-700/40 rounded-full px-3 py-1">
+                  <span key={tag} className="text-xs font-medium text-emerald-700 dark:text-emerald-300 bg-card/80 border border-emerald-600/30 dark:border-emerald-700/40 rounded-full px-3 py-1">
                     <CheckCircle2 className="w-3 h-3 inline mr-1 -mt-0.5" />{tag}
                   </span>
                 ))}
