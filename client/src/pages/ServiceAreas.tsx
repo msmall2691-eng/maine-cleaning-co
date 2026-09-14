@@ -168,7 +168,7 @@ export default function ServiceAreas() {
               Our Impact Across Southern Maine
             </h2>
             <p className="text-muted-foreground text-[15px] leading-relaxed" data-testid="text-map-subtitle">
-              Real data from our Jobber operations — every dot is a community we serve.
+              Every dot is a community we serve across York and Cumberland County.
             </p>
           </div>
           <ServiceAreaMap />
