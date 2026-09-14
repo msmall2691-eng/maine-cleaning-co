@@ -9,7 +9,7 @@ export default function Blog() {
   const posts = getBlogPosts();
 
   return (
-    <div className="bg-background min-h-screen pb-16 sm:pb-24">
+    <div className="bg-background min-h-screen pb-12 sm:pb-16">
       <div className="relative bg-secondary/50 pt-24 sm:pt-32 pb-12 sm:pb-20 border-b border-border overflow-hidden">
         <div className="absolute inset-0 z-0">
           <img

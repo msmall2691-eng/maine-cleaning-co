@@ -275,7 +275,7 @@ export default function Portal() {
 
   return (
     <div className="min-h-screen bg-secondary/20">
-      <div className="container mx-auto px-4 sm:px-6 py-24 sm:py-28">
+      <div className="container mx-auto px-4 sm:px-6 py-12 sm:py-16">
         <div className="flex flex-col lg:flex-row gap-6 lg:gap-8">
           <aside className="lg:w-64 flex-shrink-0">
             <div className="lg:hidden mb-4">

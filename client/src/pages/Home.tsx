@@ -25,7 +25,6 @@ import { Button } from "@/components/ui/button";
 import { InstantEstimate } from "@/components/ui/InstantEstimate";
 import { WorkGallery } from "@/components/ui/WorkGallery";
 import { SocialFollow } from "@/components/ui/SocialFollow";
-import { ServiceAreaMap } from "@/components/ui/ServiceAreaMap";
 import { SparkleField } from "@/components/ui/SparkleField";
 import { CoverageCheck } from "@/components/ui/CoverageCheck";
 import { companyInfo } from "@/lib/company-info";
@@ -436,7 +435,7 @@ export default function Home() {
 
       {/* ── Services Grid ── */}
       <WaveDivider />
-      <FadeSection className="py-20 sm:py-28 section-white" id="services">
+      <FadeSection className="py-14 sm:py-20 section-white" id="services">
         <div className="container mx-auto px-4 sm:px-6">
           <div className="text-center max-w-md mx-auto mb-12 sm:mb-16">
             <h2 className="text-[1.75rem] sm:text-4xl md:text-[2.5rem] font-serif font-bold text-foreground tracking-[-0.01em] mb-5 section-heading-accent">What We Do</h2>
@@ -485,7 +484,7 @@ export default function Home() {
           "here's what people say" (Reviews). Cheap to render — local JPEGs,
           all lazy — so it earns a slot this high. The Facebook embed
           deliberately does NOT come with it; see the section further down. */}
-      <FadeSection className="py-20 sm:py-28" id="our-work">
+      <FadeSection className="py-14 sm:py-20" id="our-work">
         <div className="container mx-auto px-4 sm:px-6 max-w-4xl">
           <WorkGallery />
         </div>
@@ -493,7 +492,7 @@ export default function Home() {
 
       {/* ── Reviews ── */}
       <WaveDivider />
-      <FadeSection className="py-20 sm:py-28 section-cream" id="reviews">
+      <FadeSection className="py-14 sm:py-20 section-cream" id="reviews">
         <div className="container mx-auto px-4 sm:px-6">
           <div className="flex flex-col sm:flex-row sm:items-end sm:justify-between mb-10 sm:mb-14 max-w-4xl mx-auto gap-4">
             <div>
@@ -558,34 +557,9 @@ export default function Home() {
         </div>
       </FadeSection>
 
-      {/* ── Map Teaser ── */}
-      <WaveDivider />
-      <FadeSection className="py-16 sm:py-20 section-white" id="service-area">
-        <div className="container mx-auto px-4 sm:px-6">
-          <div className="flex flex-col sm:flex-row sm:items-end sm:justify-between mb-8 sm:mb-12 max-w-4xl mx-auto gap-4">
-            <div>
-              <h2 className="text-[1.75rem] sm:text-4xl font-serif font-bold text-foreground tracking-[-0.01em] mb-3 section-heading-accent" data-testid="text-map-title">
-                Serving Southern Maine
-              </h2>
-              <p className="text-muted-foreground text-[15px]" data-testid="text-map-subtitle">
-                4,715+ visits across 49+ communities in York & Cumberland County.
-              </p>
-            </div>
-            <Link href="/service-areas" className="flex-shrink-0">
-              <Button variant="outline" className="h-10 px-5 rounded-full text-sm font-semibold gap-2 border-border" data-testid="button-view-all-areas">
-                View All Areas <ArrowRight className="w-3.5 h-3.5" />
-              </Button>
-            </Link>
-          </div>
-          <div className="max-w-4xl mx-auto">
-            <ServiceAreaMap />
-          </div>
-        </div>
-      </FadeSection>
-
       {/* ── Instant Estimate ── */}
       <WaveDividerCream />
-      <FadeSection className="py-20 sm:py-28 section-cream" id="get-estimate">
+      <FadeSection className="py-14 sm:py-20 section-cream" id="get-estimate">
         <div className="container mx-auto px-4 sm:px-6">
           <div className="grid lg:grid-cols-2 gap-12 lg:gap-20 items-start max-w-4xl lg:max-w-5xl mx-auto">
             <div className="max-w-sm lg:max-w-md">
@@ -622,7 +596,7 @@ export default function Home() {
       {/* Below the estimate on purpose. This pulls a third-party iframe, so
           it must not compete with the booking CTA above it. Lazy — nothing is
           requested from facebook.com until it's scrolled near. */}
-      <FadeSection className="py-20 sm:py-28" id="social">
+      <FadeSection className="py-14 sm:py-20" id="social">
         <div className="container mx-auto px-4 sm:px-6">
           <SocialFollow />
         </div>
@@ -630,7 +604,7 @@ export default function Home() {
 
       {/* ── Contact Form ── */}
       <WaveDividerCream flip />
-      <FadeSection className="py-20 sm:py-28" id="contact">
+      <FadeSection className="py-14 sm:py-20" id="contact">
         <div className="container mx-auto px-4 sm:px-6">
           <div className="max-w-2xl mx-auto">
             <h2 className="text-[1.75rem] sm:text-4xl md:text-[2.5rem] font-serif font-bold text-foreground tracking-[-0.01em] mb-3 text-center section-heading-accent">Get in Touch</h2>

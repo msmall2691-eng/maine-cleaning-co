@@ -228,7 +228,7 @@ export default function Admin() {
   const conversionRate = counts.All > 0 ? Math.round((bookedCount / counts.All) * 100) : 0;
 
   return (
-    <div className="container mx-auto px-4 sm:px-6 py-24 sm:py-32 min-h-screen bg-background">
+    <div className="container mx-auto px-4 sm:px-6 py-12 sm:py-16 min-h-screen bg-background">
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 sm:gap-6 mb-8 sm:mb-12">
         <div>
           <h1 className="text-2xl sm:text-3xl font-serif font-bold text-foreground" data-testid="text-dashboard-title">Management Dashboard</h1>

@@ -38,7 +38,7 @@ export default function About() {
   return (
     <div className="w-full overflow-x-hidden">
       {/* ── Page Hero ── */}
-      <section className="relative pt-32 sm:pt-40 pb-16 sm:pb-20 overflow-hidden">
+      <section className="relative pt-32 sm:pt-40 pb-12 sm:pb-14 overflow-hidden">
         <div className="hero-aurora" aria-hidden="true" />
         <div className="hero-dot-grid" aria-hidden="true" />
         <div className="container mx-auto px-4 sm:px-6 relative z-10 text-center max-w-2xl">
@@ -87,7 +87,7 @@ export default function About() {
       </section>
 
       {/* ── Our Story + Stats + What Sets Us Apart ── */}
-      <section className="py-16 sm:py-24">
+      <section className="py-12 sm:py-16">
         <div className="container mx-auto px-4 sm:px-6 max-w-5xl">
           <div className="grid lg:grid-cols-2 gap-12 lg:gap-16 items-start">
             {/* Story */}
@@ -168,7 +168,7 @@ export default function About() {
       </section>
 
       {/* ── Eco Products ── */}
-      <section className="py-16 sm:py-24" style={{ background: "hsl(222 20% 13%)" }}>
+      <section className="py-12 sm:py-16" style={{ background: "hsl(222 20% 13%)" }}>
         <div className="container mx-auto px-4 sm:px-6 max-w-5xl">
           <div className="grid lg:grid-cols-2 gap-10 lg:gap-16 items-center">
             <motion.div
@@ -212,7 +212,7 @@ export default function About() {
       </section>
 
       {/* ── Client Voices ── */}
-      <section className="py-16 sm:py-24">
+      <section className="py-12 sm:py-16">
         <div className="container mx-auto px-4 sm:px-6 max-w-5xl">
           <div className="text-center max-w-md mx-auto mb-12">
             <h2 className="text-[1.75rem] sm:text-4xl font-serif font-bold text-foreground tracking-[-0.01em] mb-4 section-heading-accent">
@@ -257,7 +257,7 @@ export default function About() {
       </section>
 
       {/* ── Certifications ── */}
-      <section className="py-16 sm:py-24" style={{ background: "hsl(222 20% 13%)" }}>
+      <section className="py-12 sm:py-16" style={{ background: "hsl(222 20% 13%)" }}>
         <div className="container mx-auto px-4 sm:px-6">
           <div className="text-center max-w-md mx-auto mb-10 sm:mb-14">
             <h2 className="text-[1.75rem] sm:text-4xl font-serif font-bold text-foreground tracking-[-0.01em] mb-4 section-heading-accent">
@@ -276,7 +276,7 @@ export default function About() {
           maintain, not a second copy that drifts. (The previous version of
           this section inlined its own hardcoded photo list, which is exactly
           how it drifted from lib/gallery-data.ts in the first place.) */}
-      <section className="py-16 sm:py-24">
+      <section className="py-12 sm:py-16">
         <div className="container mx-auto px-4 sm:px-6 max-w-4xl">
           <WorkGallery />
           <div className="mt-16">
@@ -286,7 +286,7 @@ export default function About() {
       </section>
 
       {/* ── CTA ── */}
-      <section className="py-16 sm:py-24 bg-primary text-primary-foreground">
+      <section className="py-12 sm:py-16 bg-primary text-primary-foreground">
         <div className="container mx-auto px-4 sm:px-6 text-center max-w-lg">
           <h2 className="text-[1.75rem] sm:text-4xl font-serif font-bold mb-5 tracking-[-0.01em]">Experience the difference.</h2>
           <p className="text-base opacity-85 mb-10 leading-relaxed">

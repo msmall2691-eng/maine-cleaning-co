@@ -220,7 +220,7 @@ export default function ShortTermRentals() {
       <WaveDivider />
 
       {/* ── Why STR is Booming in Southern Maine ── */}
-      <FadeSection className="py-20 sm:py-28 section-white">
+      <FadeSection className="py-14 sm:py-20 section-white">
         <div className="container mx-auto px-4 sm:px-6 max-w-4xl">
           <div className="grid lg:grid-cols-2 gap-12 lg:gap-16 items-center">
             <div>
@@ -273,7 +273,7 @@ export default function ShortTermRentals() {
 
       {/* ── Turnover Cleaning Features ── */}
       <WaveDividerCream />
-      <FadeSection className="py-20 sm:py-28 section-cream" id="turnover-cleaning">
+      <FadeSection className="py-14 sm:py-20 section-cream" id="turnover-cleaning">
         <div className="container mx-auto px-4 sm:px-6">
           <div className="text-center max-w-lg mx-auto mb-12 sm:mb-16">
             <span className="text-[11px] font-semibold uppercase tracking-[0.2em] text-primary/80 mb-3 block">Turnover Cleaning</span>
@@ -313,7 +313,7 @@ export default function ShortTermRentals() {
 
       {/* ── Management Services ── */}
       <WaveDivider />
-      <FadeSection className="py-20 sm:py-28 section-white" id="property-management">
+      <FadeSection className="py-14 sm:py-20 section-white" id="property-management">
         <div className="container mx-auto px-4 sm:px-6">
           <div className="text-center max-w-lg mx-auto mb-12 sm:mb-16">
             <span className="text-[11px] font-semibold uppercase tracking-[0.2em] text-primary/80 mb-3 block">Full-Service Management</span>
@@ -364,7 +364,7 @@ export default function ShortTermRentals() {
 
       {/* ── How iCal Sync Works (condensed) ── */}
       <WaveDividerCream />
-      <FadeSection className="py-16 sm:py-24 section-cream" id="ical-sync">
+      <FadeSection className="py-12 sm:py-16 section-cream" id="ical-sync">
         <div className="container mx-auto px-4 sm:px-6 max-w-3xl text-center">
           <RefreshCw className="w-8 h-8 text-primary mx-auto mb-4" />
           <h2 className="text-[1.75rem] sm:text-3xl font-serif font-bold text-foreground tracking-[-0.01em] mb-4 section-heading-accent">
@@ -394,7 +394,7 @@ export default function ShortTermRentals() {
 
       {/* ── Why Choose Us ── */}
       <WaveDivider />
-      <FadeSection className="py-20 sm:py-28 section-white" id="why-us">
+      <FadeSection className="py-14 sm:py-20 section-white" id="why-us">
         <div className="container mx-auto px-4 sm:px-6 max-w-4xl">
           <div className="text-center max-w-md mx-auto mb-12 sm:mb-16">
             <span className="text-[11px] font-semibold uppercase tracking-[0.2em] text-primary/80 mb-3 block">Why Hosts Choose Us</span>
@@ -447,7 +447,7 @@ export default function ShortTermRentals() {
 
       {/* ── Reviews from STR Hosts ── */}
       <WaveDividerCream />
-      <FadeSection className="py-20 sm:py-28 section-cream">
+      <FadeSection className="py-14 sm:py-20 section-cream">
         <div className="container mx-auto px-4 sm:px-6">
           <div className="text-center max-w-md mx-auto mb-12 sm:mb-16">
             <span className="text-[11px] font-semibold uppercase tracking-[0.2em] text-primary/80 mb-3 block">Host Reviews</span>
@@ -493,7 +493,7 @@ export default function ShortTermRentals() {
 
       {/* ── Coverage ── */}
       <WaveDivider />
-      <FadeSection className="py-16 sm:py-20 section-white">
+      <FadeSection className="py-12 sm:py-16 section-white">
         <div className="container mx-auto px-4 sm:px-6 max-w-3xl text-center">
           <h2 className="text-[1.75rem] sm:text-3xl font-serif font-bold text-foreground tracking-[-0.01em] mb-4 section-heading-accent">
             We Serve All of Southern Maine
@@ -510,7 +510,7 @@ export default function ShortTermRentals() {
       </FadeSection>
 
       {/* ── Estimate Section ── */}
-      <section className="py-16 sm:py-24 relative">
+      <section className="py-12 sm:py-16 relative">
         <div id="str-estimate-section" className="absolute -top-32" />
         <div className="container mx-auto px-4 sm:px-6 max-w-xl">
           <h2 className="text-xl sm:text-2xl font-serif font-bold text-foreground mb-5 text-center">Get Your Rental Cleaning Quote</h2>
@@ -519,7 +519,7 @@ export default function ShortTermRentals() {
       </section>
 
       {/* ── Final CTA ── */}
-      <section className="py-20 sm:py-28 bg-primary text-primary-foreground">
+      <section className="py-14 sm:py-20 bg-primary text-primary-foreground">
         <div className="container mx-auto px-4 sm:px-6 text-center max-w-lg">
           <Home className="w-10 h-10 mx-auto mb-5 opacity-80" />
           <h2 className="text-[1.75rem] sm:text-4xl md:text-[2.5rem] font-serif font-bold mb-5 tracking-[-0.01em]">

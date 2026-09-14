@@ -16,8 +16,8 @@ export default function Services() {
   }, []);
 
   return (
-    <div className="min-h-screen pb-16 sm:pb-24">
-      <section className="relative bg-background border-b border-border pt-20 sm:pt-28 pb-12 sm:pb-16 overflow-hidden">
+    <div className="min-h-screen pb-12 sm:pb-16">
+      <section className="relative bg-background border-b border-border pt-20 sm:pt-28 pb-10 sm:pb-12 overflow-hidden">
         <div className="absolute inset-0 z-0">
           <img
             src="/images/services-hero-clean-home.jpeg"

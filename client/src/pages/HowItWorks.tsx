@@ -89,7 +89,7 @@ export default function HowItWorks() {
   return (
     <div className="w-full overflow-x-hidden">
       {/* ── Page Hero ── */}
-      <section className="relative pt-32 sm:pt-40 pb-16 sm:pb-20 overflow-hidden">
+      <section className="relative pt-32 sm:pt-40 pb-12 sm:pb-14 overflow-hidden">
         <div className="hero-aurora" aria-hidden="true" />
         <div className="hero-dot-grid" aria-hidden="true" />
         <div className="container mx-auto px-4 sm:px-6 relative z-10 text-center max-w-2xl">
@@ -132,7 +132,7 @@ export default function HowItWorks() {
       </section>
 
       {/* ── 5 Steps ── */}
-      <section className="py-16 sm:py-24">
+      <section className="py-12 sm:py-16">
         <div className="container mx-auto px-4 sm:px-6 max-w-5xl">
           <div className="space-y-6 sm:space-y-8">
             {steps.map((item, i) => {
@@ -192,7 +192,7 @@ export default function HowItWorks() {
       </section>
 
       {/* ── FAQ ── */}
-      <section className="py-16 sm:py-24 bg-card/30">
+      <section className="py-12 sm:py-16 bg-card/30">
         <div className="container mx-auto px-4 sm:px-6 max-w-xl lg:max-w-2xl">
           <h2 className="text-[1.75rem] sm:text-4xl font-serif font-bold text-foreground tracking-[-0.01em] mb-10 sm:mb-14 text-center section-heading-accent">
             Frequently Asked Questions
@@ -213,7 +213,7 @@ export default function HowItWorks() {
       </section>
 
       {/* ── Final CTA ── */}
-      <section className="py-16 sm:py-24 bg-primary text-primary-foreground">
+      <section className="py-12 sm:py-16 bg-primary text-primary-foreground">
         <div className="container mx-auto px-4 sm:px-6 text-center max-w-lg">
           <h2 className="text-[1.75rem] sm:text-4xl font-serif font-bold mb-5 tracking-[-0.01em]">
             Simple as that.

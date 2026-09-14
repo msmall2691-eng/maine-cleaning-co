@@ -56,8 +56,8 @@ export default function ServiceDetail() {
   };
 
   return (
-    <div className={`min-h-screen pb-16 sm:pb-24 ${service.patternClass}`}>
-      <section className={`relative overflow-hidden border-b ${service.accentBorder} pt-24 sm:pt-32 pb-12 sm:pb-16`}>
+    <div className={`min-h-screen pb-12 sm:pb-16 ${service.patternClass}`}>
+      <section className={`relative overflow-hidden border-b ${service.accentBorder} pt-24 sm:pt-32 pb-10 sm:pb-12`}>
         <div className={`absolute inset-0 bg-gradient-to-b ${service.accentGradient}`} />
         <div className={`absolute inset-0 ${service.accentBg} opacity-50`} />
         <div className="relative container mx-auto px-4 sm:px-6 max-w-3xl">

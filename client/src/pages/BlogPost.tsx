@@ -35,7 +35,7 @@ export default function BlogPost() {
   }
 
   return (
-    <div className="bg-background min-h-screen pb-16 sm:pb-24">
+    <div className="bg-background min-h-screen pb-12 sm:pb-16">
       <div className="pt-24 sm:pt-32 pb-8 sm:pb-10">
         <div className="container mx-auto px-4 sm:px-6 max-w-3xl">
           <Link href="/blog" className="inline-flex items-center text-sm font-medium text-muted-foreground hover:text-primary transition-colors mb-6 sm:mb-8">
