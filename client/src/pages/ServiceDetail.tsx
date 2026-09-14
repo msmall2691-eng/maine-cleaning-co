@@ -4,7 +4,7 @@ import { servicesData } from "@/lib/services-data";
 import { Button } from "@/components/ui/button";
 import { CheckCircle2, Phone, Mail, MessageSquare, ChevronRight, Calendar } from "lucide-react";
 import { motion } from "framer-motion";
-import { InstantEstimate } from "@/components/ui/InstantEstimate";
+import { EstimateCTA } from "@/components/ui/EstimateCTA";
 import { CleaningChecklist } from "@/components/ui/CleaningChecklist";
 import { companyInfo } from "@/lib/company-info";
 import { useSEO } from "@/hooks/use-seo";
@@ -56,8 +56,8 @@ export default function ServiceDetail() {
   };
 
   return (
-    <div className={`min-h-screen pb-16 sm:pb-24 ${service.patternClass}`}>
-      <section className={`relative overflow-hidden border-b ${service.accentBorder} pt-24 sm:pt-32 pb-12 sm:pb-16`}>
+    <div className={`min-h-screen pb-12 sm:pb-16 ${service.patternClass}`}>
+      <section className={`relative overflow-hidden border-b ${service.accentBorder} pt-24 sm:pt-32 pb-10 sm:pb-12`}>
         <div className={`absolute inset-0 bg-gradient-to-b ${service.accentGradient}`} />
         <div className={`absolute inset-0 ${service.accentBg} opacity-50`} />
         <div className="relative container mx-auto px-4 sm:px-6 max-w-3xl">
@@ -178,8 +178,7 @@ export default function ServiceDetail() {
         {showEstimate ? (
           <section className="relative">
             <div id="estimate-section-anchor" className="absolute -top-32" />
-            <h2 className="text-xl sm:text-2xl font-serif font-bold text-foreground mb-5">Get Your Estimate</h2>
-            <InstantEstimate defaultCategory={estimateCategory} />
+            <EstimateCTA service={estimateCategory} />
           </section>
         ) : (
           <section>

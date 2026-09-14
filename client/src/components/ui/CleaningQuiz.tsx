@@ -154,7 +154,7 @@ const results: Record<string, QuizResult> = {
     headline: "Regular Home Cleaning",
     description: "Our recurring cleaning service keeps your home consistently fresh with eco-friendly products. Perfect for busy families who want to come home to a clean space every time.",
     icon: <Home className="w-6 h-6" />,
-    color: "bg-blue-500/15 text-blue-400",
+    color: "bg-blue-500/15 text-blue-600 dark:text-blue-400",
     features: ["Recurring weekly or biweekly schedules", "Eco-friendly Melaleuca & Sal Suds products", "Same trusted team each visit", "All living areas, kitchens & bathrooms"],
   },
   deep: {
@@ -163,7 +163,7 @@ const results: Record<string, QuizResult> = {
     headline: "Deep Cleaning",
     description: "A top-to-bottom intensive clean that tackles every overlooked area. Ideal for seasonal refreshes, pre-event prep, or getting your home back to baseline.",
     icon: <Sparkles className="w-6 h-6" />,
-    color: "bg-emerald-500/15 text-emerald-400",
+    color: "bg-emerald-500/15 text-emerald-600 dark:text-emerald-400",
     features: ["Baseboards, trim & behind furniture", "Interior windows & sills", "Deep scrub of appliances & grout", "Hospital-grade, eco-friendly products"],
   },
   vacation: {
@@ -172,7 +172,7 @@ const results: Record<string, QuizResult> = {
     headline: "Vacation Rental Turnovers",
     description: "Fast, hotel-quality resets between guest stays. We handle linens, restocking, staging, and damage checks so you can maintain five-star reviews.",
     icon: <Key className="w-6 h-6" />,
-    color: "bg-amber-500/15 text-amber-400",
+    color: "bg-amber-500/15 text-amber-500 dark:text-amber-400",
     features: ["Same-day rapid turnovers", "Linen & laundry service", "Consumables restocking", "Damage reporting with photos"],
   },
   commercial: {
@@ -181,7 +181,7 @@ const results: Record<string, QuizResult> = {
     headline: "Commercial Cleaning",
     description: "Reliable, discreet maintenance for offices, medical facilities, and professional spaces. Custom schedules to fit your business hours.",
     icon: <Building2 className="w-6 h-6" />,
-    color: "bg-purple-500/15 text-purple-400",
+    color: "bg-purple-500/15 text-purple-600 dark:text-purple-400",
     features: ["Custom cleaning schedules", "Restroom sanitization & restocking", "Workstation sanitizing", "Hard floor care & maintenance"],
   },
   moveinout: {

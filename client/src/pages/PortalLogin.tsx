@@ -86,7 +86,7 @@ export default function PortalLogin() {
         )}
 
         {error && (
-          <div className="bg-red-500/15 text-red-400 text-sm p-3 rounded-xl mb-4 border border-red-500/30" data-testid="text-auth-error">
+          <div className="bg-red-500/15 text-red-600 dark:text-red-400 text-sm p-3 rounded-xl mb-4 border border-red-500/30" data-testid="text-auth-error">
             {error}
           </div>
         )}

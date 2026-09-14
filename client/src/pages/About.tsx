@@ -3,13 +3,15 @@ import { Link } from "wouter";
 import { useSEO } from "@/hooks/use-seo";
 import {
   Calendar, Leaf, CheckCircle2, MessageCircle, Shield, Users, ArrowRight,
-  Instagram, Phone, Star, MapPin, RefreshCw, Quote, ExternalLink,
+  Phone, Star, MapPin, RefreshCw, Quote,
   TrendingUp, Clock,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Certifications } from "@/components/ui/Certifications";
 import { AICleaningTip } from "@/components/ui/AICleaningTip";
 import { companyInfo } from "@/lib/company-info";
+import { WorkGallery } from "@/components/ui/WorkGallery";
+import { SocialFollow } from "@/components/ui/SocialFollow";
 
 const fadeUp = {
   hidden: { opacity: 0, y: 20 },
@@ -18,10 +20,10 @@ const fadeUp = {
 
 const achievements = [
   { icon: Calendar, value: "Est. 2018", label: "Founded in Maine", color: "text-primary", bg: "bg-primary/10" },
-  { icon: TrendingUp, value: "5,000+", label: "Cleans Completed", color: "text-emerald-400", bg: "bg-emerald-500/10" },
-  { icon: RefreshCw, value: "93%", label: "Recurring Clients", color: "text-blue-400", bg: "bg-blue-500/10" },
-  { icon: MapPin, value: "49+", label: "Communities Served", color: "text-orange-400", bg: "bg-orange-500/10" },
-  { icon: Star, value: "4.9★", label: "Google Rating", color: "text-yellow-400", bg: "bg-yellow-500/10" },
+  { icon: TrendingUp, value: "5,000+", label: "Cleans Completed", color: "text-emerald-600 dark:text-emerald-400", bg: "bg-emerald-500/10" },
+  { icon: RefreshCw, value: "93%", label: "Recurring Clients", color: "text-blue-600 dark:text-blue-400", bg: "bg-blue-500/10" },
+  { icon: MapPin, value: "49+", label: "Communities Served", color: "text-orange-600 dark:text-orange-400", bg: "bg-orange-500/10" },
+  { icon: Star, value: "4.9★", label: "Google Rating", color: "text-yellow-500 dark:text-yellow-400", bg: "bg-yellow-500/10" },
   { icon: Clock, value: "30+", label: "Yrs Combined Exp.", color: "text-violet-400", bg: "bg-violet-500/10" },
 ];
 
@@ -36,7 +38,7 @@ export default function About() {
   return (
     <div className="w-full overflow-x-hidden">
       {/* ── Page Hero ── */}
-      <section className="relative pt-32 sm:pt-40 pb-16 sm:pb-20 overflow-hidden">
+      <section className="relative pt-32 sm:pt-40 pb-12 sm:pb-14 overflow-hidden">
         <div className="hero-aurora" aria-hidden="true" />
         <div className="hero-dot-grid" aria-hidden="true" />
         <div className="container mx-auto px-4 sm:px-6 relative z-10 text-center max-w-2xl">
@@ -85,7 +87,7 @@ export default function About() {
       </section>
 
       {/* ── Our Story + Stats + What Sets Us Apart ── */}
-      <section className="py-16 sm:py-24">
+      <section className="py-12 sm:py-16">
         <div className="container mx-auto px-4 sm:px-6 max-w-5xl">
           <div className="grid lg:grid-cols-2 gap-12 lg:gap-16 items-start">
             {/* Story */}
@@ -166,7 +168,7 @@ export default function About() {
       </section>
 
       {/* ── Eco Products ── */}
-      <section className="py-16 sm:py-24" style={{ background: "hsl(222 20% 13%)" }}>
+      <section className="py-12 sm:py-16 section-cream">
         <div className="container mx-auto px-4 sm:px-6 max-w-5xl">
           <div className="grid lg:grid-cols-2 gap-10 lg:gap-16 items-center">
             <motion.div
@@ -189,7 +191,7 @@ export default function About() {
               viewport={{ once: true }}
               transition={{ duration: 0.7, ease: [0.22, 1, 0.36, 1] }}
             >
-              <div className="inline-flex items-center gap-2 bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 text-xs font-semibold px-3 py-1.5 rounded-full mb-5">
+              <div className="inline-flex items-center gap-2 bg-emerald-500/10 border border-emerald-500/20 text-emerald-600 dark:text-emerald-400 text-xs font-semibold px-3 py-1.5 rounded-full mb-5">
                 <Leaf className="w-3.5 h-3.5" /> Eco-Certified Products
               </div>
               <h2 className="text-[1.75rem] sm:text-3xl font-serif font-bold text-foreground tracking-[-0.01em] mb-4 section-heading-accent">
@@ -200,7 +202,7 @@ export default function About() {
               </p>
               <div className="flex flex-wrap gap-2 mb-7">
                 {["Non-Toxic", "Biodegradable", "Kid & Pet Safe", "No Harsh Chemicals", "Professional Grade"].map((tag) => (
-                  <span key={tag} className="text-[11px] font-medium border border-emerald-700/40 bg-emerald-900/30 text-emerald-300 rounded-full px-2.5 py-0.5">{tag}</span>
+                  <span key={tag} className="text-[11px] font-medium border border-emerald-600/30 dark:border-emerald-700/40 bg-emerald-500/10 dark:bg-emerald-900/30 text-emerald-700 dark:text-emerald-300 rounded-full px-2.5 py-0.5">{tag}</span>
                 ))}
               </div>
               <AICleaningTip />
@@ -210,7 +212,7 @@ export default function About() {
       </section>
 
       {/* ── Client Voices ── */}
-      <section className="py-16 sm:py-24">
+      <section className="py-12 sm:py-16">
         <div className="container mx-auto px-4 sm:px-6 max-w-5xl">
           <div className="text-center max-w-md mx-auto mb-12">
             <h2 className="text-[1.75rem] sm:text-4xl font-serif font-bold text-foreground tracking-[-0.01em] mb-4 section-heading-accent">
@@ -234,7 +236,7 @@ export default function About() {
                 <p className="text-sm text-foreground leading-relaxed italic flex-grow mb-4">"{t.quote}"</p>
                 <div className="flex items-center justify-between mt-auto">
                   <div className="flex gap-0.5">
-                    {[1,2,3,4,5].map(s => <Star key={s} className="w-3 h-3 fill-yellow-400 text-yellow-400" />)}
+                    {[1,2,3,4,5].map(s => <Star key={s} className="w-3 h-3 fill-yellow-400 text-yellow-500 dark:text-yellow-400" />)}
                   </div>
                   <div className="text-right">
                     <p className="text-xs font-semibold text-muted-foreground">— {t.author}</p>
@@ -247,7 +249,7 @@ export default function About() {
           <div className="text-center">
             <a href="https://g.page/r/CYnY6ulFfvDtEAE/review" target="_blank" rel="noopener noreferrer" data-testid="link-google-reviews">
               <Button variant="outline" className="rounded-full h-10 px-6 text-sm font-semibold gap-2 border-border">
-                <Star className="w-4 h-4 fill-yellow-400 text-yellow-400" /> See All Reviews on Google
+                <Star className="w-4 h-4 fill-yellow-400 text-yellow-500 dark:text-yellow-400" /> See All Reviews on Google
               </Button>
             </a>
           </div>
@@ -255,7 +257,7 @@ export default function About() {
       </section>
 
       {/* ── Certifications ── */}
-      <section className="py-16 sm:py-24" style={{ background: "hsl(222 20% 13%)" }}>
+      <section className="py-12 sm:py-16 section-cream">
         <div className="container mx-auto px-4 sm:px-6">
           <div className="text-center max-w-md mx-auto mb-10 sm:mb-14">
             <h2 className="text-[1.75rem] sm:text-4xl font-serif font-bold text-foreground tracking-[-0.01em] mb-4 section-heading-accent">
@@ -269,70 +271,22 @@ export default function About() {
         </div>
       </section>
 
-      {/* ── Instagram Gallery ── */}
-      <section className="py-16 sm:py-24">
+      {/* ── Our Work + live social ── */}
+      {/* Same two components the home page uses — one grid and one embed to
+          maintain, not a second copy that drifts. (The previous version of
+          this section inlined its own hardcoded photo list, which is exactly
+          how it drifted from lib/gallery-data.ts in the first place.) */}
+      <section className="py-12 sm:py-16">
         <div className="container mx-auto px-4 sm:px-6 max-w-4xl">
-          <div className="text-center mb-10">
-            <div className="inline-flex items-center justify-center w-16 h-16 rounded-2xl bg-gradient-to-br from-pink-500/20 to-orange-500/20 border border-pink-500/20 mb-6">
-              <Instagram className="w-7 h-7 text-pink-400" />
-            </div>
-            <p className="text-pink-400/80 text-xs font-semibold uppercase tracking-[0.2em] mb-3">@mainecleaningco</p>
-            <h2 className="text-[1.75rem] sm:text-3xl font-serif font-bold text-foreground tracking-[-0.01em] mb-4">
-              See Our Work on Instagram
-            </h2>
-            <p className="text-muted-foreground text-[15px] leading-relaxed max-w-md mx-auto">
-              Before & afters, behind-the-scenes cleaning tips, and real homes across Southern Maine. 1,900+ followers and growing.
-            </p>
-          </div>
-
-          <div className="grid grid-cols-2 sm:grid-cols-3 gap-2 sm:gap-3 mb-8">
-            {[
-              { src: "/images/vacation-rental-bathroom-clean.jpeg", alt: "Guest-ready vacation rental bathroom" },
-              { src: "/images/commercial-floor-cleaning.jpeg", alt: "Commercial floor cleaning" },
-              { src: "/images/prolux-hepa-vacuum-fleet.jpeg", alt: "Professional vacuum equipment" },
-              { src: "/images/ecosense-cleaning-products.jpeg", alt: "Eco-friendly cleaning products" },
-              { src: "/images/before-after-deep-clean.jpeg", alt: "Before and after deep clean" },
-              { src: "/images/cleaning-toolkit-supplies.jpeg", alt: "Cleaning toolkit and supplies" },
-            ].map((img, i) => (
-              <a
-                key={i}
-                href={companyInfo.socials.instagram}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="group relative aspect-square rounded-xl overflow-hidden border border-white/5"
-                data-testid={`ig-gallery-${i}`}
-              >
-                <img
-                  src={img.src}
-                  alt={img.alt}
-                  className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
-                  loading="lazy"
-                />
-                <div className="absolute inset-0 bg-black/0 group-hover:bg-black/30 transition-colors duration-300 flex items-center justify-center">
-                  <Instagram className="w-6 h-6 text-white opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
-                </div>
-              </a>
-            ))}
-          </div>
-
-          <div className="flex flex-col sm:flex-row gap-3 justify-center">
-            <a href={companyInfo.socials.instagram} target="_blank" rel="noopener noreferrer" data-testid="link-instagram-follow">
-              <Button className="rounded-full h-12 px-8 font-semibold gap-2 bg-gradient-to-r from-pink-500 to-orange-400 border-0 text-white hover:opacity-90">
-                <Instagram className="w-4 h-4" /> Follow on Instagram
-                <ExternalLink className="w-3.5 h-3.5 opacity-70" />
-              </Button>
-            </a>
-            <a href={companyInfo.socials.facebook} target="_blank" rel="noopener noreferrer" data-testid="link-facebook-follow">
-              <Button variant="outline" className="rounded-full h-12 px-8 font-semibold gap-2 border-border">
-                Facebook Page
-              </Button>
-            </a>
+          <WorkGallery />
+          <div className="mt-16">
+            <SocialFollow />
           </div>
         </div>
       </section>
 
       {/* ── CTA ── */}
-      <section className="py-16 sm:py-24 bg-primary text-primary-foreground">
+      <section className="py-12 sm:py-16 bg-primary text-primary-foreground">
         <div className="container mx-auto px-4 sm:px-6 text-center max-w-lg">
           <h2 className="text-[1.75rem] sm:text-4xl font-serif font-bold mb-5 tracking-[-0.01em]">Experience the difference.</h2>
           <p className="text-base opacity-85 mb-10 leading-relaxed">

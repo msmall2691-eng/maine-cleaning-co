@@ -404,10 +404,10 @@ export function ScheduleCalendar({
                           <span className="font-semibold text-sm text-foreground">{getServiceLabel(cl.serviceType)}</span>
                         </div>
                         <span className={`px-2 py-0.5 rounded-full text-[10px] font-semibold capitalize
-                          ${cl.status === "completed" ? "bg-emerald-500/15 text-emerald-400" :
-                            cl.status === "cancelled" ? "bg-red-500/15 text-red-400" :
-                            cl.status === "requested" ? "bg-amber-500/15 text-amber-400" :
-                            "bg-blue-500/15 text-blue-400"}`}
+                          ${cl.status === "completed" ? "bg-emerald-500/15 text-emerald-600 dark:text-emerald-400" :
+                            cl.status === "cancelled" ? "bg-red-500/15 text-red-600 dark:text-red-400" :
+                            cl.status === "requested" ? "bg-amber-500/15 text-amber-500 dark:text-amber-400" :
+                            "bg-blue-500/15 text-blue-600 dark:text-blue-400"}`}
                         >
                           {cl.status}
                         </span>
@@ -448,14 +448,14 @@ export function ScheduleCalendar({
                               </button>
                               <button
                                 onClick={() => onUpdateCleaning(cl.id, { status: "cancelled" })}
-                                className="text-[11px] text-muted-foreground hover:text-red-400 flex items-center gap-1 transition-colors"
+                                className="text-[11px] text-muted-foreground hover:text-red-600 dark:text-red-400 flex items-center gap-1 transition-colors"
                                 data-testid={`button-cancel-${cl.id}`}
                               >
                                 <X className="w-3 h-3" /> Cancel
                               </button>
                               <button
                                 onClick={() => onDeleteCleaning(cl.id)}
-                                className="text-[11px] text-muted-foreground hover:text-red-400 flex items-center gap-1 transition-colors ml-auto"
+                                className="text-[11px] text-muted-foreground hover:text-red-600 dark:text-red-400 flex items-center gap-1 transition-colors ml-auto"
                                 data-testid={`button-delete-${cl.id}`}
                               >
                                 <Trash2 className="w-3 h-3" /> Delete
@@ -568,7 +568,7 @@ export function ScheduleCalendar({
         )}
       </AnimatePresence>
 
-      <div className="bg-amber-500/15 border border-amber-500/30 rounded-xl p-3 text-xs text-amber-400">
+      <div className="bg-amber-500/15 border border-amber-500/30 rounded-xl p-3 text-xs text-amber-500 dark:text-amber-400">
         <strong>Tip:</strong> Drag and drop any cleaning to a different day to reschedule. Click on a day to see details or add a new cleaning.
         Requested cleanings will be confirmed by your cleaning team.
       </div>

@@ -325,7 +325,7 @@ export function CoverageCheck() {
               <div className="flex items-start gap-2.5">
                 <div
                   className={`w-8 h-8 rounded-lg flex items-center justify-center flex-shrink-0 ${
-                    result.served ? "bg-emerald-500/15 text-emerald-400" : "bg-amber-500/15 text-amber-400"
+                    result.served ? "bg-emerald-500/15 text-emerald-600 dark:text-emerald-400" : "bg-amber-500/15 text-amber-500 dark:text-amber-400"
                   }`}
                 >
                   {result.served ? <CheckCircle2 className="w-4 h-4" /> : <AlertCircle className="w-4 h-4" />}

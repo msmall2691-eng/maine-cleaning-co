@@ -95,7 +95,7 @@ export default function ResetPassword() {
         ) : (
           <>
             {error && (
-              <div className="bg-red-950/30 text-red-400 text-sm p-3 rounded-xl mb-4 border border-red-500/30" data-testid="text-reset-error">
+              <div className="bg-red-950/30 text-red-600 dark:text-red-400 text-sm p-3 rounded-xl mb-4 border border-red-500/30" data-testid="text-reset-error">
                 {error}
               </div>
             )}

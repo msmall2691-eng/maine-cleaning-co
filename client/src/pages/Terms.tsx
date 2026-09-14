@@ -5,7 +5,7 @@ export default function Terms() {
   useSEO({ title: "Terms of Service", description: "Terms of service for The Maine Cleaning Co. — scheduling, cancellations, payment, and satisfaction guarantee." });
   return (
     <div className="min-h-screen bg-background">
-      <div className="container mx-auto px-4 sm:px-6 py-20 sm:py-28 max-w-3xl">
+      <div className="container mx-auto px-4 sm:px-6 py-14 sm:py-20 max-w-3xl">
         <h1 className="text-3xl sm:text-4xl font-serif font-bold text-foreground mb-3">Terms of Service</h1>
         <p className="text-sm text-muted-foreground mb-10">Last updated: March 2026</p>
 

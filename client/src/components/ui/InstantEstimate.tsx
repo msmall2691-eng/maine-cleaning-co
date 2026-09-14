@@ -229,10 +229,10 @@ function AddressInput({ value, onChange, onZipDetected }: { value: string; onCha
 
 /* ── Category selector card ── */
 const categories: { id: ServiceCategory; label: string; sub: string; icon: any; color: string; bg: string }[] = [
-  { id: "residential", label: "Residential", sub: "Weekly · Biweekly · Monthly", icon: Home, color: "text-blue-400", bg: "bg-blue-500/10 border-blue-500/20" },
-  { id: "deep-clean", label: "Deep Clean", sub: "Top-to-bottom refresh", icon: Sparkles, color: "text-emerald-400", bg: "bg-emerald-500/10 border-emerald-500/20" },
-  { id: "str", label: "Vacation Rental", sub: "Airbnb & STR turnovers", icon: Waves, color: "text-orange-400", bg: "bg-orange-500/10 border-orange-500/20" },
-  { id: "commercial", label: "Commercial", sub: "Offices & businesses", icon: Building2, color: "text-slate-400", bg: "bg-slate-500/10 border-slate-500/20" },
+  { id: "residential", label: "Residential", sub: "Weekly · Biweekly · Monthly", icon: Home, color: "text-blue-600 dark:text-blue-400", bg: "bg-blue-500/10 border-blue-500/20" },
+  { id: "deep-clean", label: "Deep Clean", sub: "Top-to-bottom refresh", icon: Sparkles, color: "text-emerald-600 dark:text-emerald-400", bg: "bg-emerald-500/10 border-emerald-500/20" },
+  { id: "str", label: "Vacation Rental", sub: "Airbnb & STR turnovers", icon: Waves, color: "text-orange-600 dark:text-orange-400", bg: "bg-orange-500/10 border-orange-500/20" },
+  { id: "commercial", label: "Commercial", sub: "Offices & businesses", icon: Building2, color: "text-slate-600 dark:text-slate-400", bg: "bg-slate-500/10 border-slate-500/20" },
 ];
 
 interface InstantEstimateProps {
@@ -927,12 +927,12 @@ export function InstantEstimate({ defaultCategory, bookingIntent = false }: Inst
                     </span>
                   )}
                   {condition !== "maintenance" && (
-                    <span className="text-[11px] font-medium bg-amber-500/10 border border-amber-500/20 text-amber-400 rounded-full px-2 py-0.5">
+                    <span className="text-[11px] font-medium bg-amber-500/10 border border-amber-500/20 text-amber-500 dark:text-amber-400 rounded-full px-2 py-0.5">
                       {condition === "moderate" ? "Moderate condition" : "Heavy condition"}
                     </span>
                   )}
                   {petHair !== "none" && (
-                    <span className="text-[11px] font-medium bg-orange-500/10 border border-orange-500/20 text-orange-400 rounded-full px-2 py-0.5">
+                    <span className="text-[11px] font-medium bg-orange-500/10 border border-orange-500/20 text-orange-600 dark:text-orange-400 rounded-full px-2 py-0.5">
                       {petHair === "some" ? "Some pets" : "Heavy pet hair"}
                     </span>
                   )}
@@ -944,7 +944,7 @@ export function InstantEstimate({ defaultCategory, bookingIntent = false }: Inst
 
               <div className="flex items-center gap-2.5 px-3.5 py-2.5 rounded-xl bg-blue-500/10 border border-blue-500/30" data-testid="text-availability">
                 <Clock className="w-4 h-4 text-blue-500 flex-shrink-0" />
-                <p className="text-xs text-blue-400 leading-relaxed">
+                <p className="text-xs text-blue-600 dark:text-blue-400 leading-relaxed">
                   <span className="font-semibold">Typical availability:</span> 3-7 business days
                 </p>
               </div>
@@ -960,7 +960,7 @@ export function InstantEstimate({ defaultCategory, bookingIntent = false }: Inst
             <motion.div key="s1-custom" initial={{ opacity: 0, x: 10 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: 10 }} transition={{ duration: 0.3, ease: [0.22, 1, 0.36, 1] }} className="space-y-6">
 
               <div className="flex items-start gap-3 px-4 py-3.5 rounded-xl bg-amber-500/8 border border-amber-500/20">
-                <Info className="w-4 h-4 text-amber-400 mt-0.5 flex-shrink-0" />
+                <Info className="w-4 h-4 text-amber-500 dark:text-amber-400 mt-0.5 flex-shrink-0" />
                 <div>
                   <p className="text-[13px] font-semibold text-foreground">Custom pricing required</p>
                   <p className="text-[12px] text-muted-foreground mt-0.5 leading-relaxed">
@@ -1270,11 +1270,13 @@ export function InstantEstimate({ defaultCategory, bookingIntent = false }: Inst
               </div>
 
               {/* ── Book This Cleaning ── */}
-              {/* Promoted from an optional "Want to book?" panel to the primary
-                  step-3 CTA. Customers who wanted an estimate + booking used to
-                  have to type name+phone+address FIRST just to see the panel;
-                  now the essentials + date sit right under the estimate. */}
-              {!isCustomQuote && contactAddress && contactName && contactPhone && (
+              {/* Only on /book. Everywhere else this component is an ESTIMATE
+                  tool, and the customer has just been told their request was
+                  sent — dropping a second multi-field form underneath that
+                  reads as "you aren't done yet", so people were filling it in
+                  thinking the estimate hadn't gone through. The estimate stands
+                  on its own; booking is a separate, deliberate step at /book. */}
+              {bookingIntent && !isCustomQuote && contactAddress && contactName && contactPhone && (
                 <div className="rounded-xl bg-gradient-to-br from-blue-500/10 to-primary/10 border border-blue-500/25 p-5 space-y-4">
                   <div className="flex items-center gap-2">
                     <Calendar className="w-5 h-5 text-blue-500" />
@@ -1311,15 +1313,15 @@ export function InstantEstimate({ defaultCategory, bookingIntent = false }: Inst
                       {addressEligible === true ? (
                         <div className="flex items-start gap-2 px-3 py-2 rounded-lg bg-emerald-500/10 border border-emerald-500/20">
                           <CheckCircle2 className="w-4 h-4 text-green-500 mt-0.5 flex-shrink-0" />
-                          <p className="text-xs text-green-400">{addressCheckMsg}</p>
+                          <p className="text-xs text-green-600 dark:text-green-400">{addressCheckMsg}</p>
                         </div>
                       ) : (
                         // Fail-open fallback: the lookup couldn't confirm the
                         // service area (flaky geocoder), so we let the customer
                         // book anyway and confirm the area when we reach out.
                         <div className="flex items-start gap-2 px-3 py-2 rounded-lg bg-blue-500/10 border border-blue-500/20" data-testid="note-address-check-failed">
-                          <Info className="w-4 h-4 text-blue-400 mt-0.5 flex-shrink-0" />
-                          <p className="text-xs text-blue-400">We'll confirm your service area when we reach out.</p>
+                          <Info className="w-4 h-4 text-blue-600 dark:text-blue-400 mt-0.5 flex-shrink-0" />
+                          <p className="text-xs text-blue-600 dark:text-blue-400">We'll confirm your service area when we reach out.</p>
                         </div>
                       )}
 
@@ -1499,11 +1501,22 @@ export function InstantEstimate({ defaultCategory, bookingIntent = false }: Inst
                   )}
                   {addressEligible === false && (
                     <div className="flex items-start gap-2 px-3 py-2 rounded-lg bg-amber-500/10 border border-amber-500/20">
-                      <AlertCircle className="w-4 h-4 text-amber-400 mt-0.5 flex-shrink-0" />
-                      <p className="text-xs text-amber-400">{addressCheckMsg}</p>
+                      <AlertCircle className="w-4 h-4 text-amber-500 dark:text-amber-400 mt-0.5 flex-shrink-0" />
+                      <p className="text-xs text-amber-500 dark:text-amber-400">{addressCheckMsg}</p>
                     </div>
                   )}
                 </div>
+              )}
+
+              {/* The estimate path's only booking affordance: a link, not a
+                  form. It can't be mistaken for an unfinished step. */}
+              {!bookingIntent && !isCustomQuote && (
+                <p className="text-center text-sm text-muted-foreground">
+                  Already know you want it?{" "}
+                  <Link href="/book" className="font-semibold text-primary underline underline-offset-2 hover:no-underline" data-testid="link-success-book">
+                    Pick a date
+                  </Link>
+                </p>
               )}
 
               {!isCustomQuote && (contactName || contactPhone || contactEmail || contactAddress) && (

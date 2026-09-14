@@ -18,21 +18,14 @@ import {
   Shield,
   MapPin,
   Users,
-  Sun,
-  Cloud,
-  CloudRain,
-  CloudSnow,
-  CloudLightning,
-  CloudDrizzle,
-  CloudFog,
   Home as HomeIcon,
   Send,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { InstantEstimate } from "@/components/ui/InstantEstimate";
-import { ServiceAreaMap } from "@/components/ui/ServiceAreaMap";
+import { WorkGallery } from "@/components/ui/WorkGallery";
+import { SocialFollow } from "@/components/ui/SocialFollow";
 import { SparkleField } from "@/components/ui/SparkleField";
-import { LiveActivityPulse } from "@/components/ui/LiveActivityPulse";
 import { CoverageCheck } from "@/components/ui/CoverageCheck";
 import { companyInfo } from "@/lib/company-info";
 
@@ -42,10 +35,10 @@ const fadeUp = {
 };
 
 const homepageServices = [
-  { id: "residential", title: "Residential Cleaning", desc: "Professional home cleaning tailored to your schedule — weekly, biweekly, or monthly.", color: "bg-blue-500/15 text-blue-400", icon: HomeIcon },
-  { id: "deep-cleaning", title: "Deep Cleaning", desc: "Top-to-bottom refresh tackling baseboards, grout, behind appliances, and every forgotten corner.", color: "bg-emerald-500/15 text-emerald-400", icon: Sparkles },
-  { id: "vacation-rentals", title: "Vacation Rental Turnovers", desc: "Hotel-quality resets between guests — same-day flips available across Southern Maine.", color: "bg-orange-500/15 text-orange-400", icon: Calendar },
-  { id: "commercial", title: "Commercial & Janitorial", desc: "Reliable, discreet maintenance for offices, retail spaces, and professional environments.", color: "bg-slate-500/15 text-slate-400", icon: Shield },
+  { id: "residential", title: "Residential Cleaning", desc: "Professional home cleaning tailored to your schedule — weekly, biweekly, or monthly.", color: "bg-blue-500/15 text-blue-600 dark:text-blue-400", icon: HomeIcon },
+  { id: "deep-cleaning", title: "Deep Cleaning", desc: "Top-to-bottom refresh tackling baseboards, grout, behind appliances, and every forgotten corner.", color: "bg-emerald-500/15 text-emerald-600 dark:text-emerald-400", icon: Sparkles },
+  { id: "vacation-rentals", title: "Vacation Rental Turnovers", desc: "Hotel-quality resets between guests — same-day flips available across Southern Maine.", color: "bg-orange-500/15 text-orange-600 dark:text-orange-400", icon: Calendar },
+  { id: "commercial", title: "Commercial & Janitorial", desc: "Reliable, discreet maintenance for offices, retail spaces, and professional environments.", color: "bg-slate-500/15 text-slate-600 dark:text-slate-400", icon: Shield },
 ];
 
 const reviews = [
@@ -64,15 +57,6 @@ const trustSignals = [
   { icon: Leaf, label: "Eco-Conscious" },
 ];
 
-
-function getWeatherIcon(iconName: string) {
-  const map: Record<string, any> = {
-    "sun": Sun, "cloud-sun": Cloud, "cloud": Cloud, "cloud-fog": CloudFog,
-    "cloud-drizzle": CloudDrizzle, "cloud-rain": CloudRain, "cloud-snow": CloudSnow,
-    "cloud-lightning": CloudLightning,
-  };
-  return map[iconName] || Cloud;
-}
 
 function useSectionFade() {
   const ref = useRef<HTMLElement>(null);
@@ -208,7 +192,7 @@ function ContactForm() {
             placeholder="you@example.com"
           />
           {emailInvalid && (
-            <p id="contact-email-error" role="alert" className="text-xs text-red-400 mt-1.5">That email doesn't look right — double-check it.</p>
+            <p id="contact-email-error" role="alert" className="text-xs text-red-600 dark:text-red-400 mt-1.5">That email doesn't look right — double-check it.</p>
           )}
         </div>
       </div>
@@ -227,7 +211,7 @@ function ContactForm() {
           placeholder="207-555-0123"
         />
         {phoneInvalid && (
-          <p id="contact-phone-error" role="alert" className="text-xs text-red-400 mt-1.5">That phone number doesn't look complete.</p>
+          <p id="contact-phone-error" role="alert" className="text-xs text-red-600 dark:text-red-400 mt-1.5">That phone number doesn't look complete.</p>
         )}
       </div>
       <div>
@@ -246,7 +230,7 @@ function ContactForm() {
         <p role="alert" className="text-sm text-amber-500">Please add a phone number or email so we can get back to you.</p>
       )}
       {status === "error" && (
-        <p role="alert" className="text-sm text-red-400">Something went wrong. Please try again or call us directly.</p>
+        <p role="alert" className="text-sm text-red-600 dark:text-red-400">Something went wrong. Please try again or call us directly.</p>
       )}
       <Button
         type="submit"
@@ -262,23 +246,8 @@ function ContactForm() {
 export default function Home() {
   useSEO({ title: "Airbnb Cleaning & STR Management — Southern Maine", description: "Southern Maine's premier cleaning & short-term rental management. Same-day Airbnb turnovers, residential cleaning, and commercial janitorial across York & Cumberland County." });
   const carouselRef = useRef<HTMLDivElement>(null);
-  type ForecastDay = { date: string; high: number; low: number; label: string; icon: string };
-  type WeatherData = {
-    current: { temp: number; label: string; icon: string; humidity: number; windSpeed: number };
-    forecast: ForecastDay[];
-    location: string;
-  };
-  const [weather, setWeather] = useState<WeatherData | null>(null);
-  const [weatherFailed, setWeatherFailed] = useState(false);
   const [pastThreshold, setPastThreshold] = useState(false);
   const [activeReviewIndex, setActiveReviewIndex] = useState(0);
-
-  useEffect(() => {
-    fetch("/api/weather")
-      .then((r) => (r.ok ? r.json() : Promise.reject()))
-      .then(setWeather)
-      .catch(() => setWeatherFailed(true));
-  }, []);
 
   useEffect(() => {
     const el = carouselRef.current;
@@ -351,10 +320,6 @@ export default function Home() {
         <div className="hero-aurora" aria-hidden="true" />
         <div className="hero-dot-grid" aria-hidden="true" />
         <SparkleField />
-        <div className="marquee-track" aria-hidden="true">
-          <span>Residential&nbsp;·&nbsp;Deep&nbsp;Cleaning&nbsp;·&nbsp;Vacation&nbsp;Rentals&nbsp;·&nbsp;Commercial&nbsp;·&nbsp;Eco-Friendly&nbsp;·&nbsp;Southern&nbsp;Maine&nbsp;·&nbsp;</span>
-          <span>Residential&nbsp;·&nbsp;Deep&nbsp;Cleaning&nbsp;·&nbsp;Vacation&nbsp;Rentals&nbsp;·&nbsp;Commercial&nbsp;·&nbsp;Eco-Friendly&nbsp;·&nbsp;Southern&nbsp;Maine&nbsp;·&nbsp;</span>
-        </div>
 
         <div className="container mx-auto px-4 sm:px-6 relative z-10 text-center max-w-2xl lg:max-w-3xl">
           <motion.div initial={{ opacity: 0, y: 14 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.5 }} className="mb-4">
@@ -394,7 +359,7 @@ export default function Home() {
                 <Calendar className="mr-2 w-4 h-4" /> Book a Cleaning
               </Button>
             </Link>
-            <Button size="lg" variant="outline" className="w-full sm:w-auto h-13 sm:h-14 px-8 sm:px-10 rounded-full text-base border-border bg-card/80 backdrop-blur-sm shadow-[0_1px_4px_rgba(0,0,0,0.15)]" onClick={scrollToEstimate} data-testid="button-hero-estimate">
+            <Button size="lg" variant="outline" className="w-full sm:w-auto h-13 sm:h-14 px-8 sm:px-10 rounded-full text-base border-2 border-primary hover:bg-primary/5 bg-card/80 backdrop-blur-sm shadow-[0_1px_4px_rgba(0,0,0,0.15)]" onClick={scrollToEstimate} data-testid="button-hero-estimate">
               Get an Instant Quote <ArrowRight className="ml-2.5 w-4 h-4" />
             </Button>
           </motion.div>
@@ -414,101 +379,6 @@ export default function Home() {
             ))}
           </motion.div>
 
-          {/* Live indicator */}
-          <motion.div
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            transition={{ duration: 0.5, delay: 0.6 }}
-            className="flex justify-center mt-5"
-            data-testid="serving-indicator"
-          >
-            <LiveActivityPulse />
-          </motion.div>
-
-          {/* 5-Day Weather Forecast */}
-          {!weather && weatherFailed && (
-            <motion.div
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              className="flex justify-center mt-6"
-            >
-              <div className="bg-card/60 backdrop-blur-sm rounded-2xl px-4 py-3 shadow-[0_1px_6px_rgba(0,0,0,0.15)] border border-border/50 max-w-sm w-full sm:max-w-md text-center">
-                <p className="text-xs text-muted-foreground">Southern Maine · Weather temporarily unavailable</p>
-              </div>
-            </motion.div>
-          )}
-          {!weather && !weatherFailed && (
-            <motion.div
-              initial={{ opacity: 0, y: 8 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.5, delay: 0.7 }}
-              className="flex justify-center mt-6"
-              data-testid="weather-skeleton"
-            >
-              <div className="bg-card/60 backdrop-blur-sm rounded-2xl px-4 py-3 shadow-[0_1px_6px_rgba(0,0,0,0.15)] border border-border/50 max-w-sm w-full sm:max-w-md">
-                <div className="flex items-center justify-between mb-2.5">
-                  <div className="flex items-center gap-2">
-                    <div className="skeleton-shimmer w-4 h-4 rounded-full" />
-                    <div className="skeleton-shimmer w-12 h-4" />
-                    <div className="skeleton-shimmer w-16 h-3" />
-                  </div>
-                  <div className="skeleton-shimmer w-20 h-3" />
-                </div>
-                <div className="flex justify-between gap-1">
-                  {[0,1,2,3,4].map(i => (
-                    <div key={i} className="flex flex-col items-center gap-1 flex-1 min-w-0">
-                      <div className="skeleton-shimmer w-8 h-2.5" />
-                      <div className="skeleton-shimmer w-3.5 h-3.5 rounded-full" />
-                      <div className="skeleton-shimmer w-6 h-3" />
-                      <div className="skeleton-shimmer w-5 h-2.5" />
-                    </div>
-                  ))}
-                </div>
-              </div>
-            </motion.div>
-          )}
-          {weather && (() => {
-            const CurrentIcon = getWeatherIcon(weather.current.icon);
-            const dayNames = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
-            return (
-              <motion.div
-                initial={{ opacity: 0, y: 8 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ duration: 0.5, delay: 0.7 }}
-                className="flex justify-center mt-6"
-                data-testid="weather-widget"
-              >
-                <div className="bg-card/60 backdrop-blur-sm rounded-2xl px-4 py-3 shadow-[0_1px_6px_rgba(0,0,0,0.15)] border border-border/50 max-w-sm w-full sm:max-w-md">
-                  <div className="flex items-center justify-between mb-2.5">
-                    <div className="flex items-center gap-2">
-                      <CurrentIcon className="w-4 h-4 text-primary/70" />
-                      <span className="text-sm font-semibold text-foreground/80">{weather.current.temp}°F</span>
-                      <span className="text-xs text-muted-foreground">{weather.current.label}</span>
-                    </div>
-                    <div className="flex items-center gap-1 text-[11px] text-muted-foreground/60">
-                      <MapPin className="w-3 h-3" />
-                      <span>{weather.location}</span>
-                    </div>
-                  </div>
-                  <div className="flex justify-between gap-1">
-                    {weather.forecast.map((day, i) => {
-                      const DayIcon = getWeatherIcon(day.icon);
-                      const d = new Date(day.date + "T12:00:00");
-                      const label = i === 0 ? "Today" : dayNames[d.getDay()];
-                      return (
-                        <div key={day.date} className="flex flex-col items-center gap-0.5 flex-1 min-w-0" data-testid={`forecast-day-${i}`}>
-                          <span className="text-[10px] font-semibold text-muted-foreground/70 uppercase">{label}</span>
-                          <DayIcon className="w-3.5 h-3.5 text-primary/50" />
-                          <span className="text-[11px] font-semibold text-foreground/70">{day.high}°</span>
-                          <span className="text-[10px] text-muted-foreground/50">{day.low}°</span>
-                        </div>
-                      );
-                    })}
-                  </div>
-                </div>
-              </motion.div>
-            );
-          })()}
         </div>
       </section>
 
@@ -518,37 +388,37 @@ export default function Home() {
           <div className="grid grid-cols-2 md:grid-cols-4 gap-2 sm:gap-3 max-w-3xl mx-auto">
             <a href={companyInfo.contact.phoneHref} data-testid="quick-action-call" className="group flex items-center gap-3 p-3 sm:p-3.5 rounded-xl hover:bg-secondary/60 active:bg-secondary/80 transition-all border border-transparent hover:border-border/60">
               <div className="w-9 h-9 rounded-lg bg-blue-500/10 flex items-center justify-center flex-shrink-0 group-hover:bg-blue-500/20 transition-colors">
-                <Phone className="w-4 h-4 text-blue-400" />
+                <Phone className="w-4 h-4 text-blue-600 dark:text-blue-400" />
               </div>
               <div className="min-w-0">
-                <div className="text-[13px] font-semibold text-foreground group-hover:text-blue-400 transition-colors truncate">Call Now</div>
+                <div className="text-[13px] font-semibold text-foreground group-hover:text-blue-600 dark:text-blue-400 transition-colors truncate">Call Now</div>
                 <div className="text-[11px] text-muted-foreground truncate">{companyInfo.contact.phoneDisplay}</div>
               </div>
             </a>
             <a href={companyInfo.contact.smsHref} data-testid="quick-action-text" className="sm:hidden group flex items-center gap-3 p-3 sm:p-3.5 rounded-xl hover:bg-secondary/60 active:bg-secondary/80 transition-all border border-transparent hover:border-border/60">
               <div className="w-9 h-9 rounded-lg bg-emerald-500/10 flex items-center justify-center flex-shrink-0 group-hover:bg-emerald-500/20 transition-colors">
-                <MessageSquare className="w-4 h-4 text-emerald-400" />
+                <MessageSquare className="w-4 h-4 text-emerald-600 dark:text-emerald-400" />
               </div>
               <div className="min-w-0">
-                <div className="text-[13px] font-semibold text-foreground group-hover:text-emerald-400 transition-colors truncate">Text Us</div>
+                <div className="text-[13px] font-semibold text-foreground group-hover:text-emerald-600 dark:text-emerald-400 transition-colors truncate">Text Us</div>
                 <div className="text-[11px] text-muted-foreground truncate">Quick reply</div>
               </div>
             </a>
             <a href={companyInfo.contact.phoneHref} data-testid="quick-action-text-desktop" className="hidden sm:flex group items-center gap-3 p-3 sm:p-3.5 rounded-xl hover:bg-secondary/60 active:bg-secondary/80 transition-all border border-transparent hover:border-border/60">
               <div className="w-9 h-9 rounded-lg bg-emerald-500/10 flex items-center justify-center flex-shrink-0 group-hover:bg-emerald-500/20 transition-colors">
-                <MessageSquare className="w-4 h-4 text-emerald-400" />
+                <MessageSquare className="w-4 h-4 text-emerald-600 dark:text-emerald-400" />
               </div>
               <div className="min-w-0">
-                <div className="text-[13px] font-semibold text-foreground group-hover:text-emerald-400 transition-colors truncate">Call or Text</div>
+                <div className="text-[13px] font-semibold text-foreground group-hover:text-emerald-600 dark:text-emerald-400 transition-colors truncate">Call or Text</div>
                 <div className="text-[11px] text-muted-foreground truncate">{companyInfo.contact.phoneDisplay}</div>
               </div>
             </a>
             <Link href="/service-areas" data-testid="quick-action-areas" className="group flex items-center gap-3 p-3 sm:p-3.5 rounded-xl hover:bg-secondary/60 active:bg-secondary/80 transition-all border border-transparent hover:border-border/60">
               <div className="w-9 h-9 rounded-lg bg-orange-500/10 flex items-center justify-center flex-shrink-0 group-hover:bg-orange-500/20 transition-colors">
-                <MapPin className="w-4 h-4 text-orange-400" />
+                <MapPin className="w-4 h-4 text-orange-600 dark:text-orange-400" />
               </div>
               <div className="min-w-0">
-                <div className="text-[13px] font-semibold text-foreground group-hover:text-orange-400 transition-colors truncate">Service Areas</div>
+                <div className="text-[13px] font-semibold text-foreground group-hover:text-orange-600 dark:text-orange-400 transition-colors truncate">Service Areas</div>
                 <div className="text-[11px] text-muted-foreground truncate">49+ communities</div>
               </div>
             </Link>
@@ -565,7 +435,7 @@ export default function Home() {
 
       {/* ── Services Grid ── */}
       <WaveDivider />
-      <FadeSection className="py-20 sm:py-28 section-white" id="services">
+      <FadeSection className="py-14 sm:py-20 section-white" id="services">
         <div className="container mx-auto px-4 sm:px-6">
           <div className="text-center max-w-md mx-auto mb-12 sm:mb-16">
             <h2 className="text-[1.75rem] sm:text-4xl md:text-[2.5rem] font-serif font-bold text-foreground tracking-[-0.01em] mb-5 section-heading-accent">What We Do</h2>
@@ -609,9 +479,20 @@ export default function Home() {
         </div>
       </FadeSection>
 
+      {/* ── See Our Work ── */}
+      {/* Proof of work sits between "here's what we do" (Services) and
+          "here's what people say" (Reviews). Cheap to render — local JPEGs,
+          all lazy — so it earns a slot this high. The Facebook embed
+          deliberately does NOT come with it; see the section further down. */}
+      <FadeSection className="py-14 sm:py-20" id="our-work">
+        <div className="container mx-auto px-4 sm:px-6 max-w-4xl">
+          <WorkGallery />
+        </div>
+      </FadeSection>
+
       {/* ── Reviews ── */}
       <WaveDivider />
-      <FadeSection className="py-20 sm:py-28 section-cream" id="reviews">
+      <FadeSection className="py-14 sm:py-20 section-cream" id="reviews">
         <div className="container mx-auto px-4 sm:px-6">
           <div className="flex flex-col sm:flex-row sm:items-end sm:justify-between mb-10 sm:mb-14 max-w-4xl mx-auto gap-4">
             <div>
@@ -619,9 +500,9 @@ export default function Home() {
               <p className="text-muted-foreground text-[15px] mb-4">Real feedback from our Southern Maine customers.</p>
               <div className="flex flex-wrap justify-start gap-x-5 gap-y-1.5 text-xs sm:text-[13px] text-muted-foreground font-medium">
                 <span>7+ Years</span>
-                <span className="text-border">·</span>
+                <span className="text-muted-foreground/50">·</span>
                 <span>5,000+ Cleans</span>
-                <span className="text-border">·</span>
+                <span className="text-muted-foreground/50">·</span>
                 <span>4.9★ Google</span>
               </div>
             </div>
@@ -639,7 +520,7 @@ export default function Home() {
             {reviews.map((r, i) => (
               <div key={i} className="snap-start flex-shrink-0 w-[85%] sm:w-[48%] lg:w-[32%] card-soft p-5 sm:p-6" data-testid={`card-review-${i}`}>
                 <div className="flex gap-0.5 mb-3">
-                  {[1,2,3,4,5].map(s => <Star key={s} className="w-3.5 h-3.5 fill-yellow-400 text-yellow-400" />)}
+                  {[1,2,3,4,5].map(s => <Star key={s} className="w-3.5 h-3.5 fill-yellow-400 text-yellow-500 dark:text-yellow-400" />)}
                 </div>
                 <p className="text-sm text-foreground leading-relaxed mb-4 italic">"{r.text}"</p>
                 <div className="flex items-center justify-between">
@@ -668,7 +549,7 @@ export default function Home() {
           <div className="text-center mt-8 sm:mt-10 max-w-4xl lg:mx-auto">
             <a href="https://g.page/r/CYnY6ulFfvDtEAE/review" target="_blank" rel="noopener noreferrer" data-testid="link-google-reviews">
               <Button variant="outline" className="h-10 px-6 rounded-full border-border text-sm font-semibold gap-2 shadow-[0_1px_4px_rgba(0,0,0,0.15)]">
-                <Star className="w-4 h-4 fill-yellow-400 text-yellow-400" />
+                <Star className="w-4 h-4 fill-yellow-400 text-yellow-500 dark:text-yellow-400" />
                 See all reviews on Google
               </Button>
             </a>
@@ -676,34 +557,9 @@ export default function Home() {
         </div>
       </FadeSection>
 
-      {/* ── Map Teaser ── */}
-      <WaveDivider />
-      <FadeSection className="py-16 sm:py-20 section-white" id="service-area">
-        <div className="container mx-auto px-4 sm:px-6">
-          <div className="flex flex-col sm:flex-row sm:items-end sm:justify-between mb-8 sm:mb-12 max-w-4xl mx-auto gap-4">
-            <div>
-              <h2 className="text-[1.75rem] sm:text-4xl font-serif font-bold text-foreground tracking-[-0.01em] mb-3 section-heading-accent" data-testid="text-map-title">
-                Serving Southern Maine
-              </h2>
-              <p className="text-muted-foreground text-[15px]" data-testid="text-map-subtitle">
-                4,715+ visits across 49+ communities in York & Cumberland County.
-              </p>
-            </div>
-            <Link href="/service-areas" className="flex-shrink-0">
-              <Button variant="outline" className="h-10 px-5 rounded-full text-sm font-semibold gap-2 border-border" data-testid="button-view-all-areas">
-                View All Areas <ArrowRight className="w-3.5 h-3.5" />
-              </Button>
-            </Link>
-          </div>
-          <div className="max-w-4xl mx-auto">
-            <ServiceAreaMap />
-          </div>
-        </div>
-      </FadeSection>
-
       {/* ── Instant Estimate ── */}
       <WaveDividerCream />
-      <FadeSection className="py-20 sm:py-28 section-cream" id="get-estimate">
+      <FadeSection className="py-14 sm:py-20 section-cream" id="get-estimate">
         <div className="container mx-auto px-4 sm:px-6">
           <div className="grid lg:grid-cols-2 gap-12 lg:gap-20 items-start max-w-4xl lg:max-w-5xl mx-auto">
             <div className="max-w-sm lg:max-w-md">
@@ -736,9 +592,19 @@ export default function Home() {
         </div>
       </FadeSection>
 
+      {/* ── Social ── */}
+      {/* Below the estimate on purpose. This pulls a third-party iframe, so
+          it must not compete with the booking CTA above it. Lazy — nothing is
+          requested from facebook.com until it's scrolled near. */}
+      <FadeSection className="py-14 sm:py-20" id="social">
+        <div className="container mx-auto px-4 sm:px-6">
+          <SocialFollow />
+        </div>
+      </FadeSection>
+
       {/* ── Contact Form ── */}
       <WaveDividerCream flip />
-      <FadeSection className="py-20 sm:py-28" id="contact">
+      <FadeSection className="py-14 sm:py-20" id="contact">
         <div className="container mx-auto px-4 sm:px-6">
           <div className="max-w-2xl mx-auto">
             <h2 className="text-[1.75rem] sm:text-4xl md:text-[2.5rem] font-serif font-bold text-foreground tracking-[-0.01em] mb-3 text-center section-heading-accent">Get in Touch</h2>

@@ -3,8 +3,8 @@ import { motion } from "framer-motion";
 import { Link } from "wouter";
 import { useSEO } from "@/hooks/use-seo";
 import {
-  ArrowRight, Phone, RefreshCw, Zap, Home as HomeIcon, Star, Shield,
-  CheckCircle2, ClipboardList, CalendarCheck, Sparkles, MessageSquare,
+  ArrowRight, Phone, Zap, CheckCircle2, ClipboardList, CalendarCheck,
+  Sparkles, MessageSquare,
 } from "lucide-react";
 import { Accordion, AccordionItem, AccordionTrigger, AccordionContent } from "@/components/ui/accordion";
 import { Button } from "@/components/ui/button";
@@ -43,27 +43,13 @@ const steps = [
   },
 ];
 
-const whatToExpect = [
-  { icon: Shield, title: "Background-Checked Team", desc: "Every cleaner is vetted, trained, and covered by our liability insurance." },
-  { icon: RefreshCw, title: "Consistent Cleaners", desc: "Recurring clients get the same team each visit — they learn your home and preferences." },
-  { icon: Zap, title: "Fast Response", desc: "We respond to all inquiries within a few hours during business hours." },
-  { icon: CheckCircle2, title: "Satisfaction Guarantee", desc: "If anything isn't right, we come back and fix it. No questions asked." },
-];
-
 const faqs = [
-  { q: "Are your cleaners background-checked?", a: "Yes. Every cleaner is vetted, trained, and covered by our comprehensive liability insurance. We take the safety of your home seriously." },
-  { q: "Will I get the same team each visit?", a: "For recurring clients, absolutely. We assign a consistent team who learns your home, your preferences, and your standards." },
-  { q: "What if I'm not satisfied with a clean?", a: "We offer a satisfaction guarantee. If anything isn't right, we come back and fix it — no questions asked." },
-  { q: "What areas do you serve?", a: "We serve York County and Cumberland County in Southern Maine — including Portland, South Portland, Scarborough, Cape Elizabeth, Falmouth, Yarmouth, Old Orchard Beach, Kennebunkport, and 40+ more communities." },
-  { q: "What cleaning products do you use?", a: "We exclusively use Melaleuca EcoSense and Sal Suds — eco-friendly, safe for children and pets, and highly effective. No harsh chemicals, ever." },
-  { q: "Do I need to be home during the cleaning?", a: "No. Many clients provide a spare key or entry code. We always ensure your home is secure when we leave." },
-  { q: "How is pricing determined?", a: "Pricing is based on square footage, number of bathrooms, service type, frequency, and home condition. Use our instant estimate tool for a quick range." },
-  { q: "Are you insured?", a: "Yes. We are fully bonded and insured with comprehensive liability coverage." },
-  { q: "Can I book a one-time clean without committing?", a: "Absolutely. We offer one-time deep cleans and standard cleans with no commitment required." },
-  { q: "What's the difference between a standard and deep clean?", a: "A deep clean covers baseboards, interior windows, detailed grout scrubbing, behind furniture, and more — areas that aren't part of routine maintenance cleans." },
-  { q: "How does scheduling work?", a: "Once we confirm your plan, you'll have a consistent day and time. We communicate any changes promptly and never leave you guessing." },
-  { q: "Do you offer vacation rental turnovers?", a: "Yes — it's one of our specialties. We sync with Airbnb, VRBO, and all major platforms via iCal. Same-day turnovers are available 7 days a week." },
-  { q: "How do I get started?", a: "Use our instant estimate tool on the home page, call or text us, or send an email. We'll take it from there." },
+  { q: "Are your cleaners background-checked and insured?", a: "Yes to both. Every cleaner is vetted and trained, and we're fully bonded and insured with comprehensive liability coverage." },
+  { q: "How is pricing determined?", a: "Square footage, number of bathrooms, service type, frequency, and the condition of the home. Our instant estimate tool gives you a range in about a minute — no commitment, and no phone call required to see a number." },
+  { q: "Do I need to be home during the cleaning?", a: "No. Many clients leave a spare key or an entry code. We always make sure your home is secure when we leave." },
+  { q: "What's the difference between a standard and a deep clean?", a: "A deep clean covers baseboards, interior windows, detailed grout scrubbing and behind furniture — the things routine maintenance cleans don't include. You can book either as a one-time clean with no commitment." },
+  { q: "What if I'm not satisfied with a clean?", a: "We come back and fix it. No questions asked — that's the satisfaction guarantee." },
+  { q: "What areas do you serve?", a: "York County and Cumberland County in Southern Maine — Portland, South Portland, Scarborough, Cape Elizabeth, Falmouth, Yarmouth, Old Orchard Beach, Kennebunkport, and 40+ more communities." },
 ];
 
 export default function HowItWorks() {
@@ -89,7 +75,7 @@ export default function HowItWorks() {
   return (
     <div className="w-full overflow-x-hidden">
       {/* ── Page Hero ── */}
-      <section className="relative pt-32 sm:pt-40 pb-16 sm:pb-20 overflow-hidden">
+      <section className="relative pt-32 sm:pt-40 pb-12 sm:pb-14 overflow-hidden">
         <div className="hero-aurora" aria-hidden="true" />
         <div className="hero-dot-grid" aria-hidden="true" />
         <div className="container mx-auto px-4 sm:px-6 relative z-10 text-center max-w-2xl">
@@ -132,7 +118,7 @@ export default function HowItWorks() {
       </section>
 
       {/* ── 5 Steps ── */}
-      <section className="py-16 sm:py-24">
+      <section className="py-12 sm:py-16">
         <div className="container mx-auto px-4 sm:px-6 max-w-5xl">
           <div className="space-y-6 sm:space-y-8">
             {steps.map((item, i) => {
@@ -192,7 +178,7 @@ export default function HowItWorks() {
       </section>
 
       {/* ── FAQ ── */}
-      <section className="py-16 sm:py-24 bg-card/30">
+      <section className="py-12 sm:py-16 bg-card/30">
         <div className="container mx-auto px-4 sm:px-6 max-w-xl lg:max-w-2xl">
           <h2 className="text-[1.75rem] sm:text-4xl font-serif font-bold text-foreground tracking-[-0.01em] mb-10 sm:mb-14 text-center section-heading-accent">
             Frequently Asked Questions
@@ -213,7 +199,7 @@ export default function HowItWorks() {
       </section>
 
       {/* ── Final CTA ── */}
-      <section className="py-16 sm:py-24 bg-primary text-primary-foreground">
+      <section className="py-12 sm:py-16 bg-primary text-primary-foreground">
         <div className="container mx-auto px-4 sm:px-6 text-center max-w-lg">
           <h2 className="text-[1.75rem] sm:text-4xl font-serif font-bold mb-5 tracking-[-0.01em]">
             Simple as that.

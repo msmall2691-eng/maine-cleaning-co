@@ -12,14 +12,14 @@ const STORAGE_KEY = "mcc-theme";
 const ThemeContext = createContext<ThemeContextValue | null>(null);
 
 function readInitialTheme(): Theme {
-  if (typeof window === "undefined") return "dark";
+  if (typeof window === "undefined") return "light";
   try {
     const stored = window.localStorage.getItem(STORAGE_KEY);
     if (stored === "light" || stored === "dark") return stored;
   } catch {
     // ignore storage errors (private mode, etc.)
   }
-  return "dark";
+  return "light";
 }
 
 function applyTheme(theme: Theme) {
@@ -40,8 +40,11 @@ export function ThemeProvider({ children }: { children: React.ReactNode }) {
     }
   }, [theme]);
 
-  // Dark is the default; we intentionally don't sync to the OS preference
-  // so first-time visitors always land on the coastal dark palette.
+  // Light is the default. This is a cleaning company: a bright, fresh first
+  // impression is the product. Dark stays available behind the navbar toggle
+  // and, once chosen, persists in localStorage. We intentionally don't sync to
+  // the OS preference — a visitor whose laptop is in dark mode still gets the
+  // light site on a first visit, and can switch if they want it.
 
   const setTheme = useCallback((t: Theme) => setThemeState(t), []);
   const toggle = useCallback(() => setThemeState((t) => (t === "dark" ? "light" : "dark")), []);
@@ -55,7 +58,7 @@ export function useTheme(): ThemeContextValue {
   const ctx = useContext(ThemeContext);
   if (!ctx) {
     return {
-      theme: "dark",
+      theme: "light",
       setTheme: () => {},
       toggle: () => {},
     };
