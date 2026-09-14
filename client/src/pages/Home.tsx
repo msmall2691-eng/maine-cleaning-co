@@ -35,10 +35,10 @@ const fadeUp = {
 };
 
 const homepageServices = [
-  { id: "residential", title: "Residential Cleaning", desc: "Professional home cleaning tailored to your schedule — weekly, biweekly, or monthly.", color: "bg-blue-500/15 text-blue-400", icon: HomeIcon },
-  { id: "deep-cleaning", title: "Deep Cleaning", desc: "Top-to-bottom refresh tackling baseboards, grout, behind appliances, and every forgotten corner.", color: "bg-emerald-500/15 text-emerald-400", icon: Sparkles },
-  { id: "vacation-rentals", title: "Vacation Rental Turnovers", desc: "Hotel-quality resets between guests — same-day flips available across Southern Maine.", color: "bg-orange-500/15 text-orange-400", icon: Calendar },
-  { id: "commercial", title: "Commercial & Janitorial", desc: "Reliable, discreet maintenance for offices, retail spaces, and professional environments.", color: "bg-slate-500/15 text-slate-400", icon: Shield },
+  { id: "residential", title: "Residential Cleaning", desc: "Professional home cleaning tailored to your schedule — weekly, biweekly, or monthly.", color: "bg-blue-500/15 text-blue-600 dark:text-blue-400", icon: HomeIcon },
+  { id: "deep-cleaning", title: "Deep Cleaning", desc: "Top-to-bottom refresh tackling baseboards, grout, behind appliances, and every forgotten corner.", color: "bg-emerald-500/15 text-emerald-600 dark:text-emerald-400", icon: Sparkles },
+  { id: "vacation-rentals", title: "Vacation Rental Turnovers", desc: "Hotel-quality resets between guests — same-day flips available across Southern Maine.", color: "bg-orange-500/15 text-orange-600 dark:text-orange-400", icon: Calendar },
+  { id: "commercial", title: "Commercial & Janitorial", desc: "Reliable, discreet maintenance for offices, retail spaces, and professional environments.", color: "bg-slate-500/15 text-slate-600 dark:text-slate-400", icon: Shield },
 ];
 
 const reviews = [
@@ -192,7 +192,7 @@ function ContactForm() {
             placeholder="you@example.com"
           />
           {emailInvalid && (
-            <p id="contact-email-error" role="alert" className="text-xs text-red-400 mt-1.5">That email doesn't look right — double-check it.</p>
+            <p id="contact-email-error" role="alert" className="text-xs text-red-600 dark:text-red-400 mt-1.5">That email doesn't look right — double-check it.</p>
           )}
         </div>
       </div>
@@ -211,7 +211,7 @@ function ContactForm() {
           placeholder="207-555-0123"
         />
         {phoneInvalid && (
-          <p id="contact-phone-error" role="alert" className="text-xs text-red-400 mt-1.5">That phone number doesn't look complete.</p>
+          <p id="contact-phone-error" role="alert" className="text-xs text-red-600 dark:text-red-400 mt-1.5">That phone number doesn't look complete.</p>
         )}
       </div>
       <div>
@@ -230,7 +230,7 @@ function ContactForm() {
         <p role="alert" className="text-sm text-amber-500">Please add a phone number or email so we can get back to you.</p>
       )}
       {status === "error" && (
-        <p role="alert" className="text-sm text-red-400">Something went wrong. Please try again or call us directly.</p>
+        <p role="alert" className="text-sm text-red-600 dark:text-red-400">Something went wrong. Please try again or call us directly.</p>
       )}
       <Button
         type="submit"
@@ -388,37 +388,37 @@ export default function Home() {
           <div className="grid grid-cols-2 md:grid-cols-4 gap-2 sm:gap-3 max-w-3xl mx-auto">
             <a href={companyInfo.contact.phoneHref} data-testid="quick-action-call" className="group flex items-center gap-3 p-3 sm:p-3.5 rounded-xl hover:bg-secondary/60 active:bg-secondary/80 transition-all border border-transparent hover:border-border/60">
               <div className="w-9 h-9 rounded-lg bg-blue-500/10 flex items-center justify-center flex-shrink-0 group-hover:bg-blue-500/20 transition-colors">
-                <Phone className="w-4 h-4 text-blue-400" />
+                <Phone className="w-4 h-4 text-blue-600 dark:text-blue-400" />
               </div>
               <div className="min-w-0">
-                <div className="text-[13px] font-semibold text-foreground group-hover:text-blue-400 transition-colors truncate">Call Now</div>
+                <div className="text-[13px] font-semibold text-foreground group-hover:text-blue-600 dark:text-blue-400 transition-colors truncate">Call Now</div>
                 <div className="text-[11px] text-muted-foreground truncate">{companyInfo.contact.phoneDisplay}</div>
               </div>
             </a>
             <a href={companyInfo.contact.smsHref} data-testid="quick-action-text" className="sm:hidden group flex items-center gap-3 p-3 sm:p-3.5 rounded-xl hover:bg-secondary/60 active:bg-secondary/80 transition-all border border-transparent hover:border-border/60">
               <div className="w-9 h-9 rounded-lg bg-emerald-500/10 flex items-center justify-center flex-shrink-0 group-hover:bg-emerald-500/20 transition-colors">
-                <MessageSquare className="w-4 h-4 text-emerald-400" />
+                <MessageSquare className="w-4 h-4 text-emerald-600 dark:text-emerald-400" />
               </div>
               <div className="min-w-0">
-                <div className="text-[13px] font-semibold text-foreground group-hover:text-emerald-400 transition-colors truncate">Text Us</div>
+                <div className="text-[13px] font-semibold text-foreground group-hover:text-emerald-600 dark:text-emerald-400 transition-colors truncate">Text Us</div>
                 <div className="text-[11px] text-muted-foreground truncate">Quick reply</div>
               </div>
             </a>
             <a href={companyInfo.contact.phoneHref} data-testid="quick-action-text-desktop" className="hidden sm:flex group items-center gap-3 p-3 sm:p-3.5 rounded-xl hover:bg-secondary/60 active:bg-secondary/80 transition-all border border-transparent hover:border-border/60">
               <div className="w-9 h-9 rounded-lg bg-emerald-500/10 flex items-center justify-center flex-shrink-0 group-hover:bg-emerald-500/20 transition-colors">
-                <MessageSquare className="w-4 h-4 text-emerald-400" />
+                <MessageSquare className="w-4 h-4 text-emerald-600 dark:text-emerald-400" />
               </div>
               <div className="min-w-0">
-                <div className="text-[13px] font-semibold text-foreground group-hover:text-emerald-400 transition-colors truncate">Call or Text</div>
+                <div className="text-[13px] font-semibold text-foreground group-hover:text-emerald-600 dark:text-emerald-400 transition-colors truncate">Call or Text</div>
                 <div className="text-[11px] text-muted-foreground truncate">{companyInfo.contact.phoneDisplay}</div>
               </div>
             </a>
             <Link href="/service-areas" data-testid="quick-action-areas" className="group flex items-center gap-3 p-3 sm:p-3.5 rounded-xl hover:bg-secondary/60 active:bg-secondary/80 transition-all border border-transparent hover:border-border/60">
               <div className="w-9 h-9 rounded-lg bg-orange-500/10 flex items-center justify-center flex-shrink-0 group-hover:bg-orange-500/20 transition-colors">
-                <MapPin className="w-4 h-4 text-orange-400" />
+                <MapPin className="w-4 h-4 text-orange-600 dark:text-orange-400" />
               </div>
               <div className="min-w-0">
-                <div className="text-[13px] font-semibold text-foreground group-hover:text-orange-400 transition-colors truncate">Service Areas</div>
+                <div className="text-[13px] font-semibold text-foreground group-hover:text-orange-600 dark:text-orange-400 transition-colors truncate">Service Areas</div>
                 <div className="text-[11px] text-muted-foreground truncate">49+ communities</div>
               </div>
             </Link>
@@ -500,9 +500,9 @@ export default function Home() {
               <p className="text-muted-foreground text-[15px] mb-4">Real feedback from our Southern Maine customers.</p>
               <div className="flex flex-wrap justify-start gap-x-5 gap-y-1.5 text-xs sm:text-[13px] text-muted-foreground font-medium">
                 <span>7+ Years</span>
-                <span className="text-border">·</span>
+                <span className="text-muted-foreground/50">·</span>
                 <span>5,000+ Cleans</span>
-                <span className="text-border">·</span>
+                <span className="text-muted-foreground/50">·</span>
                 <span>4.9★ Google</span>
               </div>
             </div>
@@ -520,7 +520,7 @@ export default function Home() {
             {reviews.map((r, i) => (
               <div key={i} className="snap-start flex-shrink-0 w-[85%] sm:w-[48%] lg:w-[32%] card-soft p-5 sm:p-6" data-testid={`card-review-${i}`}>
                 <div className="flex gap-0.5 mb-3">
-                  {[1,2,3,4,5].map(s => <Star key={s} className="w-3.5 h-3.5 fill-yellow-400 text-yellow-400" />)}
+                  {[1,2,3,4,5].map(s => <Star key={s} className="w-3.5 h-3.5 fill-yellow-400 text-yellow-500 dark:text-yellow-400" />)}
                 </div>
                 <p className="text-sm text-foreground leading-relaxed mb-4 italic">"{r.text}"</p>
                 <div className="flex items-center justify-between">
@@ -549,7 +549,7 @@ export default function Home() {
           <div className="text-center mt-8 sm:mt-10 max-w-4xl lg:mx-auto">
             <a href="https://g.page/r/CYnY6ulFfvDtEAE/review" target="_blank" rel="noopener noreferrer" data-testid="link-google-reviews">
               <Button variant="outline" className="h-10 px-6 rounded-full border-border text-sm font-semibold gap-2 shadow-[0_1px_4px_rgba(0,0,0,0.15)]">
-                <Star className="w-4 h-4 fill-yellow-400 text-yellow-400" />
+                <Star className="w-4 h-4 fill-yellow-400 text-yellow-500 dark:text-yellow-400" />
                 See all reviews on Google
               </Button>
             </a>

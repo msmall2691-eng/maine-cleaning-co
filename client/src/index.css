@@ -45,7 +45,8 @@
     --popover: 0 0% 100%;
     --popover-foreground: 30 6% 20%;
 
-    --primary: 210 58% 46%;               /* Atlantic blue — unchanged */
+    --primary: 210 58% 42%;               /* Atlantic blue, darkened from 46% so
+                                             text-primary clears AA on its own tint */
     --primary-foreground: 0 0% 100%;
 
     --secondary: 30 8% 95%;               /* subtle warm grey */
@@ -70,7 +71,9 @@
     --section-warm: 30 10% 94%;           /* slightly warmer stripe */
 
     /* Component-specific theme tokens */
-    --navbar-glass-bg: 0 0% 100% / 0.72;
+    --navbar-glass-bg: 0 0% 100% / 0.88;  /* was 0.72 — page headings read
+                                             straight through the bar once light
+                                             became the default. Matches dark. */
     --navbar-glass-border: 30 6% 88% / 0.6;
     --card-glass-inset: 255 255 255;      /* rgb for inset highlight */
     --card-shadow-strength: 0.06;

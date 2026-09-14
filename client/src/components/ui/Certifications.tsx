@@ -30,7 +30,7 @@ const certifications: CertItem[] = [
     description: "Cleaning Industry Management Standard — the gold standard for quality and operational excellence.",
     accent: "from-blue-500/10 to-blue-600/5",
     iconBg: "bg-blue-500/10",
-    iconColor: "text-blue-400",
+    iconColor: "text-blue-600 dark:text-blue-400",
   },
   {
     type: "icon",

@@ -16,10 +16,10 @@ function formatDateTime(dateStr: string) {
 
 function statusColor(status: string) {
   switch (status) {
-    case "New": return "bg-blue-500/15 text-blue-400 border-blue-500/30";
+    case "New": return "bg-blue-500/15 text-blue-600 dark:text-blue-400 border-blue-500/30";
     case "Reviewed": return "bg-muted text-muted-foreground border-border";
-    case "Booked": return "bg-emerald-500/15 text-emerald-300 border-emerald-500/30";
-    case "Transferred": return "bg-purple-500/15 text-purple-400 border-purple-500/30";
+    case "Booked": return "bg-emerald-500/15 text-emerald-700 dark:text-emerald-300 border-emerald-500/30";
+    case "Transferred": return "bg-purple-500/15 text-purple-600 dark:text-purple-400 border-purple-500/30";
     default: return "bg-muted text-muted-foreground border-border";
   }
 }
@@ -212,7 +212,7 @@ export default function Admin() {
               />
             </div>
             {loginError && (
-              <p className="text-sm text-red-400 text-center" data-testid="text-admin-error">{loginError}</p>
+              <p className="text-sm text-red-600 dark:text-red-400 text-center" data-testid="text-admin-error">{loginError}</p>
             )}
             <Button type="submit" className="w-full h-12 text-base rounded-xl shadow-md" data-testid="button-admin-login">
               Sign In
@@ -235,7 +235,7 @@ export default function Admin() {
           <p className="text-muted-foreground mt-1 text-sm">Overview of quoting activity and leads. Transfer leads to Jobber manually.</p>
         </div>
         <div className="flex items-center gap-2 sm:gap-3">
-          <div className="flex items-center gap-2 bg-emerald-500/15 text-emerald-300 px-3 sm:px-4 py-2 rounded-full border border-emerald-500/30 text-xs sm:text-sm font-medium shadow-sm">
+          <div className="flex items-center gap-2 bg-emerald-500/15 text-emerald-700 dark:text-emerald-300 px-3 sm:px-4 py-2 rounded-full border border-emerald-500/30 text-xs sm:text-sm font-medium shadow-sm">
             <span className="relative flex h-2 w-2 sm:h-2.5 sm:w-2.5">
               <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-green-400 opacity-75"></span>
               <span className="relative inline-flex rounded-full h-full w-full bg-emerald-500"></span>
@@ -374,11 +374,11 @@ export default function Admin() {
                               </Button>
                             )}
                             {(lead.status === "New" || lead.status === "Reviewed") && (
-                              <Button variant="ghost" size="sm" className="rounded-full text-emerald-300 hover:text-emerald-300 hover:bg-emerald-500/15 text-xs" onClick={() => statusMutation.mutate({ id: lead.id, status: "Transferred" })} data-testid={`button-transfer-${lead.id}`}>
+                              <Button variant="ghost" size="sm" className="rounded-full text-emerald-700 dark:text-emerald-300 hover:text-emerald-700 dark:text-emerald-300 hover:bg-emerald-500/15 text-xs" onClick={() => statusMutation.mutate({ id: lead.id, status: "Transferred" })} data-testid={`button-transfer-${lead.id}`}>
                                 Transferred
                               </Button>
                             )}
-                            <Button variant="ghost" size="icon" className="rounded-full w-8 h-8 text-muted-foreground hover:text-red-400 hover:bg-red-500/15" onClick={() => archiveMutation.mutate(lead.id)} data-testid={`button-archive-${lead.id}`} title="Archive">
+                            <Button variant="ghost" size="icon" className="rounded-full w-8 h-8 text-muted-foreground hover:text-red-600 dark:text-red-400 hover:bg-red-500/15" onClick={() => archiveMutation.mutate(lead.id)} data-testid={`button-archive-${lead.id}`} title="Archive">
                               <Archive className="w-3.5 h-3.5" />
                             </Button>
                           </div>
@@ -502,12 +502,12 @@ export default function Admin() {
                       </Button>
                     )}
                     {(lead.status === "New" || lead.status === "Reviewed") && (
-                      <Button variant="outline" size="sm" className="rounded-full text-xs h-8 text-emerald-300 border-emerald-700/40 hover:bg-emerald-500/15" onClick={() => statusMutation.mutate({ id: lead.id, status: "Transferred" })} data-testid={`button-transfer-${lead.id}`}>
+                      <Button variant="outline" size="sm" className="rounded-full text-xs h-8 text-emerald-700 dark:text-emerald-300 border-emerald-700/40 hover:bg-emerald-500/15" onClick={() => statusMutation.mutate({ id: lead.id, status: "Transferred" })} data-testid={`button-transfer-${lead.id}`}>
                         Transferred
                       </Button>
                     )}
                     <div className="flex-1" />
-                    <Button variant="ghost" size="icon" className="rounded-full w-8 h-8 text-muted-foreground hover:text-red-400" onClick={() => archiveMutation.mutate(lead.id)} data-testid={`button-archive-${lead.id}`}>
+                    <Button variant="ghost" size="icon" className="rounded-full w-8 h-8 text-muted-foreground hover:text-red-600 dark:text-red-400" onClick={() => archiveMutation.mutate(lead.id)} data-testid={`button-archive-${lead.id}`}>
                       <Archive className="w-3.5 h-3.5" />
                     </Button>
                     <button onClick={() => setExpandedId(expandedId === lead.id ? null : lead.id)} className="text-xs text-muted-foreground hover:text-foreground">

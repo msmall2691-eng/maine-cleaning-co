@@ -17,7 +17,7 @@ const kpiStats = [
     value: "93%",
     label: "Recurring Clients",
     desc: "Trust us to come back again & again",
-    color: "text-emerald-400",
+    color: "text-emerald-600 dark:text-emerald-400",
     bg: "bg-emerald-500/10",
   },
   {
@@ -25,7 +25,7 @@ const kpiStats = [
     value: "7%",
     label: "One-Time Cleans",
     desc: "First-timers always welcome",
-    color: "text-blue-400",
+    color: "text-blue-600 dark:text-blue-400",
     bg: "bg-blue-500/10",
   },
   {
@@ -33,7 +33,7 @@ const kpiStats = [
     value: "49+",
     label: "Communities",
     desc: "Across York & Cumberland County",
-    color: "text-orange-400",
+    color: "text-orange-600 dark:text-orange-400",
     bg: "bg-orange-500/10",
   },
   {

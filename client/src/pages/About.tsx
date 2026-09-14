@@ -20,10 +20,10 @@ const fadeUp = {
 
 const achievements = [
   { icon: Calendar, value: "Est. 2018", label: "Founded in Maine", color: "text-primary", bg: "bg-primary/10" },
-  { icon: TrendingUp, value: "5,000+", label: "Cleans Completed", color: "text-emerald-400", bg: "bg-emerald-500/10" },
-  { icon: RefreshCw, value: "93%", label: "Recurring Clients", color: "text-blue-400", bg: "bg-blue-500/10" },
-  { icon: MapPin, value: "49+", label: "Communities Served", color: "text-orange-400", bg: "bg-orange-500/10" },
-  { icon: Star, value: "4.9★", label: "Google Rating", color: "text-yellow-400", bg: "bg-yellow-500/10" },
+  { icon: TrendingUp, value: "5,000+", label: "Cleans Completed", color: "text-emerald-600 dark:text-emerald-400", bg: "bg-emerald-500/10" },
+  { icon: RefreshCw, value: "93%", label: "Recurring Clients", color: "text-blue-600 dark:text-blue-400", bg: "bg-blue-500/10" },
+  { icon: MapPin, value: "49+", label: "Communities Served", color: "text-orange-600 dark:text-orange-400", bg: "bg-orange-500/10" },
+  { icon: Star, value: "4.9★", label: "Google Rating", color: "text-yellow-500 dark:text-yellow-400", bg: "bg-yellow-500/10" },
   { icon: Clock, value: "30+", label: "Yrs Combined Exp.", color: "text-violet-400", bg: "bg-violet-500/10" },
 ];
 
@@ -168,7 +168,7 @@ export default function About() {
       </section>
 
       {/* ── Eco Products ── */}
-      <section className="py-12 sm:py-16" style={{ background: "hsl(222 20% 13%)" }}>
+      <section className="py-12 sm:py-16 section-cream">
         <div className="container mx-auto px-4 sm:px-6 max-w-5xl">
           <div className="grid lg:grid-cols-2 gap-10 lg:gap-16 items-center">
             <motion.div
@@ -191,7 +191,7 @@ export default function About() {
               viewport={{ once: true }}
               transition={{ duration: 0.7, ease: [0.22, 1, 0.36, 1] }}
             >
-              <div className="inline-flex items-center gap-2 bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 text-xs font-semibold px-3 py-1.5 rounded-full mb-5">
+              <div className="inline-flex items-center gap-2 bg-emerald-500/10 border border-emerald-500/20 text-emerald-600 dark:text-emerald-400 text-xs font-semibold px-3 py-1.5 rounded-full mb-5">
                 <Leaf className="w-3.5 h-3.5" /> Eco-Certified Products
               </div>
               <h2 className="text-[1.75rem] sm:text-3xl font-serif font-bold text-foreground tracking-[-0.01em] mb-4 section-heading-accent">
@@ -202,7 +202,7 @@ export default function About() {
               </p>
               <div className="flex flex-wrap gap-2 mb-7">
                 {["Non-Toxic", "Biodegradable", "Kid & Pet Safe", "No Harsh Chemicals", "Professional Grade"].map((tag) => (
-                  <span key={tag} className="text-[11px] font-medium border border-emerald-700/40 bg-emerald-900/30 text-emerald-300 rounded-full px-2.5 py-0.5">{tag}</span>
+                  <span key={tag} className="text-[11px] font-medium border border-emerald-600/30 dark:border-emerald-700/40 bg-emerald-500/10 dark:bg-emerald-900/30 text-emerald-700 dark:text-emerald-300 rounded-full px-2.5 py-0.5">{tag}</span>
                 ))}
               </div>
               <AICleaningTip />
@@ -236,7 +236,7 @@ export default function About() {
                 <p className="text-sm text-foreground leading-relaxed italic flex-grow mb-4">"{t.quote}"</p>
                 <div className="flex items-center justify-between mt-auto">
                   <div className="flex gap-0.5">
-                    {[1,2,3,4,5].map(s => <Star key={s} className="w-3 h-3 fill-yellow-400 text-yellow-400" />)}
+                    {[1,2,3,4,5].map(s => <Star key={s} className="w-3 h-3 fill-yellow-400 text-yellow-500 dark:text-yellow-400" />)}
                   </div>
                   <div className="text-right">
                     <p className="text-xs font-semibold text-muted-foreground">— {t.author}</p>
@@ -249,7 +249,7 @@ export default function About() {
           <div className="text-center">
             <a href="https://g.page/r/CYnY6ulFfvDtEAE/review" target="_blank" rel="noopener noreferrer" data-testid="link-google-reviews">
               <Button variant="outline" className="rounded-full h-10 px-6 text-sm font-semibold gap-2 border-border">
-                <Star className="w-4 h-4 fill-yellow-400 text-yellow-400" /> See All Reviews on Google
+                <Star className="w-4 h-4 fill-yellow-400 text-yellow-500 dark:text-yellow-400" /> See All Reviews on Google
               </Button>
             </a>
           </div>
@@ -257,7 +257,7 @@ export default function About() {
       </section>
 
       {/* ── Certifications ── */}
-      <section className="py-12 sm:py-16" style={{ background: "hsl(222 20% 13%)" }}>
+      <section className="py-12 sm:py-16 section-cream">
         <div className="container mx-auto px-4 sm:px-6">
           <div className="text-center max-w-md mx-auto mb-10 sm:mb-14">
             <h2 className="text-[1.75rem] sm:text-4xl font-serif font-bold text-foreground tracking-[-0.01em] mb-4 section-heading-accent">

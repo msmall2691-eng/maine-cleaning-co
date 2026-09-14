@@ -105,7 +105,7 @@ export function FacebookFeed() {
             href={companyInfo.socials.facebook}
             target="_blank"
             rel="noopener noreferrer"
-            className="inline-flex items-center gap-1.5 text-sm font-semibold text-[#1877F2] hover:underline"
+            className="inline-flex items-center gap-1.5 text-sm font-semibold text-[#0B57C4] hover:underline"
             data-testid="link-fb-feed-fallback"
           >
             Open our Facebook page <ExternalLink className="w-3.5 h-3.5" />

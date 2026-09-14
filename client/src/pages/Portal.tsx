@@ -68,13 +68,13 @@ function getServiceLabel(type: string) {
 
 function statusBadge(status: string) {
   const colors: Record<string, string> = {
-    New: "bg-blue-500/15 text-blue-400 border-blue-500/30",
-    Reviewed: "bg-amber-500/15 text-amber-400 border-amber-500/30",
-    Quoted: "bg-indigo-500/15 text-indigo-400 border-indigo-500/30",
-    Approved: "bg-emerald-500/15 text-emerald-300 border-emerald-500/30",
-    Scheduled: "bg-purple-500/15 text-purple-400 border-purple-500/30",
-    Booked: "bg-emerald-500/15 text-emerald-300 border-emerald-500/30",
-    Transferred: "bg-purple-500/15 text-purple-400 border-purple-500/30",
+    New: "bg-blue-500/15 text-blue-600 dark:text-blue-400 border-blue-500/30",
+    Reviewed: "bg-amber-500/15 text-amber-500 dark:text-amber-400 border-amber-500/30",
+    Quoted: "bg-indigo-500/15 text-indigo-600 dark:text-indigo-400 border-indigo-500/30",
+    Approved: "bg-emerald-500/15 text-emerald-700 dark:text-emerald-300 border-emerald-500/30",
+    Scheduled: "bg-purple-500/15 text-purple-600 dark:text-purple-400 border-purple-500/30",
+    Booked: "bg-emerald-500/15 text-emerald-700 dark:text-emerald-300 border-emerald-500/30",
+    Transferred: "bg-purple-500/15 text-purple-600 dark:text-purple-400 border-purple-500/30",
   };
   return colors[status] || "bg-muted/40 text-muted-foreground border-border";
 }
@@ -289,7 +289,7 @@ export default function Portal() {
                 </div>
                 <button
                   onClick={async () => { await logout(); navigate("/"); }}
-                  className="p-2 rounded-xl text-muted-foreground hover:text-red-400 hover:bg-red-500/15 transition-all"
+                  className="p-2 rounded-xl text-muted-foreground hover:text-red-600 dark:text-red-400 hover:bg-red-500/15 transition-all"
                   data-testid="button-logout-mobile"
                 >
                   <LogOut className="w-4 h-4" />
@@ -364,7 +364,7 @@ export default function Portal() {
               <div className="mt-5 pt-4 border-t border-border">
                 <button
                   onClick={async () => { await logout(); navigate("/"); }}
-                  className="w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium text-muted-foreground hover:text-red-400 hover:bg-red-500/15 transition-all"
+                  className="w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium text-muted-foreground hover:text-red-600 dark:text-red-400 hover:bg-red-500/15 transition-all"
                   data-testid="button-logout"
                 >
                   <LogOut className="w-4 h-4" /> Sign Out
@@ -391,11 +391,11 @@ export default function Portal() {
                         data-testid="banner-onboarding-prompt"
                       >
                         <div className="w-10 h-10 rounded-xl bg-amber-500/20 flex items-center justify-center flex-shrink-0">
-                          <Bell className="w-5 h-5 text-amber-400" />
+                          <Bell className="w-5 h-5 text-amber-500 dark:text-amber-400" />
                         </div>
                         <div className="flex-1 min-w-0">
-                          <h3 className="font-bold text-amber-300 text-sm">Complete your onboarding form</h3>
-                          <p className="text-xs text-amber-400 mt-0.5">Please fill out a few details so we can prepare for your first cleaning. It only takes a couple of minutes.</p>
+                          <h3 className="font-bold text-amber-700 dark:text-amber-300 text-sm">Complete your onboarding form</h3>
+                          <p className="text-xs text-amber-500 dark:text-amber-400 mt-0.5">Please fill out a few details so we can prepare for your first cleaning. It only takes a couple of minutes.</p>
                           <Button
                             size="sm"
                             className="mt-3 rounded-full text-xs bg-amber-600 hover:bg-amber-700"
@@ -413,10 +413,10 @@ export default function Portal() {
 
                     <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
                       {[
-                        { label: "Active Quotes", value: quotes.length, icon: FileText, color: "text-blue-400 bg-blue-500/15", onClick: () => setTab("quotes") },
-                        { label: "Documents", value: contractsData.length, icon: ClipboardCheck, color: "text-emerald-400 bg-emerald-500/15", onClick: () => setTab("documents") },
-                        { label: "Upcoming", value: scheduleData.filter((s: any) => s.status === "upcoming").length, icon: Calendar, color: "text-orange-400 bg-orange-500/15", onClick: () => setTab("schedule") },
-                        { label: "Payments", value: paymentsData.length, icon: CreditCard, color: "text-purple-400 bg-purple-500/15", onClick: () => setTab("payments") },
+                        { label: "Active Quotes", value: quotes.length, icon: FileText, color: "text-blue-600 dark:text-blue-400 bg-blue-500/15", onClick: () => setTab("quotes") },
+                        { label: "Documents", value: contractsData.length, icon: ClipboardCheck, color: "text-emerald-600 dark:text-emerald-400 bg-emerald-500/15", onClick: () => setTab("documents") },
+                        { label: "Upcoming", value: scheduleData.filter((s: any) => s.status === "upcoming").length, icon: Calendar, color: "text-orange-600 dark:text-orange-400 bg-orange-500/15", onClick: () => setTab("schedule") },
+                        { label: "Payments", value: paymentsData.length, icon: CreditCard, color: "text-purple-600 dark:text-purple-400 bg-purple-500/15", onClick: () => setTab("payments") },
                       ].map((card, i) => {
                         const Icon = card.icon;
                         return (
@@ -526,7 +526,7 @@ export default function Portal() {
                       </div>
                       {saveStatus !== "idle" && (
                         <div className={`flex items-center gap-1.5 text-xs font-medium px-3 py-1.5 rounded-full ${
-                          saveStatus === "saving" ? "bg-blue-500/15 text-blue-400" : "bg-emerald-500/15 text-emerald-400"
+                          saveStatus === "saving" ? "bg-blue-500/15 text-blue-600 dark:text-blue-400" : "bg-emerald-500/15 text-emerald-600 dark:text-emerald-400"
                         }`}>
                           {saveStatus === "saving" ? (
                             <><Loader2 className="w-3 h-3 animate-spin" /> Saving...</>
@@ -635,8 +635,8 @@ export default function Portal() {
                             className="mt-6 p-4 bg-emerald-500/15 rounded-xl border border-emerald-500/30 text-center"
                           >
                             <CheckCircle2 className="w-8 h-8 text-green-500 mx-auto mb-2" />
-                            <p className="text-sm font-bold text-emerald-300">All set! Your onboarding form is complete.</p>
-                            <p className="text-xs text-emerald-400 mt-1">You can view a summary in your Documents tab.</p>
+                            <p className="text-sm font-bold text-emerald-700 dark:text-emerald-300">All set! Your onboarding form is complete.</p>
+                            <p className="text-xs text-emerald-600 dark:text-emerald-400 mt-1">You can view a summary in your Documents tab.</p>
                           </motion.div>
                         )}
 
@@ -682,7 +682,7 @@ export default function Portal() {
                               <h3 className="font-bold text-foreground">Client Onboarding Form</h3>
                               <p className="text-xs text-muted-foreground mt-0.5">{getServiceLabel(q.serviceType)} · QT-{q.id}</p>
                             </div>
-                            <span className={`px-2 py-0.5 rounded-full text-[10px] font-semibold border ${progress.percent === 100 ? "bg-emerald-500/15 text-emerald-300 border-emerald-500/30" : "bg-amber-500/15 text-amber-400 border-amber-500/30"}`}>
+                            <span className={`px-2 py-0.5 rounded-full text-[10px] font-semibold border ${progress.percent === 100 ? "bg-emerald-500/15 text-emerald-700 dark:text-emerald-300 border-emerald-500/30" : "bg-amber-500/15 text-amber-500 dark:text-amber-400 border-amber-500/30"}`}>
                               {progress.percent === 100 ? "Complete" : "In Progress"}
                             </span>
                           </div>
@@ -728,7 +728,7 @@ export default function Portal() {
                                 <h3 className="font-bold text-foreground">{getServiceLabel(contract.serviceType)} Service Agreement</h3>
                                 <p className="text-xs text-muted-foreground mt-0.5">{contract.frequency} · ${contract.price}/visit</p>
                               </div>
-                              <span className={`px-2 py-0.5 rounded-full text-[10px] font-semibold border ${contract.status === "signed" ? "bg-emerald-500/15 text-emerald-300 border-emerald-500/30" : "bg-amber-500/15 text-amber-400 border-amber-500/30"}`}>
+                              <span className={`px-2 py-0.5 rounded-full text-[10px] font-semibold border ${contract.status === "signed" ? "bg-emerald-500/15 text-emerald-700 dark:text-emerald-300 border-emerald-500/30" : "bg-amber-500/15 text-amber-500 dark:text-amber-400 border-amber-500/30"}`}>
                                 {contract.status === "signed" ? "Signed" : "Pending Signature"}
                               </span>
                             </div>
@@ -757,7 +757,7 @@ export default function Portal() {
                                 </Button>
                               </div>
                             ) : (
-                              <div className="flex items-center gap-2 text-sm text-emerald-300">
+                              <div className="flex items-center gap-2 text-sm text-emerald-700 dark:text-emerald-300">
                                 <CheckCircle2 className="w-4 h-4" />
                                 <span>Signed by {contract.signedName} on {new Date(contract.signedAt).toLocaleDateString()}</span>
                               </div>
@@ -797,9 +797,9 @@ export default function Portal() {
                               <div className="text-xs text-muted-foreground">{new Date(payment.createdAt).toLocaleDateString()}</div>
                             </div>
                             <span className={`px-2 py-0.5 rounded-full text-[10px] font-semibold border capitalize ${
-                              payment.status === "paid" ? "bg-emerald-500/15 text-emerald-300 border-emerald-500/30" :
-                              payment.status === "overdue" ? "bg-red-500/15 text-red-400 border-red-500/30" :
-                              "bg-amber-500/15 text-amber-400 border-amber-500/30"
+                              payment.status === "paid" ? "bg-emerald-500/15 text-emerald-700 dark:text-emerald-300 border-emerald-500/30" :
+                              payment.status === "overdue" ? "bg-red-500/15 text-red-600 dark:text-red-400 border-red-500/30" :
+                              "bg-amber-500/15 text-amber-500 dark:text-amber-400 border-amber-500/30"
                             }`}>{payment.status}</span>
                           </div>
                         ))}

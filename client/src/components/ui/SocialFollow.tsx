@@ -1,4 +1,4 @@
-import { Instagram, ExternalLink } from "lucide-react";
+import { Instagram, Facebook, ExternalLink } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { FacebookFeed } from "@/components/ui/FacebookFeed";
 import { companyInfo } from "@/lib/company-info";
@@ -39,8 +39,11 @@ export function SocialFollow() {
           rel="noopener noreferrer"
           data-testid="link-instagram-follow"
         >
-          <Button className="rounded-full h-12 px-8 font-semibold gap-2 bg-gradient-to-r from-pink-500 to-orange-400 border-0 text-white hover:opacity-90">
-            <Instagram className="w-4 h-4" /> Follow on Instagram
+          <Button
+            variant="outline"
+            className="w-full sm:w-auto rounded-full h-12 px-8 font-semibold gap-2 border-2 border-primary"
+          >
+            <Instagram className="w-4 h-4 text-[#C13584]" /> Follow on Instagram
             <ExternalLink className="w-3.5 h-3.5 opacity-70" />
           </Button>
         </a>
@@ -52,9 +55,9 @@ export function SocialFollow() {
         >
           <Button
             variant="outline"
-            className="rounded-full h-12 px-8 font-semibold gap-2 border-2 border-primary"
+            className="w-full sm:w-auto rounded-full h-12 px-8 font-semibold gap-2 border-2 border-primary"
           >
-            Facebook Page
+            <Facebook className="w-4 h-4 text-[#1877F2]" /> Facebook Page
           </Button>
         </a>
       </div>
