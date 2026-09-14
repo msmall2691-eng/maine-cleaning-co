@@ -23,6 +23,8 @@ import {
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { InstantEstimate } from "@/components/ui/InstantEstimate";
+import { WorkGallery } from "@/components/ui/WorkGallery";
+import { SocialFollow } from "@/components/ui/SocialFollow";
 import { ServiceAreaMap } from "@/components/ui/ServiceAreaMap";
 import { SparkleField } from "@/components/ui/SparkleField";
 import { CoverageCheck } from "@/components/ui/CoverageCheck";
@@ -478,6 +480,17 @@ export default function Home() {
         </div>
       </FadeSection>
 
+      {/* ── See Our Work ── */}
+      {/* Proof of work sits between "here's what we do" (Services) and
+          "here's what people say" (Reviews). Cheap to render — local JPEGs,
+          all lazy — so it earns a slot this high. The Facebook embed
+          deliberately does NOT come with it; see the section further down. */}
+      <FadeSection className="py-20 sm:py-28" id="our-work">
+        <div className="container mx-auto px-4 sm:px-6 max-w-4xl">
+          <WorkGallery />
+        </div>
+      </FadeSection>
+
       {/* ── Reviews ── */}
       <WaveDivider />
       <FadeSection className="py-20 sm:py-28 section-cream" id="reviews">
@@ -602,6 +615,16 @@ export default function Home() {
             </div>
             <InstantEstimate />
           </div>
+        </div>
+      </FadeSection>
+
+      {/* ── Social ── */}
+      {/* Below the estimate on purpose. This pulls a third-party iframe, so
+          it must not compete with the booking CTA above it. Lazy — nothing is
+          requested from facebook.com until it's scrolled near. */}
+      <FadeSection className="py-20 sm:py-28" id="social">
+        <div className="container mx-auto px-4 sm:px-6">
+          <SocialFollow />
         </div>
       </FadeSection>
 

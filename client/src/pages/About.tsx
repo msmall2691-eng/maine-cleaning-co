@@ -3,15 +3,15 @@ import { Link } from "wouter";
 import { useSEO } from "@/hooks/use-seo";
 import {
   Calendar, Leaf, CheckCircle2, MessageCircle, Shield, Users, ArrowRight,
-  Instagram, Phone, Star, MapPin, RefreshCw, Quote, ExternalLink,
+  Phone, Star, MapPin, RefreshCw, Quote,
   TrendingUp, Clock,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Certifications } from "@/components/ui/Certifications";
 import { AICleaningTip } from "@/components/ui/AICleaningTip";
 import { companyInfo } from "@/lib/company-info";
-import { galleryItems } from "@/lib/gallery-data";
-import { FacebookFeed } from "@/components/ui/FacebookFeed";
+import { WorkGallery } from "@/components/ui/WorkGallery";
+import { SocialFollow } from "@/components/ui/SocialFollow";
 
 const fadeUp = {
   hidden: { opacity: 0, y: 20 },
@@ -272,73 +272,15 @@ export default function About() {
       </section>
 
       {/* ── Our Work + live social ── */}
+      {/* Same two components the home page uses — one grid and one embed to
+          maintain, not a second copy that drifts. (The previous version of
+          this section inlined its own hardcoded photo list, which is exactly
+          how it drifted from lib/gallery-data.ts in the first place.) */}
       <section className="py-16 sm:py-24">
         <div className="container mx-auto px-4 sm:px-6 max-w-4xl">
-          <div className="text-center mb-10">
-            <h2 className="text-[1.75rem] sm:text-3xl font-serif font-bold text-foreground tracking-[-0.01em] mb-4">
-              See Our Work
-            </h2>
-            <p className="text-muted-foreground text-[15px] leading-relaxed max-w-md mx-auto">
-              Real homes, rentals and commercial spaces across Southern Maine — photographed
-              on the job, not staged in a studio.
-            </p>
-          </div>
-
-          {/* Our own photos. Each tile deep-links to the matching post when we
-              have one (GalleryItem.postUrl) and otherwise opens the profile. */}
-          <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 sm:gap-3 mb-14">
-            {galleryItems.map((item) => (
-              <a
-                key={item.id}
-                href={item.postUrl ?? companyInfo.socials.instagram}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="group relative aspect-square rounded-xl overflow-hidden border border-border/60"
-                data-testid={`work-gallery-${item.id}`}
-                title={item.caption}
-              >
-                <img
-                  src={item.image}
-                  alt={item.alt}
-                  className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
-                  loading="lazy"
-                />
-                <div className="absolute inset-0 flex items-end bg-gradient-to-t from-black/70 via-black/0 to-black/0 opacity-0 group-hover:opacity-100 transition-opacity duration-300">
-                  <span className="p-3 text-[11px] sm:text-xs font-medium text-white leading-snug">
-                    {item.caption}
-                  </span>
-                </div>
-              </a>
-            ))}
-          </div>
-
-          {/* Genuinely live: the Page Plugin renders our actual Facebook
-              timeline, so this stays current without anyone updating the site. */}
-          <div className="text-center mb-8">
-            <h3 className="text-xl sm:text-2xl font-serif font-bold text-foreground tracking-[-0.01em] mb-3">
-              What we've been up to
-            </h3>
-            <p className="text-muted-foreground text-[15px] leading-relaxed max-w-md mx-auto">
-              Straight from our Facebook page — jobs, tips and updates as we post them.
-            </p>
-          </div>
-
-          <div className="mb-10">
-            <FacebookFeed />
-          </div>
-
-          <div className="flex flex-col sm:flex-row gap-3 justify-center">
-            <a href={companyInfo.socials.instagram} target="_blank" rel="noopener noreferrer" data-testid="link-instagram-follow">
-              <Button className="rounded-full h-12 px-8 font-semibold gap-2 bg-gradient-to-r from-pink-500 to-orange-400 border-0 text-white hover:opacity-90">
-                <Instagram className="w-4 h-4" /> Follow on Instagram
-                <ExternalLink className="w-3.5 h-3.5 opacity-70" />
-              </Button>
-            </a>
-            <a href={companyInfo.socials.facebook} target="_blank" rel="noopener noreferrer" data-testid="link-facebook-follow">
-              <Button variant="outline" className="rounded-full h-12 px-8 font-semibold gap-2 border-2 border-primary">
-                Facebook Page
-              </Button>
-            </a>
+          <WorkGallery />
+          <div className="mt-16">
+            <SocialFollow />
           </div>
         </div>
       </section>
