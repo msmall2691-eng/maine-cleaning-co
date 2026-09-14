@@ -351,10 +351,6 @@ export default function Home() {
         <div className="hero-aurora" aria-hidden="true" />
         <div className="hero-dot-grid" aria-hidden="true" />
         <SparkleField />
-        <div className="marquee-track" aria-hidden="true">
-          <span>Residential&nbsp;·&nbsp;Deep&nbsp;Cleaning&nbsp;·&nbsp;Vacation&nbsp;Rentals&nbsp;·&nbsp;Commercial&nbsp;·&nbsp;Eco-Friendly&nbsp;·&nbsp;Southern&nbsp;Maine&nbsp;·&nbsp;</span>
-          <span>Residential&nbsp;·&nbsp;Deep&nbsp;Cleaning&nbsp;·&nbsp;Vacation&nbsp;Rentals&nbsp;·&nbsp;Commercial&nbsp;·&nbsp;Eco-Friendly&nbsp;·&nbsp;Southern&nbsp;Maine&nbsp;·&nbsp;</span>
-        </div>
 
         <div className="container mx-auto px-4 sm:px-6 relative z-10 text-center max-w-2xl lg:max-w-3xl">
           <motion.div initial={{ opacity: 0, y: 14 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.5 }} className="mb-4">

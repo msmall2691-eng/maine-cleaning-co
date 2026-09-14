@@ -75,7 +75,6 @@
     --card-glass-inset: 255 255 255;      /* rgb for inset highlight */
     --card-shadow-strength: 0.06;
     --dot-grid-alpha: 0.09;
-    --marquee-alpha: 0.045;
   }
 
   /* ── Dark theme — existing deep navy ── */
@@ -116,7 +115,6 @@
     --card-glass-inset: 255 255 255;
     --card-shadow-strength: 0.18;
     --dot-grid-alpha: 0.055;
-    --marquee-alpha: 0.03;
   }
 }
 
@@ -198,37 +196,7 @@
   border-color: hsl(var(--border));
 }
 
-.marquee-track {
-  position: absolute;
-  top: 50%;
-  left: 0;
-  right: 0;
-  transform: translateY(-50%);
-  display: flex;
-  white-space: nowrap;
-  overflow: hidden;
-  pointer-events: none;
-  user-select: none;
-  font-size: clamp(3rem, 8vw, 6rem);
-  font-weight: 700;
-  font-family: var(--font-serif);
-  color: hsl(var(--foreground) / var(--marquee-alpha));
-  line-height: 1;
-  z-index: 0;
-}
-.marquee-track span {
-  display: inline-block;
-  animation: marquee-scroll 50s linear infinite;
-}
-@keyframes marquee-scroll {
-  0% { transform: translateX(0); }
-  100% { transform: translateX(-100%); }
-}
-
 @media (prefers-reduced-motion: reduce) {
-  .marquee-track span {
-    animation: none;
-  }
   .section-fade {
     opacity: 1 !important;
     transform: none !important;
