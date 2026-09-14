@@ -91,28 +91,11 @@ export function WeatherAtmosphere() {
         {condition === "storm" && <div className="weather-storm-dim" />}
       </div>
 
-      {/* Front layer — precipitation drifts over the whole page */}
-      {(condition === "drizzle" ||
-        condition === "rain" ||
-        condition === "snow" ||
-        condition === "storm") && (
-        <div
-          className="weather-atmosphere"
-          aria-hidden="true"
-          style={{ zIndex: 30 }}
-          data-condition={`${condition}-front`}
-        >
-          {condition === "drizzle" && <div className="weather-rain" style={{ opacity: 0.28 }} />}
-          {condition === "rain" && <div className="weather-rain" style={{ opacity: 0.4 }} />}
-          {condition === "snow" && <div className="weather-snow" style={{ opacity: 0.55 }} />}
-          {condition === "storm" && (
-            <>
-              <div className="weather-rain" style={{ opacity: 0.42 }} />
-              <div className="weather-storm-flash" />
-            </>
-          )}
-        </div>
-      )}
+      {/* The full-page precipitation overlay that used to live here (animated
+          rain/snow drifting over every page at z-index 30) is gone. It sat ON
+          TOP of the content including the booking form, and read as a tech
+          demo rather than a cleaning company. The subtle ambient tint above
+          stays — it shifts with the weather without getting in the way. */}
     </>
   );
 }

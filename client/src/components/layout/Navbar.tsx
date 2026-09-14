@@ -6,12 +6,23 @@ import { Button } from "@/components/ui/button";
 import { ThemeToggle } from "@/components/ui/ThemeToggle";
 import { companyInfo } from "@/lib/company-info";
 
+// Four links, deliberately. The bar previously carried eight plus the phone,
+// Sign In, the theme toggle and TWO call-to-action buttons — more than fits
+// between the wordmark and the right edge, so "Book Now" was being clipped off
+// the viewport at ordinary laptop widths (~1280px). Home is the wordmark,
+// Airbnb & STR lives under Services, and Blog + Contact are in the footer.
 const navLinks = [
-  { href: "/", label: "Home" },
   { href: "/services", label: "Services" },
-  { href: "/about", label: "About" },
   { href: "/how-it-works", label: "How It Works" },
   { href: "/service-areas", label: "Service Areas" },
+  { href: "/about", label: "About" },
+];
+
+// The mobile drawer is a vertical list with room to spare, so it keeps the
+// pages the desktop bar drops. Trimming the bar shouldn't cost a phone user
+// a route — these are otherwise only reachable from the footer.
+const mobileNavLinks = [
+  ...navLinks,
   { href: "/short-term-rentals", label: "Airbnb & STR" },
   { href: "/blog", label: "Blog" },
   { href: "/#contact", label: "Contact" },
@@ -87,7 +98,7 @@ export default function Navbar() {
         </Link>
 
         {/* Desktop nav */}
-        <nav className="hidden md:flex items-center gap-0.5 lg:gap-1">
+        <nav className="hidden lg:flex items-center gap-0.5 xl:gap-1">
           {navLinks.map((link) => {
             const isHash = link.href.includes("#");
             const hashId = isHash ? link.href.split("#")[1] : "";
@@ -129,7 +140,7 @@ export default function Navbar() {
         </nav>
 
         {/* Desktop CTAs */}
-        <div className="hidden md:flex items-center gap-2.5">
+        <div className="hidden lg:flex items-center gap-2.5">
           <a
             href={companyInfo.contact.phoneHref}
             className="flex items-center gap-1.5 text-[13px] font-medium text-muted-foreground hover:text-foreground transition-colors px-2"
@@ -150,15 +161,6 @@ export default function Navbar() {
             Sign In
           </Link>
           <ThemeToggle />
-          <Button
-            size="sm"
-            variant="outline"
-            className="rounded-full px-4 h-9 text-[13px] font-medium tracking-wide"
-            onClick={scrollToEstimate}
-            data-testid="button-nav-estimate"
-          >
-            Get a Quote
-          </Button>
           <Link href="/book">
             <Button
               size="sm"
@@ -171,7 +173,7 @@ export default function Navbar() {
         </div>
 
         {/* Mobile controls */}
-        <div className="md:hidden flex items-center gap-1">
+        <div className="lg:hidden flex items-center gap-1">
           <ThemeToggle />
           <button
             className="p-2.5 -mr-1.5 text-foreground rounded-xl hover:bg-secondary/50 active:bg-secondary/70 transition-colors"
@@ -198,7 +200,7 @@ export default function Navbar() {
               animate={{ opacity: 1 }}
               exit={{ opacity: 0 }}
               transition={{ duration: 0.2 }}
-              className="md:hidden fixed inset-0 bg-black/50 backdrop-blur-sm z-40"
+              className="lg:hidden fixed inset-0 bg-black/50 backdrop-blur-sm z-40"
               onClick={() => setMobileMenuOpen(false)}
             />
             <motion.div
@@ -206,10 +208,10 @@ export default function Navbar() {
               animate={{ height: "auto", opacity: 1 }}
               exit={{ height: 0, opacity: 0 }}
               transition={{ duration: 0.32, ease: [0.22, 1, 0.36, 1] }}
-              className="md:hidden navbar-glass border-t-0 overflow-hidden absolute top-full left-0 right-0 z-50"
+              className="lg:hidden navbar-glass border-t-0 overflow-hidden absolute top-full left-0 right-0 z-50"
             >
               <nav className="flex flex-col px-6 pt-4 pb-7 gap-0.5">
-                {navLinks.map((link, i) => {
+                {mobileNavLinks.map((link, i) => {
                   const isHash = link.href.includes("#");
                   const hashId = isHash ? link.href.split("#")[1] : "";
                   const cls = `flex items-center py-3.5 px-4 rounded-2xl text-[15px] font-medium active:bg-secondary/50 transition-colors ${

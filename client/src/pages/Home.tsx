@@ -18,13 +18,6 @@ import {
   Shield,
   MapPin,
   Users,
-  Sun,
-  Cloud,
-  CloudRain,
-  CloudSnow,
-  CloudLightning,
-  CloudDrizzle,
-  CloudFog,
   Home as HomeIcon,
   Send,
 } from "lucide-react";
@@ -32,7 +25,6 @@ import { Button } from "@/components/ui/button";
 import { InstantEstimate } from "@/components/ui/InstantEstimate";
 import { ServiceAreaMap } from "@/components/ui/ServiceAreaMap";
 import { SparkleField } from "@/components/ui/SparkleField";
-import { LiveActivityPulse } from "@/components/ui/LiveActivityPulse";
 import { CoverageCheck } from "@/components/ui/CoverageCheck";
 import { companyInfo } from "@/lib/company-info";
 
@@ -64,15 +56,6 @@ const trustSignals = [
   { icon: Leaf, label: "Eco-Conscious" },
 ];
 
-
-function getWeatherIcon(iconName: string) {
-  const map: Record<string, any> = {
-    "sun": Sun, "cloud-sun": Cloud, "cloud": Cloud, "cloud-fog": CloudFog,
-    "cloud-drizzle": CloudDrizzle, "cloud-rain": CloudRain, "cloud-snow": CloudSnow,
-    "cloud-lightning": CloudLightning,
-  };
-  return map[iconName] || Cloud;
-}
 
 function useSectionFade() {
   const ref = useRef<HTMLElement>(null);
@@ -262,23 +245,8 @@ function ContactForm() {
 export default function Home() {
   useSEO({ title: "Airbnb Cleaning & STR Management — Southern Maine", description: "Southern Maine's premier cleaning & short-term rental management. Same-day Airbnb turnovers, residential cleaning, and commercial janitorial across York & Cumberland County." });
   const carouselRef = useRef<HTMLDivElement>(null);
-  type ForecastDay = { date: string; high: number; low: number; label: string; icon: string };
-  type WeatherData = {
-    current: { temp: number; label: string; icon: string; humidity: number; windSpeed: number };
-    forecast: ForecastDay[];
-    location: string;
-  };
-  const [weather, setWeather] = useState<WeatherData | null>(null);
-  const [weatherFailed, setWeatherFailed] = useState(false);
   const [pastThreshold, setPastThreshold] = useState(false);
   const [activeReviewIndex, setActiveReviewIndex] = useState(0);
-
-  useEffect(() => {
-    fetch("/api/weather")
-      .then((r) => (r.ok ? r.json() : Promise.reject()))
-      .then(setWeather)
-      .catch(() => setWeatherFailed(true));
-  }, []);
 
   useEffect(() => {
     const el = carouselRef.current;
@@ -390,7 +358,7 @@ export default function Home() {
                 <Calendar className="mr-2 w-4 h-4" /> Book a Cleaning
               </Button>
             </Link>
-            <Button size="lg" variant="outline" className="w-full sm:w-auto h-13 sm:h-14 px-8 sm:px-10 rounded-full text-base border-border bg-card/80 backdrop-blur-sm shadow-[0_1px_4px_rgba(0,0,0,0.15)]" onClick={scrollToEstimate} data-testid="button-hero-estimate">
+            <Button size="lg" variant="outline" className="w-full sm:w-auto h-13 sm:h-14 px-8 sm:px-10 rounded-full text-base border-2 border-primary hover:bg-primary/5 bg-card/80 backdrop-blur-sm shadow-[0_1px_4px_rgba(0,0,0,0.15)]" onClick={scrollToEstimate} data-testid="button-hero-estimate">
               Get an Instant Quote <ArrowRight className="ml-2.5 w-4 h-4" />
             </Button>
           </motion.div>
@@ -410,101 +378,6 @@ export default function Home() {
             ))}
           </motion.div>
 
-          {/* Live indicator */}
-          <motion.div
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            transition={{ duration: 0.5, delay: 0.6 }}
-            className="flex justify-center mt-5"
-            data-testid="serving-indicator"
-          >
-            <LiveActivityPulse />
-          </motion.div>
-
-          {/* 5-Day Weather Forecast */}
-          {!weather && weatherFailed && (
-            <motion.div
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              className="flex justify-center mt-6"
-            >
-              <div className="bg-card/60 backdrop-blur-sm rounded-2xl px-4 py-3 shadow-[0_1px_6px_rgba(0,0,0,0.15)] border border-border/50 max-w-sm w-full sm:max-w-md text-center">
-                <p className="text-xs text-muted-foreground">Southern Maine · Weather temporarily unavailable</p>
-              </div>
-            </motion.div>
-          )}
-          {!weather && !weatherFailed && (
-            <motion.div
-              initial={{ opacity: 0, y: 8 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.5, delay: 0.7 }}
-              className="flex justify-center mt-6"
-              data-testid="weather-skeleton"
-            >
-              <div className="bg-card/60 backdrop-blur-sm rounded-2xl px-4 py-3 shadow-[0_1px_6px_rgba(0,0,0,0.15)] border border-border/50 max-w-sm w-full sm:max-w-md">
-                <div className="flex items-center justify-between mb-2.5">
-                  <div className="flex items-center gap-2">
-                    <div className="skeleton-shimmer w-4 h-4 rounded-full" />
-                    <div className="skeleton-shimmer w-12 h-4" />
-                    <div className="skeleton-shimmer w-16 h-3" />
-                  </div>
-                  <div className="skeleton-shimmer w-20 h-3" />
-                </div>
-                <div className="flex justify-between gap-1">
-                  {[0,1,2,3,4].map(i => (
-                    <div key={i} className="flex flex-col items-center gap-1 flex-1 min-w-0">
-                      <div className="skeleton-shimmer w-8 h-2.5" />
-                      <div className="skeleton-shimmer w-3.5 h-3.5 rounded-full" />
-                      <div className="skeleton-shimmer w-6 h-3" />
-                      <div className="skeleton-shimmer w-5 h-2.5" />
-                    </div>
-                  ))}
-                </div>
-              </div>
-            </motion.div>
-          )}
-          {weather && (() => {
-            const CurrentIcon = getWeatherIcon(weather.current.icon);
-            const dayNames = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
-            return (
-              <motion.div
-                initial={{ opacity: 0, y: 8 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ duration: 0.5, delay: 0.7 }}
-                className="flex justify-center mt-6"
-                data-testid="weather-widget"
-              >
-                <div className="bg-card/60 backdrop-blur-sm rounded-2xl px-4 py-3 shadow-[0_1px_6px_rgba(0,0,0,0.15)] border border-border/50 max-w-sm w-full sm:max-w-md">
-                  <div className="flex items-center justify-between mb-2.5">
-                    <div className="flex items-center gap-2">
-                      <CurrentIcon className="w-4 h-4 text-primary/70" />
-                      <span className="text-sm font-semibold text-foreground/80">{weather.current.temp}°F</span>
-                      <span className="text-xs text-muted-foreground">{weather.current.label}</span>
-                    </div>
-                    <div className="flex items-center gap-1 text-[11px] text-muted-foreground/60">
-                      <MapPin className="w-3 h-3" />
-                      <span>{weather.location}</span>
-                    </div>
-                  </div>
-                  <div className="flex justify-between gap-1">
-                    {weather.forecast.map((day, i) => {
-                      const DayIcon = getWeatherIcon(day.icon);
-                      const d = new Date(day.date + "T12:00:00");
-                      const label = i === 0 ? "Today" : dayNames[d.getDay()];
-                      return (
-                        <div key={day.date} className="flex flex-col items-center gap-0.5 flex-1 min-w-0" data-testid={`forecast-day-${i}`}>
-                          <span className="text-[10px] font-semibold text-muted-foreground/70 uppercase">{label}</span>
-                          <DayIcon className="w-3.5 h-3.5 text-primary/50" />
-                          <span className="text-[11px] font-semibold text-foreground/70">{day.high}°</span>
-                          <span className="text-[10px] text-muted-foreground/50">{day.low}°</span>
-                        </div>
-                      );
-                    })}
-                  </div>
-                </div>
-              </motion.div>
-            );
-          })()}
         </div>
       </section>
 
