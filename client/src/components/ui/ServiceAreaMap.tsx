@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { motion, useReducedMotion } from "framer-motion";
 import { MapPin, Maximize2, Expand, Shrink, X } from "lucide-react";
+import { CLEANS_SINCE_2018, RECURRING_CLIENT_RATE, COMMUNITIES_SERVED, TOTAL_COMMUNITIES } from "@/lib/company-stats";
 
 /**
  * Serving-Southern-Maine — Obsidian-style INTERACTIVE knowledge graph.
@@ -50,13 +51,16 @@ const cities: City[] = [
   { name: "Cape Elizabeth", lat: 43.5636, lng: -70.2000, visits: 28, services: ["residential", "commercial"] },
 ];
 
-const TOTAL_COMMUNITIES = 49;
 const maxVisits = Math.max(...cities.map((c) => c.visits));
 
+// The cities above are the busiest we serve, not all of them — the bars and
+// the graph plot a subset, and the roster in lib/service-areas.ts is the full
+// list. Summing visits here would therefore understate the lifetime total, so
+// the strip uses the shared figure rather than deriving one from this array.
 const stats = [
-  { value: "4,715+", label: "Cleans since 2018" },
-  { value: "93%", label: "Repeat clients" },
-  { value: `${TOTAL_COMMUNITIES}`, label: "Communities" },
+  { value: CLEANS_SINCE_2018, label: "Cleans since 2018" },
+  { value: RECURRING_CLIENT_RATE, label: "Repeat clients" },
+  { value: COMMUNITIES_SERVED, label: "Communities" },
 ];
 
 function milesBetween(a: { lat: number; lng: number }, b: { lat: number; lng: number }) {

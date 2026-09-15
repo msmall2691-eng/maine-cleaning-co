@@ -3,7 +3,11 @@ import path from "path";
 
 export default defineConfig({
   test: {
-    include: ["server/**/__tests__/**/*.test.ts", "server/**/*.test.ts"],
+    include: [
+      "server/**/__tests__/**/*.test.ts",
+      "server/**/*.test.ts",
+      "client/src/**/__tests__/**/*.test.ts",
+    ],
     environment: "node",
     globals: false,
     coverage: {
@@ -16,6 +20,7 @@ export default defineConfig({
   resolve: {
     alias: {
       "@shared": path.resolve(__dirname, "shared"),
+      "@": path.resolve(__dirname, "client", "src"),
     },
   },
 });

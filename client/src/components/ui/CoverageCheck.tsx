@@ -2,6 +2,7 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import { AnimatePresence, motion } from "framer-motion";
 import { CheckCircle2, MapPin, Search, Sparkles, X, AlertCircle, ArrowRight, Phone } from "lucide-react";
 import { companyInfo } from "@/lib/company-info";
+import { COVERAGE_INDEX as COMMUNITIES } from "@/lib/coverage-index";
 
 // Rough geographic center of our Southern Maine service area — used only
 // for distance display, not "am I served" gating. Placed near the Saco /
@@ -10,62 +11,7 @@ import { companyInfo } from "@/lib/company-info";
 const AREA_CENTER = { lat: 43.60, lng: -70.55, name: "Southern Maine" };
 const MAX_MILES = 95; // Comfortable reach across York + Cumberland County.
 
-// All service-area communities. `zip` is optional — used only for lookup hints.
-const COMMUNITIES: { name: string; lat: number; lng: number; zip?: string }[] = [
-  // Cumberland County
-  { name: "Portland", lat: 43.6591, lng: -70.2568, zip: "04101" },
-  { name: "South Portland", lat: 43.6415, lng: -70.2580, zip: "04106" },
-  { name: "Cape Elizabeth", lat: 43.5636, lng: -70.2000, zip: "04107" },
-  { name: "Scarborough", lat: 43.5781, lng: -70.3222, zip: "04074" },
-  { name: "Falmouth", lat: 43.7298, lng: -70.2378, zip: "04105" },
-  { name: "Cumberland", lat: 43.7940, lng: -70.2380, zip: "04021" },
-  { name: "Yarmouth", lat: 43.8000, lng: -70.1830, zip: "04096" },
-  { name: "Freeport", lat: 43.8570, lng: -70.1030, zip: "04032" },
-  { name: "Pownal", lat: 43.9020, lng: -70.1900, zip: "04069" },
-  { name: "North Yarmouth", lat: 43.8280, lng: -70.2340, zip: "04097" },
-  { name: "Gray", lat: 43.8891, lng: -70.3300, zip: "04039" },
-  { name: "New Gloucester", lat: 43.9660, lng: -70.2920, zip: "04260" },
-  { name: "Windham", lat: 43.7985, lng: -70.4039, zip: "04062" },
-  { name: "Gorham", lat: 43.6795, lng: -70.4434, zip: "04038" },
-  { name: "Standish", lat: 43.7570, lng: -70.5594, zip: "04084" },
-  { name: "Naples", lat: 43.9781, lng: -70.6075, zip: "04055" },
-  { name: "Casco", lat: 43.9580, lng: -70.5175, zip: "04015" },
-  { name: "Raymond", lat: 43.8945, lng: -70.4700, zip: "04071" },
-  { name: "Sebago", lat: 43.9010, lng: -70.6710, zip: "04029" },
-  { name: "Bridgton", lat: 44.0530, lng: -70.7130, zip: "04009" },
-  { name: "Harrison", lat: 44.1160, lng: -70.6620, zip: "04040" },
-  { name: "Frye Island", lat: 43.8600, lng: -70.5500, zip: "04071" },
-  // York County
-  { name: "Old Orchard Beach", lat: 43.5168, lng: -70.3773, zip: "04064" },
-  { name: "Saco", lat: 43.5010, lng: -70.4430, zip: "04072" },
-  { name: "Biddeford", lat: 43.4926, lng: -70.4534, zip: "04005" },
-  { name: "Buxton", lat: 43.6540, lng: -70.5220, zip: "04093" },
-  { name: "Hollis", lat: 43.6110, lng: -70.5990, zip: "04042" },
-  { name: "Limerick", lat: 43.6880, lng: -70.7930, zip: "04048" },
-  { name: "Waterboro", lat: 43.5368, lng: -70.7192, zip: "04087" },
-  { name: "Alfred", lat: 43.4780, lng: -70.7150, zip: "04002" },
-  { name: "Lyman", lat: 43.5230, lng: -70.6060, zip: "04002" },
-  { name: "Arundel", lat: 43.4260, lng: -70.4780, zip: "04046" },
-  { name: "Kennebunk", lat: 43.3884, lng: -70.5449, zip: "04043" },
-  { name: "Kennebunkport", lat: 43.3612, lng: -70.4767, zip: "04046" },
-  { name: "Wells", lat: 43.3222, lng: -70.5800, zip: "04090" },
-  { name: "Ogunquit", lat: 43.2494, lng: -70.5983, zip: "04090" },
-  { name: "York", lat: 43.1616, lng: -70.6485, zip: "03909" },
-  { name: "Kittery", lat: 43.0904, lng: -70.7395, zip: "03904" },
-  { name: "Eliot", lat: 43.1490, lng: -70.7910, zip: "03903" },
-  { name: "South Berwick", lat: 43.2350, lng: -70.8080, zip: "03908" },
-  { name: "Berwick", lat: 43.2680, lng: -70.8620, zip: "03901" },
-  { name: "North Berwick", lat: 43.3050, lng: -70.7350, zip: "03906" },
-  { name: "Sanford", lat: 43.4390, lng: -70.7740, zip: "04073" },
-  { name: "Springvale", lat: 43.4700, lng: -70.7960, zip: "04083" },
-  { name: "Shapleigh", lat: 43.5300, lng: -70.8480, zip: "04076" },
-  { name: "Acton", lat: 43.5340, lng: -70.9110, zip: "04001" },
-  { name: "Newfield", lat: 43.6480, lng: -70.8710, zip: "04056" },
-  { name: "Parsonsfield", lat: 43.7350, lng: -70.9280, zip: "04047" },
-  { name: "Cornish", lat: 43.7940, lng: -70.8060, zip: "04020" },
-  { name: "Baldwin", lat: 43.8386, lng: -70.7700, zip: "04024" },
-  { name: "Denmark", lat: 43.9700, lng: -70.7900, zip: "04022" },
-];
+
 
 function milesBetween(a: { lat: number; lng: number }, b: { lat: number; lng: number }) {
   const R = 3959;

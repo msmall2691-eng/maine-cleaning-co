@@ -10,6 +10,7 @@ import { Button } from "@/components/ui/button";
 import { Certifications } from "@/components/ui/Certifications";
 import { AICleaningTip } from "@/components/ui/AICleaningTip";
 import { companyInfo } from "@/lib/company-info";
+import { CLEANS_SINCE_2018, CLEANS_SINCE_2018_PLAIN, RECURRING_CLIENT_RATE, COMMUNITIES_SERVED } from "@/lib/company-stats";
 import { WorkGallery } from "@/components/ui/WorkGallery";
 import { SocialFollow } from "@/components/ui/SocialFollow";
 
@@ -20,9 +21,9 @@ const fadeUp = {
 
 const achievements = [
   { icon: Calendar, value: "Est. 2018", label: "Founded in Maine", color: "text-primary", bg: "bg-primary/10" },
-  { icon: TrendingUp, value: "5,000+", label: "Cleans Completed", color: "text-emerald-600 dark:text-emerald-400", bg: "bg-emerald-500/10" },
-  { icon: RefreshCw, value: "93%", label: "Recurring Clients", color: "text-blue-600 dark:text-blue-400", bg: "bg-blue-500/10" },
-  { icon: MapPin, value: "49+", label: "Communities Served", color: "text-orange-600 dark:text-orange-400", bg: "bg-orange-500/10" },
+  { icon: TrendingUp, value: CLEANS_SINCE_2018, label: "Cleans Completed", color: "text-emerald-600 dark:text-emerald-400", bg: "bg-emerald-500/10" },
+  { icon: RefreshCw, value: RECURRING_CLIENT_RATE, label: "Recurring Clients", color: "text-blue-600 dark:text-blue-400", bg: "bg-blue-500/10" },
+  { icon: MapPin, value: COMMUNITIES_SERVED, label: "Communities Served", color: "text-orange-600 dark:text-orange-400", bg: "bg-orange-500/10" },
   { icon: Star, value: "4.9★", label: "Google Rating", color: "text-yellow-500 dark:text-yellow-400", bg: "bg-yellow-500/10" },
   { icon: Clock, value: "30+", label: "Yrs Combined Exp.", color: "text-violet-400", bg: "bg-violet-500/10" },
 ];
@@ -104,7 +105,7 @@ export default function About() {
                 The Maine Cleaning Co. was founded in 2018 with one belief: cleaning should feel effortless for clients and meaningful for the people doing it. We've grown from a small residential team into Southern Maine's most trusted cleaning service — serving homes, vacation rentals, and commercial spaces across York and Cumberland counties.
               </p>
               <p className="text-muted-foreground text-[15px] leading-relaxed mb-6">
-                Every cleaner on our team is trained, background-checked, and genuinely invested in delivering results that go beyond the surface. With 30+ years of combined experience and over 5,000 completed cleans, we've earned a 93% client retention rate.
+                Every cleaner on our team is trained, background-checked, and genuinely invested in delivering results that go beyond the surface. With 30+ years of combined experience and {CLEANS_SINCE_2018_PLAIN} completed cleans, we've earned a {RECURRING_CLIENT_RATE} client retention rate.
               </p>
 
               {/* What sets us apart — integrated values */}
