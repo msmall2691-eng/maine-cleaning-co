@@ -29,6 +29,18 @@ function walk(dir: string): string[] {
   });
 }
 
+/**
+ * The second outcome, however it's phrased. Broad enough that the tone can be
+ * softened freely — it has been twice — but it still fails if the "or we may
+ * not be able to" half is edited away entirely, which is the half that makes
+ * the 48-hour promise keepable.
+ */
+const CANT_TAKE_IT = /not the right fit|too full|can't|cannot|if we can't|fill(?:s|ed)? up/i;
+
+/** Capacity framing: a no is about our schedule, not about the customer. */
+const CAPACITY_REASON =
+  /schedule (?:does )?fill|only take on what we can do properly|don't take on every job|busiest stretches/i;
+
 /** Every source file except the module that defines the wording. */
 function sourceFiles() {
   return walk(SRC).filter((f) => !f.endsWith("response-time.ts"));
@@ -76,27 +88,30 @@ describe("response-time promises", () => {
     // keepable, so it is not allowed to be edited away.
     expect(RESPONSE_REPLY).toMatch(/48 hours/);
     expect(RESPONSE_REPLY).toMatch(/quote/i);
-    expect(RESPONSE_REPLY).toMatch(/not the right fit|can't|cannot|turn.*down/i);
+    expect(RESPONSE_REPLY).toMatch(CANT_TAKE_IT);
   });
 
   it("explains a no by capacity and fit, never by the customer", () => {
     // The difference between honest and snobbish is whether the reason is
     // about our schedule or about them.
-    expect(SELECTIVITY_NOTE).toMatch(/schedule fills up|don't take on every job/i);
-    expect(SELECTIVITY_NOTE).not.toMatch(/right kind of client|selective about who|we choose our/i);
+    expect(SELECTIVITY_NOTE).toMatch(CAPACITY_REASON);
+    expect(SELECTIVITY_NOTE).not.toMatch(
+      /right kind of client|selective about who|we choose our|only work with/i,
+    );
   });
 
   it("always pairs the promise with the faster channel", () => {
-    expect(RESPONSE_URGENT).toMatch(/call or text/i);
+    expect(RESPONSE_URGENT).toMatch(/call or a? ?text/i);
 
     const note = readFileSync(join(SRC, "components", "ui", "ResponseNote.tsx"), "utf8");
     expect(note).toContain("RESPONSE_URGENT");
     expect(note).toContain("SELECTIVITY_NOTE");
 
     const faq = readFileSync(join(SRC, "pages", "HowItWorks.tsx"), "utf8");
-    expect(faq).toMatch(/call or text/i);
-    // The FAQ is where someone goes to find out if they'll be turned down.
-    expect(faq).toMatch(/don't take on every job/i);
+    expect(faq).toMatch(/call or a? ?text/i);
+    // The FAQ is where someone goes to find out whether they'll get a quote.
+    expect(faq).toMatch(CAPACITY_REASON);
+    expect(faq).toMatch(CANT_TAKE_IT);
   });
 
   it("states availability without manufacturing scarcity", () => {

@@ -53,7 +53,7 @@ export default function Book() {
           </h1>
           <p className="mt-3 text-base text-muted-foreground max-w-2xl leading-relaxed">
             Get an instant estimate, tell us a few essentials, and pick a date — we confirm every
-            booking by call or text, {RESPONSE_WINDOW}. Serving{" "}
+            booking by call or text {RESPONSE_WINDOW}. Serving{" "}
             {companyInfo.serviceArea?.center || "Southern Maine"} and the surrounding communities
             all across York and Cumberland County.
           </p>

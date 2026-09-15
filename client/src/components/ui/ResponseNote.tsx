@@ -6,10 +6,10 @@ import { RESPONSE_URGENT, SELECTIVITY_NOTE } from "@/lib/response-time";
  * The note someone sees right after they've sent us something.
  *
  * This is where expectations get set, so it commits to the one thing we can
- * do for everyone — an answer inside 48 hours — and says plainly that the
- * answer might be no. Saying so is the courteous version: people don't mind
- * being turned down, they mind being left to guess, and the last line names
- * that directly so the honesty reads as a favour rather than a brush-off.
+ * do for everyone — hearing from us inside 48 hours — and is upfront that the
+ * schedule sometimes won't stretch. Saying so is the kinder version: being
+ * turned down politely is easy to take, being left to guess is not, and
+ * "never left wondering" names that so the honesty reads as a courtesy.
  */
 export function ResponseNote() {
   return (
@@ -19,12 +19,12 @@ export function ResponseNote() {
     >
       <p className="flex items-center gap-2 text-sm font-semibold text-foreground mb-1.5">
         <Clock className="w-4 h-4 text-primary flex-shrink-0" />
-        You'll hear back within 48 hours
+        You'll hear from us within 48 hours
       </p>
       <p className="text-[13px] text-muted-foreground leading-relaxed">
-        {SELECTIVITY_NOTE} Either way you'll get an answer within two days — a quote if we
-        can take it on, or a quick note if we can't, so you're never left waiting on us to
-        find out. {RESPONSE_URGENT}
+        {SELECTIVITY_NOTE} Either way we'll come back to you within two days — your quote if
+        we can fit you in, or a friendly note if we can't, so you're never left wondering.{" "}
+        {RESPONSE_URGENT}
       </p>
       <div className="flex flex-wrap gap-4 mt-3 text-[13px]">
         <a
