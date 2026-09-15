@@ -333,7 +333,7 @@ export default function ManageBooking() {
                     <div className="flex items-start gap-2 px-3 py-2 rounded-lg bg-emerald-500/10 border border-emerald-500/20" data-testid="manage-saved">
                       <CheckCircle2 className="w-4 h-4 text-green-500 mt-0.5 flex-shrink-0" />
                       <p className="text-xs text-green-600 dark:text-green-400">
-                        Changes saved! We'll confirm any date change by call or text within 1 business day.
+                        Changes saved! We'll confirm any date change by call or text as soon as we can.
                       </p>
                     </div>
                   )}
