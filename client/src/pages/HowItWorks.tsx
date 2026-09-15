@@ -20,7 +20,7 @@ const steps = [
   {
     step: "1", icon: ClipboardList, title: "Request Estimate",
     desc: "Use our instant estimate calculator or reach out directly — whichever is easier.",
-    detail: "No commitment needed. We read every message ourselves and reply as fast as we can — call or text if it's time-sensitive.",
+    detail: "No commitment needed. You'll hear back within 48 hours either way — call or text if it's time-sensitive.",
   },
   {
     step: "2", icon: CalendarCheck, title: "Confirm Details",
@@ -49,7 +49,7 @@ const faqs = [
   { q: "How is pricing determined?", a: "Square footage, number of bathrooms, service type, frequency, and the condition of the home. Our instant estimate tool gives you a range in about a minute — no commitment, and no phone call required to see a number." },
   { q: "Do I need to be home during the cleaning?", a: "No. Many clients leave a spare key or an entry code. We always make sure your home is secure when we leave." },
   { q: "What's the difference between a standard and a deep clean?", a: "A deep clean covers baseboards, interior windows, detailed grout scrubbing and behind furniture — the things routine maintenance cleans don't include. You can book either as a one-time clean with no commitment." },
-  { q: "How fast will you get back to me?", a: "We're a small local team and we answer every message ourselves rather than routing it to a call centre — usually within a day or two, sometimes a little longer in our busiest stretch of the season. We do read and reply to everyone. If it's time-sensitive, call or text and you'll reach us quicker." },
+  { q: "How fast will you hear back — and do you take every job?", a: "You'll hear back within 48 hours, always. We're a small local team and we don't take on every job: the schedule fills up, especially in peak season, and some work isn't a fit for how we operate. So within two days you'll get one of two things — a quote if we can take it on, or a straight answer that we're not the right fit right now. We'd rather tell you quickly than leave you waiting while you've got a house to sort out. If it's time-sensitive, call or text and you'll reach us quicker." },
   { q: "What if I'm not satisfied with a clean?", a: "We come back and fix it. No questions asked — that's the satisfaction guarantee." },
   { q: "What areas do you serve?", a: `York County and Cumberland County in Southern Maine — ${COMMUNITIES_SERVED} communities in all, including Portland, South Portland, Scarborough, Cape Elizabeth, Falmouth, Yarmouth, Old Orchard Beach and Kennebunkport.` },
 ];

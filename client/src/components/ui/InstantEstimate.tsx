@@ -1541,9 +1541,9 @@ export function InstantEstimate({ defaultCategory, bookingIntent = false }: Inst
                 </h4>
                 <div className="space-y-3">
                   {[
-                    { label: "We'll review your request", desc: "Usually within a day or two" },
+                    { label: "We'll review your request", desc: "You'll hear back within 48 hours" },
                     { label: "We'll reach out to confirm details", desc: "Via phone, text, or email" },
-                    { label: "You'll get a final quote & schedule", desc: "Usually within 3–7 business days" },
+                    { label: "If we can take it on, you'll get a quote", desc: "And a straight answer either way" },
                   ].map((item, i) => (
                     <div key={i} className="flex items-start gap-3">
                       <div className="w-7 h-7 rounded-full bg-card border border-border/50 flex items-center justify-center flex-shrink-0 mt-0.5 shadow-[0_1px_3px_rgba(0,0,0,0.1)]">

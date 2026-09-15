@@ -632,7 +632,7 @@ export default function Home() {
           <div className="max-w-2xl mx-auto">
             <h2 className="text-[1.75rem] sm:text-4xl md:text-[2.5rem] font-serif font-bold text-foreground tracking-[-0.01em] mb-3 text-center section-heading-accent">Get in Touch</h2>
             <p className="text-muted-foreground text-[15px] mb-10 leading-relaxed text-center max-w-lg mx-auto">
-              Have a question or need more info? Drop us a message — we read every one ourselves and reply as fast as we can.
+              Have a question or need more info? Drop us a message and you'll hear back within 48 hours.
             </p>
             <ContactForm />
             <div className="mt-10 flex flex-col sm:flex-row items-center justify-center gap-6 text-sm text-muted-foreground">
