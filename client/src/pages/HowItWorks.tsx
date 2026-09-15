@@ -9,6 +9,7 @@ import {
 import { Accordion, AccordionItem, AccordionTrigger, AccordionContent } from "@/components/ui/accordion";
 import { Button } from "@/components/ui/button";
 import { companyInfo } from "@/lib/company-info";
+import { COMMUNITIES_SERVED } from "@/lib/company-stats";
 
 const fadeUp = {
   hidden: { opacity: 0, y: 20 },
@@ -49,7 +50,7 @@ const faqs = [
   { q: "Do I need to be home during the cleaning?", a: "No. Many clients leave a spare key or an entry code. We always make sure your home is secure when we leave." },
   { q: "What's the difference between a standard and a deep clean?", a: "A deep clean covers baseboards, interior windows, detailed grout scrubbing and behind furniture — the things routine maintenance cleans don't include. You can book either as a one-time clean with no commitment." },
   { q: "What if I'm not satisfied with a clean?", a: "We come back and fix it. No questions asked — that's the satisfaction guarantee." },
-  { q: "What areas do you serve?", a: "York County and Cumberland County in Southern Maine — Portland, South Portland, Scarborough, Cape Elizabeth, Falmouth, Yarmouth, Old Orchard Beach, Kennebunkport, and 40+ more communities." },
+  { q: "What areas do you serve?", a: `York County and Cumberland County in Southern Maine — ${COMMUNITIES_SERVED} communities in all, including Portland, South Portland, Scarborough, Cape Elizabeth, Falmouth, Yarmouth, Old Orchard Beach and Kennebunkport.` },
 ];
 
 export default function HowItWorks() {

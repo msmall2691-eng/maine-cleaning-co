@@ -28,6 +28,7 @@ import { SocialFollow } from "@/components/ui/SocialFollow";
 import { SparkleField } from "@/components/ui/SparkleField";
 import { CoverageCheck } from "@/components/ui/CoverageCheck";
 import { companyInfo } from "@/lib/company-info";
+import { COMMUNITIES_SERVED, CLEANS_SINCE_2018 } from "@/lib/company-stats";
 
 const fadeUp = {
   hidden: { opacity: 0, y: 20 },
@@ -419,7 +420,7 @@ export default function Home() {
               </div>
               <div className="min-w-0">
                 <div className="text-[13px] font-semibold text-foreground group-hover:text-orange-600 dark:text-orange-400 transition-colors truncate">Service Areas</div>
-                <div className="text-[11px] text-muted-foreground truncate">49+ communities</div>
+                <div className="text-[11px] text-muted-foreground truncate">{COMMUNITIES_SERVED} communities</div>
               </div>
             </Link>
           </div>
@@ -501,7 +502,7 @@ export default function Home() {
               <div className="flex flex-wrap justify-start gap-x-5 gap-y-1.5 text-xs sm:text-[13px] text-muted-foreground font-medium">
                 <span>7+ Years</span>
                 <span className="text-muted-foreground/50">·</span>
-                <span>5,000+ Cleans</span>
+                <span>{CLEANS_SINCE_2018} Cleans</span>
                 <span className="text-muted-foreground/50">·</span>
                 <span>4.9★ Google</span>
               </div>
