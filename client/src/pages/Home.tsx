@@ -28,6 +28,7 @@ import { SocialFollow } from "@/components/ui/SocialFollow";
 import { SparkleField } from "@/components/ui/SparkleField";
 import { CoverageCheck } from "@/components/ui/CoverageCheck";
 import { companyInfo } from "@/lib/company-info";
+import { RESPONSE_REPLY, AVAILABILITY_NOTE } from "@/lib/response-time";
 import { COMMUNITIES_SERVED, CLEANS_SINCE_2018 } from "@/lib/company-stats";
 
 const fadeUp = {
@@ -154,7 +155,7 @@ function ContactForm() {
       <div className="bg-card border border-border/60 rounded-2xl p-8 text-center">
         <CheckCircle2 className="w-10 h-10 text-primary mx-auto mb-4" />
         <p className="text-lg font-semibold text-foreground mb-2">Message Sent!</p>
-        <p className="text-sm text-muted-foreground">We'll get back to you within one business day.</p>
+        <p className="text-sm text-muted-foreground leading-relaxed max-w-sm mx-auto">{RESPONSE_REPLY}</p>
         <Button variant="outline" className="mt-6 rounded-full" onClick={() => setStatus("idle")}>
           Send Another Message
         </Button>
@@ -363,6 +364,27 @@ export default function Home() {
             <Button size="lg" variant="outline" className="w-full sm:w-auto h-13 sm:h-14 px-8 sm:px-10 rounded-full text-base border-2 border-primary hover:bg-primary/5 bg-card/80 backdrop-blur-sm shadow-[0_1px_4px_rgba(0,0,0,0.15)]" onClick={scrollToEstimate} data-testid="button-hero-estimate">
               Get an Instant Quote <ArrowRight className="ml-2.5 w-4 h-4" />
             </Button>
+          </motion.div>
+
+          {/* Still here, still taking work. A plain availability statement —
+              deliberately not scarcity ("only N slots left"), which would be
+              both untrue and the opposite of how we actually operate. */}
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            transition={{ duration: 0.5, delay: 0.4 }}
+            className="flex justify-center -mt-6 sm:-mt-8 mb-10 sm:mb-12"
+          >
+            <span
+              className="inline-flex items-center gap-2 rounded-full border border-emerald-600/30 dark:border-emerald-500/30 bg-emerald-500/10 px-4 py-1.5 text-[13px] font-medium text-emerald-700 dark:text-emerald-300"
+              data-testid="badge-availability"
+            >
+              <span className="relative flex h-2 w-2" aria-hidden="true">
+                <span className="absolute inline-flex h-full w-full rounded-full bg-emerald-500 opacity-60 motion-safe:animate-ping" />
+                <span className="relative inline-flex h-2 w-2 rounded-full bg-emerald-600 dark:bg-emerald-400" />
+              </span>
+              {AVAILABILITY_NOTE}
+            </span>
           </motion.div>
 
           {/* Trust signals */}
@@ -610,7 +632,7 @@ export default function Home() {
           <div className="max-w-2xl mx-auto">
             <h2 className="text-[1.75rem] sm:text-4xl md:text-[2.5rem] font-serif font-bold text-foreground tracking-[-0.01em] mb-3 text-center section-heading-accent">Get in Touch</h2>
             <p className="text-muted-foreground text-[15px] mb-10 leading-relaxed text-center max-w-lg mx-auto">
-              Have a question or need more info? Drop us a message and we'll get back to you within one business day.
+              Have a question or need more info? Drop us a message — we read every one ourselves and reply as fast as we can.
             </p>
             <ContactForm />
             <div className="mt-10 flex flex-col sm:flex-row items-center justify-center gap-6 text-sm text-muted-foreground">

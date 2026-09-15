@@ -31,6 +31,8 @@ import {
   AlertCircle,
 } from "lucide-react";
 import { companyInfo } from "@/lib/company-info";
+import { RESPONSE_REPLY, RESPONSE_CONFIRM } from "@/lib/response-time";
+import { ResponseNote } from "@/components/ui/ResponseNote";
 import { VoiceInput, type ParsedEstimate } from "@/components/ui/VoiceInput";
 import { computeEstimate } from "@shared/pricing";
 
@@ -572,7 +574,7 @@ export function InstantEstimate({ defaultCategory, bookingIntent = false }: Inst
       // page session) gets its own fresh key instead of colliding with
       // this one in Bright-Space's dedup.
       rotateIdempotencyKey();
-      toast({ title: "Booking request sent!", description: "We'll confirm within 1 business day." });
+      toast({ title: "Booking request sent!", description: RESPONSE_CONFIRM });
     },
     onError: (err: Error) => {
       toast({ title: "Booking failed", description: err.message || "Please try again or call us.", variant: "destructive" });
@@ -1118,8 +1120,8 @@ export function InstantEstimate({ defaultCategory, bookingIntent = false }: Inst
                   Add a phone or email so we can send your quote.
                 </p>
               )}
-              <p className="text-[11px] text-muted-foreground text-center">
-                We typically respond within 1 business day.
+              <p className="text-[11px] text-muted-foreground text-center leading-relaxed">
+                {RESPONSE_REPLY}
               </p>
             </motion.div>
           )}
@@ -1256,7 +1258,7 @@ export function InstantEstimate({ defaultCategory, bookingIntent = false }: Inst
                   </p>
                 ) : contactEmail && !emailSent ? (
                   <p className="text-muted-foreground text-xs mt-1.5">
-                    We'll reach out to <span className="font-medium text-foreground">{contactEmail}</span> within 1 business day.
+                    We'll reach out to <span className="font-medium text-foreground">{contactEmail}</span> as soon as we can.
                   </p>
                 ) : contactPhone ? (
                   <p className="text-muted-foreground text-xs mt-1.5">
@@ -1264,7 +1266,7 @@ export function InstantEstimate({ defaultCategory, bookingIntent = false }: Inst
                   </p>
                 ) : (
                   <p className="text-muted-foreground text-xs mt-1.5">
-                    We'll be in touch within 1 business day.
+                    We'll be in touch as soon as we can.
                   </p>
                 )}
               </div>
@@ -1490,7 +1492,7 @@ export function InstantEstimate({ defaultCategory, bookingIntent = false }: Inst
                         </p>
                       )}
                       <p className="text-[11px] text-muted-foreground text-center leading-relaxed">
-                        Requires approval — we'll confirm by call or text within 1 business day.
+                        Requires approval — {RESPONSE_CONFIRM.charAt(0).toLowerCase() + RESPONSE_CONFIRM.slice(1)}
                         <br />
                         <span className="inline-flex items-center gap-1 mt-1">
                           <Calendar className="w-3 h-3" />
@@ -1531,13 +1533,15 @@ export function InstantEstimate({ defaultCategory, bookingIntent = false }: Inst
                 </div>
               )}
 
+              <ResponseNote />
+
               <div className="rounded-xl bg-muted/40 p-4 space-y-4">
                 <h4 className="text-sm font-bold text-foreground flex items-center gap-2">
                   <ClipboardCheck className="w-4 h-4 text-primary" /> What happens next
                 </h4>
                 <div className="space-y-3">
                   {[
-                    { label: "We'll review your request", desc: "Typically within 1 business day" },
+                    { label: "We'll review your request", desc: "Usually within a day or two" },
                     { label: "We'll reach out to confirm details", desc: "Via phone, text, or email" },
                     { label: "You'll get a final quote & schedule", desc: "Usually within 3–7 business days" },
                   ].map((item, i) => (
@@ -1597,7 +1601,7 @@ export function InstantEstimate({ defaultCategory, bookingIntent = false }: Inst
                   <div>
                     <p className="text-sm font-medium text-foreground">Pending approval</p>
                     <p className="text-xs text-muted-foreground mt-0.5">
-                      We'll review your request and confirm via phone or text within 1 business day.
+                      We'll review your request and confirm by phone or text as soon as we can.
                       Once approved, you'll get a Google Calendar invite that adds the cleaning to your
                       phone automatically — no app to install.
                     </p>

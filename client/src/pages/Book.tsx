@@ -4,6 +4,7 @@ import { Calendar, Sparkles, CheckCircle2, Clock } from "lucide-react";
 import { useSEO } from "@/hooks/use-seo";
 import { InstantEstimate } from "@/components/ui/InstantEstimate";
 import { companyInfo } from "@/lib/company-info";
+import { RESPONSE_WINDOW } from "@/lib/response-time";
 
 /**
  * /book — dedicated booking landing page.
@@ -51,9 +52,10 @@ export default function Book() {
             Book Your Cleaning
           </h1>
           <p className="mt-3 text-base text-muted-foreground max-w-2xl leading-relaxed">
-            Get an instant estimate, tell us a few essentials, and pick a date — we confirm within
-            one business day. Serving {companyInfo.serviceArea?.center || "Southern Maine"} and the
-            surrounding communities all across York and Cumberland County.
+            Get an instant estimate, tell us a few essentials, and pick a date — we confirm every
+            booking by call or text, {RESPONSE_WINDOW}. Serving{" "}
+            {companyInfo.serviceArea?.center || "Southern Maine"} and the surrounding communities
+            all across York and Cumberland County.
           </p>
 
           <div className="mt-6 grid grid-cols-1 sm:grid-cols-3 gap-3 max-w-3xl">

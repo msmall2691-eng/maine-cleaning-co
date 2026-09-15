@@ -19,8 +19,8 @@ const fadeUp = {
 const steps = [
   {
     step: "1", icon: ClipboardList, title: "Request Estimate",
-    desc: "Use our instant estimate calculator or reach out directly. We respond within hours, not days.",
-    detail: "No commitment needed — just tell us about your space and what you need.",
+    desc: "Use our instant estimate calculator or reach out directly — whichever is easier.",
+    detail: "No commitment needed. We read every message ourselves and reply as fast as we can — call or text if it's time-sensitive.",
   },
   {
     step: "2", icon: CalendarCheck, title: "Confirm Details",
@@ -49,6 +49,7 @@ const faqs = [
   { q: "How is pricing determined?", a: "Square footage, number of bathrooms, service type, frequency, and the condition of the home. Our instant estimate tool gives you a range in about a minute — no commitment, and no phone call required to see a number." },
   { q: "Do I need to be home during the cleaning?", a: "No. Many clients leave a spare key or an entry code. We always make sure your home is secure when we leave." },
   { q: "What's the difference between a standard and a deep clean?", a: "A deep clean covers baseboards, interior windows, detailed grout scrubbing and behind furniture — the things routine maintenance cleans don't include. You can book either as a one-time clean with no commitment." },
+  { q: "How fast will you get back to me?", a: "We're a small local team and we answer every message ourselves rather than routing it to a call centre — usually within a day or two, sometimes a little longer in our busiest stretch of the season. We do read and reply to everyone. If it's time-sensitive, call or text and you'll reach us quicker." },
   { q: "What if I'm not satisfied with a clean?", a: "We come back and fix it. No questions asked — that's the satisfaction guarantee." },
   { q: "What areas do you serve?", a: `York County and Cumberland County in Southern Maine — ${COMMUNITIES_SERVED} communities in all, including Portland, South Portland, Scarborough, Cape Elizabeth, Falmouth, Yarmouth, Old Orchard Beach and Kennebunkport.` },
 ];
