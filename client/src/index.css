@@ -217,6 +217,15 @@
   }
 }
 
+/* Printing runs no IntersectionObserver, so any section that hadn't been
+   scrolled to would come out of the printer blank. */
+@media print {
+  .section-fade {
+    opacity: 1 !important;
+    transform: none !important;
+  }
+}
+
 .no-scrollbar {
   scrollbar-width: none;
   -ms-overflow-style: none;

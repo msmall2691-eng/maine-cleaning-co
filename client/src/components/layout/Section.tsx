@@ -58,7 +58,13 @@ function useReveal<T extends HTMLElement>(enabled: boolean) {
           io.disconnect();
         }
       },
-      { threshold: 0.08, rootMargin: "0px 0px -40px 0px" },
+      // threshold 0, not a fraction: a fractional threshold can never be met
+      // by an element taller than the viewport/threshold ratio, and is never
+      // met at all by a zero-height one — either of which would leave a
+      // section stuck at opacity 0 with its content unreachable. The negative
+      // bottom margin is what delays the reveal until the section is properly
+      // on screen, so nothing is lost by dropping the ratio.
+      { threshold: 0, rootMargin: "0px 0px -40px 0px" },
     );
     io.observe(el);
     return () => io.disconnect();

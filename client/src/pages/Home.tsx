@@ -29,6 +29,7 @@ import { SparkleField } from "@/components/ui/SparkleField";
 import { CoverageCheck } from "@/components/ui/CoverageCheck";
 import { companyInfo } from "@/lib/company-info";
 import { RESPONSE_REPLY, AVAILABILITY_NOTE } from "@/lib/response-time";
+import { ResponseNote } from "@/components/ui/ResponseNote";
 import { COMMUNITIES_SERVED, CLEANS_SINCE_2018 } from "@/lib/company-stats";
 import { Section, SectionHeading } from "@/components/layout/Section";
 import { LogoWatermark } from "@/components/brand/Logo";
@@ -623,8 +624,14 @@ export default function Home() {
         </div>
         <LogoWatermark position="right" />
 
-        <div className="grid lg:grid-cols-[minmax(0,0.85fr)_minmax(0,1fr)] gap-12 lg:gap-16 items-start">
-          <div>
+        {/* The estimator is ~1,400px tall and this column is ~600px, so the
+            column used to run out a third of the way down and leave a tall
+            hole beside the form. `items-start` + a sticky column means the
+            pitch travels with you as you work through the estimate instead —
+            no hole, and the reassurance is on screen at the moment you are
+            deciding whether to submit. */}
+        <div className="grid lg:grid-cols-[minmax(0,0.8fr)_minmax(0,1fr)] gap-12 lg:gap-16 items-start">
+          <div className="lg:sticky lg:top-28">
             <SectionHeading
               align="left"
               eyebrow="Pricing"
@@ -632,25 +639,30 @@ export default function Home() {
               lead="Get an instant ballpark estimate, or reach out for a custom quote. No hidden fees, no surprises."
               className="mb-8"
             />
-            <ul className="space-y-3 mb-9">
+            <ul className="space-y-3 mb-8">
               {["No hidden fees", "Custom plans for unique spaces", "Flexible scheduling", "Satisfaction guaranteed"].map((t, i) => (
                 <li key={i} className="flex items-center gap-3 text-sm font-medium text-foreground">
                   <CheckCircle2 className="w-4 h-4 text-primary flex-shrink-0" /> {t}
                 </li>
               ))}
             </ul>
-            <div className="text-sm text-muted-foreground space-y-3">
-              <p className="font-semibold text-foreground text-xs uppercase tracking-[0.15em] mb-3">Prefer to talk?</p>
-              <a href={companyInfo.contact.phoneHref} className="flex items-center gap-2.5 hover:text-foreground transition-colors" data-testid="link-est-call">
-                <Phone className="w-4 h-4 text-primary" /> {companyInfo.contact.phoneDisplay}
-              </a>
-              <a href={companyInfo.contact.smsHref} className="flex items-center gap-2.5 hover:text-foreground transition-colors" data-testid="link-est-text">
-                <MessageSquare className="w-4 h-4 text-primary" /> Text us
-              </a>
-              <a href={companyInfo.contact.emailHref} className="flex items-center gap-2.5 hover:text-foreground transition-colors" data-testid="link-est-email">
-                <Mail className="w-4 h-4 text-primary" /> {companyInfo.contact.email}
-              </a>
-            </div>
+
+            {/* The 48-hour promise belongs here, next to the button that
+                sends it — it is what someone wants to know at the moment
+                they're deciding whether to submit, and it was previously
+                only shown after submitting. It also carries the call and
+                text links, so the bare "Prefer to talk?" list that used to
+                sit here (same two links, plus email) went with it; email
+                moved below to keep all three channels. */}
+            <ResponseNote />
+
+            <a
+              href={companyInfo.contact.emailHref}
+              className="inline-flex items-center gap-2.5 mt-4 text-sm text-muted-foreground hover:text-foreground transition-colors"
+              data-testid="link-est-email"
+            >
+              <Mail className="w-4 h-4 text-primary" /> {companyInfo.contact.email}
+            </a>
           </div>
           <InstantEstimate />
         </div>

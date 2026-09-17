@@ -8,6 +8,8 @@ import { intakeSubmitSchema } from "./lib/validators";
 import { normalizeIntakePayload } from "./lib/normalize";
 import { forwardLeadToBrightBase, forwardBookingUpdateToBrightBase } from "./lib/brightbase";
 import { calculateQuote, estimatesDiverge } from "./lib/quoteEngine";
+import { RATE, MIN_JOB, RANGE_BAND } from "@shared/pricing";
+import { CLEANS_SINCE_2018 } from "@/lib/company-stats";
 import { runForward, retryFailedForwards, recordSkipped } from "./lib/leadForward";
 import { leadForwards } from "@shared/schema";
 import { db } from "./db";
@@ -565,6 +567,16 @@ export async function registerRoutes(
           serviceType: normalized.serviceType,
         });
       }
+      // Same fallback, same blind spot — see the booking handler.
+      if (intakeQuote.estimateMin == null && normalized.estimateMin != null) {
+        log("WARN", "intake", "Server could not price this job — persisting the CLIENT-supplied estimate", {
+          clientMin: normalized.estimateMin,
+          clientMax: normalized.estimateMax,
+          serviceType: normalized.serviceType,
+          confidence: intakeQuote.confidence,
+          sqft: normalized.sqft ?? null,
+        });
+      }
       const trustedMin = intakeQuote.estimateMin ?? normalized.estimateMin ?? null;
       const trustedMax = intakeQuote.estimateMax ?? normalized.estimateMax ?? null;
       normalized.estimateMin = trustedMin;
@@ -1015,20 +1027,34 @@ export async function registerRoutes(
 
   const getOpenAI = () => new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
 
+  // The money and the stats are interpolated, never typed. This prompt used
+  // to hardcode its own price card — "$120", "$200", "$62/hour", "÷725",
+  // "1.5x", "±6%" — and every one of those had drifted from shared/pricing.ts
+  // ($130, $225, $60/hr, a piecewise divisor, 1.60-1.80, ±4%). A customer
+  // could ask the widget about a deep clean, be told "starting at $200", then
+  // get $225 from the estimator — which is the number that reaches BrightBase.
+  // Same story for "5,000+ cleans" against the 4,715+ the rest of the site
+  // commits to. Nothing in either set was covered by a test, because a string
+  // in a prompt isn't code until it quotes someone a price.
+  //
+  // The exact formula is deliberately NOT restated here. The model must not be
+  // able to compute a price at all — the rules below send every pricing
+  // question to the estimator, which is the one engine the server recomputes
+  // from and forwards.
   const SYSTEM_PROMPT = `You are the AI assistant for The Maine Cleaning Co., a premium residential and commercial cleaning company serving Southern Maine (Portland, Scarborough, Falmouth, Windham, Naples, Kennebunk, Gorham, and surrounding towns).
 
 Services offered:
-- Standard Residential Cleaning (weekly/biweekly/monthly) — starting at $120
-- Deep Cleaning — starting at $200, includes baseboards, inside appliances, grout
+- Standard Residential Cleaning (weekly/biweekly/monthly) — starting at $${MIN_JOB.standard}
+- Deep Cleaning — starting at $${MIN_JOB.deep}, includes baseboards, inside appliances, grout
 - Vacation Rental Turnovers — guest-ready cleanings between stays
 - Move-In/Move-Out Cleaning — empty-property deep clean
 - Commercial Cleaning — offices, dental practices, car clubs, group homes
 
-Pricing factors: Square footage (÷725 = base hours), number of bathrooms, property condition, pet hair level, cleaning frequency (weekly cheapest, one-time most expensive). Rate is $62/hour. Deep clean multiplier is 1.5x. Prices rounded to nearest $5 with a ±6% range shown.
+Pricing factors: Square footage, number of bathrooms, property condition, pet hair level, cleaning frequency (weekly cheapest, one-time most expensive). Rate is $${RATE}/hour. Deep cleans cost more and scale with the size of the home. Prices are rounded to the nearest $5 and shown as a ±${Math.round(RANGE_BAND * 100)}% range.
 
 Coverage area: Southern Maine including Portland, South Portland, Scarborough, Falmouth, Gorham, Windham, Naples, Casco, Standish, West Baldwin, Kennebunk, Old Orchard Beach, Waterboro.
 
-Company details: 7+ years in business, 5,000+ cleans completed, 4.9 Google rating, eco-friendly products, fully insured. Phone: 207-572-0502, Email: office@mainecleaningco.com
+Company details: 7+ years in business, ${CLEANS_SINCE_2018} cleans completed, 4.9 Google rating, eco-friendly products, fully insured. Phone: 207-572-0502, Email: office@mainecleaningco.com
 
 Rules:
 - Be warm, professional, and concise (2-4 sentences per response)
@@ -1306,6 +1332,21 @@ Rules:
       });
       const estimateMin = serverQuote.estimateMin ?? data.estimateMin ?? null;
       const estimateMax = serverQuote.estimateMax ?? data.estimateMax ?? null;
+      // That fallback is deliberate (see above) but it must not be silent.
+      // estimatesDiverge() returns false the moment either side is null, so
+      // until now a client-supplied price on a custom-quote or incomplete-input
+      // booking was persisted AND forwarded to BrightBase with no log line at
+      // all — the one path where a number we did not compute reaches the
+      // operator, and the one path with nothing to notice it by.
+      if (serverQuote.estimateMin == null && data.estimateMin != null) {
+        log("WARN", "booking", "Server could not price this job — persisting the CLIENT-supplied estimate", {
+          clientMin: data.estimateMin,
+          clientMax: data.estimateMax,
+          serviceType: data.serviceType,
+          confidence: serverQuote.confidence,
+          sqft: data.sqft ?? null,
+        });
+      }
       if (estimatesDiverge(data.estimateMin, data.estimateMax, serverQuote.estimateMin, serverQuote.estimateMax)) {
         log("WARN", "booking", "Client-supplied estimate diverged from server recompute", {
           clientMin: data.estimateMin,

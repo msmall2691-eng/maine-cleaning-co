@@ -2340,6 +2340,546 @@
         "max": 420,
         "mid": 405
       }
+    },
+    {
+      "input": {
+        "sqft": 1800,
+        "bathrooms": 2,
+        "cleanType": "deep",
+        "frequency": "weekly",
+        "condition": "maintenance",
+        "petHair": "none"
+      },
+      "expected": {
+        "min": 235,
+        "max": 255,
+        "mid": 245
+      }
+    },
+    {
+      "input": {
+        "sqft": 1800,
+        "bathrooms": 2,
+        "cleanType": "deep",
+        "frequency": "weekly",
+        "condition": "maintenance",
+        "petHair": "some"
+      },
+      "expected": {
+        "min": 260,
+        "max": 280,
+        "mid": 270
+      }
+    },
+    {
+      "input": {
+        "sqft": 1800,
+        "bathrooms": 2,
+        "cleanType": "deep",
+        "frequency": "weekly",
+        "condition": "maintenance",
+        "petHair": "heavy"
+      },
+      "expected": {
+        "min": 285,
+        "max": 305,
+        "mid": 295
+      }
+    },
+    {
+      "input": {
+        "sqft": 1800,
+        "bathrooms": 2,
+        "cleanType": "deep",
+        "frequency": "weekly",
+        "condition": "moderate",
+        "petHair": "none"
+      },
+      "expected": {
+        "min": 275,
+        "max": 295,
+        "mid": 285
+      }
+    },
+    {
+      "input": {
+        "sqft": 1800,
+        "bathrooms": 2,
+        "cleanType": "deep",
+        "frequency": "weekly",
+        "condition": "moderate",
+        "petHair": "some"
+      },
+      "expected": {
+        "min": 300,
+        "max": 320,
+        "mid": 310
+      }
+    },
+    {
+      "input": {
+        "sqft": 1800,
+        "bathrooms": 2,
+        "cleanType": "deep",
+        "frequency": "weekly",
+        "condition": "moderate",
+        "petHair": "heavy"
+      },
+      "expected": {
+        "min": 320,
+        "max": 350,
+        "mid": 335
+      }
+    },
+    {
+      "input": {
+        "sqft": 1800,
+        "bathrooms": 2,
+        "cleanType": "deep",
+        "frequency": "weekly",
+        "condition": "heavy",
+        "petHair": "none"
+      },
+      "expected": {
+        "min": 310,
+        "max": 340,
+        "mid": 325
+      }
+    },
+    {
+      "input": {
+        "sqft": 1800,
+        "bathrooms": 2,
+        "cleanType": "deep",
+        "frequency": "weekly",
+        "condition": "heavy",
+        "petHair": "some"
+      },
+      "expected": {
+        "min": 340,
+        "max": 370,
+        "mid": 355
+      }
+    },
+    {
+      "input": {
+        "sqft": 1800,
+        "bathrooms": 2,
+        "cleanType": "deep",
+        "frequency": "weekly",
+        "condition": "heavy",
+        "petHair": "heavy"
+      },
+      "expected": {
+        "min": 365,
+        "max": 395,
+        "mid": 380
+      }
+    },
+    {
+      "input": {
+        "sqft": 1800,
+        "bathrooms": 2,
+        "cleanType": "deep",
+        "frequency": "biweekly",
+        "condition": "maintenance",
+        "petHair": "none"
+      },
+      "expected": {
+        "min": 275,
+        "max": 295,
+        "mid": 285
+      }
+    },
+    {
+      "input": {
+        "sqft": 1800,
+        "bathrooms": 2,
+        "cleanType": "deep",
+        "frequency": "biweekly",
+        "condition": "maintenance",
+        "petHair": "some"
+      },
+      "expected": {
+        "min": 300,
+        "max": 330,
+        "mid": 315
+      }
+    },
+    {
+      "input": {
+        "sqft": 1800,
+        "bathrooms": 2,
+        "cleanType": "deep",
+        "frequency": "biweekly",
+        "condition": "maintenance",
+        "petHair": "heavy"
+      },
+      "expected": {
+        "min": 330,
+        "max": 360,
+        "mid": 345
+      }
+    },
+    {
+      "input": {
+        "sqft": 1800,
+        "bathrooms": 2,
+        "cleanType": "deep",
+        "frequency": "biweekly",
+        "condition": "moderate",
+        "petHair": "none"
+      },
+      "expected": {
+        "min": 320,
+        "max": 350,
+        "mid": 335
+      }
+    },
+    {
+      "input": {
+        "sqft": 1800,
+        "bathrooms": 2,
+        "cleanType": "deep",
+        "frequency": "biweekly",
+        "condition": "moderate",
+        "petHair": "some"
+      },
+      "expected": {
+        "min": 350,
+        "max": 380,
+        "mid": 365
+      }
+    },
+    {
+      "input": {
+        "sqft": 1800,
+        "bathrooms": 2,
+        "cleanType": "deep",
+        "frequency": "biweekly",
+        "condition": "moderate",
+        "petHair": "heavy"
+      },
+      "expected": {
+        "min": 380,
+        "max": 410,
+        "mid": 395
+      }
+    },
+    {
+      "input": {
+        "sqft": 1800,
+        "bathrooms": 2,
+        "cleanType": "deep",
+        "frequency": "biweekly",
+        "condition": "heavy",
+        "petHair": "none"
+      },
+      "expected": {
+        "min": 370,
+        "max": 400,
+        "mid": 385
+      }
+    },
+    {
+      "input": {
+        "sqft": 1800,
+        "bathrooms": 2,
+        "cleanType": "deep",
+        "frequency": "biweekly",
+        "condition": "heavy",
+        "petHair": "some"
+      },
+      "expected": {
+        "min": 400,
+        "max": 430,
+        "mid": 415
+      }
+    },
+    {
+      "input": {
+        "sqft": 1800,
+        "bathrooms": 2,
+        "cleanType": "deep",
+        "frequency": "biweekly",
+        "condition": "heavy",
+        "petHair": "heavy"
+      },
+      "expected": {
+        "min": 425,
+        "max": 465,
+        "mid": 445
+      }
+    },
+    {
+      "input": {
+        "sqft": 1800,
+        "bathrooms": 2,
+        "cleanType": "deep",
+        "frequency": "monthly",
+        "condition": "maintenance",
+        "petHair": "none"
+      },
+      "expected": {
+        "min": 315,
+        "max": 345,
+        "mid": 330
+      }
+    },
+    {
+      "input": {
+        "sqft": 1800,
+        "bathrooms": 2,
+        "cleanType": "deep",
+        "frequency": "monthly",
+        "condition": "maintenance",
+        "petHair": "some"
+      },
+      "expected": {
+        "min": 350,
+        "max": 380,
+        "mid": 365
+      }
+    },
+    {
+      "input": {
+        "sqft": 1800,
+        "bathrooms": 2,
+        "cleanType": "deep",
+        "frequency": "monthly",
+        "condition": "maintenance",
+        "petHair": "heavy"
+      },
+      "expected": {
+        "min": 385,
+        "max": 415,
+        "mid": 400
+      }
+    },
+    {
+      "input": {
+        "sqft": 1800,
+        "bathrooms": 2,
+        "cleanType": "deep",
+        "frequency": "monthly",
+        "condition": "moderate",
+        "petHair": "none"
+      },
+      "expected": {
+        "min": 370,
+        "max": 400,
+        "mid": 385
+      }
+    },
+    {
+      "input": {
+        "sqft": 1800,
+        "bathrooms": 2,
+        "cleanType": "deep",
+        "frequency": "monthly",
+        "condition": "moderate",
+        "petHair": "some"
+      },
+      "expected": {
+        "min": 405,
+        "max": 435,
+        "mid": 420
+      }
+    },
+    {
+      "input": {
+        "sqft": 1800,
+        "bathrooms": 2,
+        "cleanType": "deep",
+        "frequency": "monthly",
+        "condition": "moderate",
+        "petHair": "heavy"
+      },
+      "expected": {
+        "min": 435,
+        "max": 475,
+        "mid": 455
+      }
+    },
+    {
+      "input": {
+        "sqft": 1800,
+        "bathrooms": 2,
+        "cleanType": "deep",
+        "frequency": "monthly",
+        "condition": "heavy",
+        "petHair": "none"
+      },
+      "expected": {
+        "min": 425,
+        "max": 465,
+        "mid": 445
+      }
+    },
+    {
+      "input": {
+        "sqft": 1800,
+        "bathrooms": 2,
+        "cleanType": "deep",
+        "frequency": "monthly",
+        "condition": "heavy",
+        "petHair": "some"
+      },
+      "expected": {
+        "min": 455,
+        "max": 495,
+        "mid": 475
+      }
+    },
+    {
+      "input": {
+        "sqft": 1800,
+        "bathrooms": 2,
+        "cleanType": "deep",
+        "frequency": "monthly",
+        "condition": "heavy",
+        "petHair": "heavy"
+      },
+      "expected": {
+        "min": 490,
+        "max": 530,
+        "mid": 510
+      }
+    },
+    {
+      "input": {
+        "sqft": 1800,
+        "bathrooms": 2,
+        "cleanType": "deep",
+        "frequency": "one-time",
+        "condition": "maintenance",
+        "petHair": "none"
+      },
+      "expected": {
+        "min": 415,
+        "max": 445,
+        "mid": 430
+      }
+    },
+    {
+      "input": {
+        "sqft": 1800,
+        "bathrooms": 2,
+        "cleanType": "deep",
+        "frequency": "one-time",
+        "condition": "maintenance",
+        "petHair": "some"
+      },
+      "expected": {
+        "min": 455,
+        "max": 495,
+        "mid": 475
+      }
+    },
+    {
+      "input": {
+        "sqft": 1800,
+        "bathrooms": 2,
+        "cleanType": "deep",
+        "frequency": "one-time",
+        "condition": "maintenance",
+        "petHair": "heavy"
+      },
+      "expected": {
+        "min": 500,
+        "max": 540,
+        "mid": 520
+      }
+    },
+    {
+      "input": {
+        "sqft": 1800,
+        "bathrooms": 2,
+        "cleanType": "deep",
+        "frequency": "one-time",
+        "condition": "moderate",
+        "petHair": "none"
+      },
+      "expected": {
+        "min": 485,
+        "max": 525,
+        "mid": 505
+      }
+    },
+    {
+      "input": {
+        "sqft": 1800,
+        "bathrooms": 2,
+        "cleanType": "deep",
+        "frequency": "one-time",
+        "condition": "moderate",
+        "petHair": "some"
+      },
+      "expected": {
+        "min": 530,
+        "max": 570,
+        "mid": 550
+      }
+    },
+    {
+      "input": {
+        "sqft": 1800,
+        "bathrooms": 2,
+        "cleanType": "deep",
+        "frequency": "one-time",
+        "condition": "moderate",
+        "petHair": "heavy"
+      },
+      "expected": {
+        "min": 570,
+        "max": 620,
+        "mid": 595
+      }
+    },
+    {
+      "input": {
+        "sqft": 1800,
+        "bathrooms": 2,
+        "cleanType": "deep",
+        "frequency": "one-time",
+        "condition": "heavy",
+        "petHair": "none"
+      },
+      "expected": {
+        "min": 555,
+        "max": 605,
+        "mid": 580
+      }
+    },
+    {
+      "input": {
+        "sqft": 1800,
+        "bathrooms": 2,
+        "cleanType": "deep",
+        "frequency": "one-time",
+        "condition": "heavy",
+        "petHair": "some"
+      },
+      "expected": {
+        "min": 595,
+        "max": 645,
+        "mid": 620
+      }
+    },
+    {
+      "input": {
+        "sqft": 1800,
+        "bathrooms": 2,
+        "cleanType": "deep",
+        "frequency": "one-time",
+        "condition": "heavy",
+        "petHair": "heavy"
+      },
+      "expected": {
+        "min": 640,
+        "max": 690,
+        "mid": 665
+      }
     }
   ]
 }

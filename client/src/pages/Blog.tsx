@@ -48,7 +48,7 @@ export default function Blog() {
         </div>
       </Section>
 
-      <Section measure="wide" rhythm="default">
+      <Section measure="wide" rhythm="tight" className="pb-[clamp(3.25rem,6vw,5.5rem)]">
         <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-5 sm:gap-8">
           {posts.map((post, i) => (
             <motion.div

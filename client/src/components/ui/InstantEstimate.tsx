@@ -10,6 +10,7 @@ import { Link, useLocation } from "wouter";
 import {
   CheckCircle2,
   ChevronRight,
+  ChevronDown,
   Send,
   Loader2,
   Phone,
@@ -266,6 +267,25 @@ export function InstantEstimate({ defaultCategory, bookingIntent = false }: Inst
   const [condition, setCondition] = useState<HomeCondition>("maintenance");
   const [bathrooms, setBathrooms] = useState(2);
   const [zip, setZip] = useState("");
+
+  // Pet hair, condition and ZIP sit behind a disclosure in step 1 (see the
+  // comment at that panel). All three have defaults that price correctly, so
+  // the form opens short. Two rules keep this from becoming hidden state:
+  // the panel force-opens the moment any of them goes off-default — which is
+  // how VoiceInput's parsed values reveal themselves rather than silently
+  // changing the price — and the summary line always names what is set.
+  const [detailsOpen, setDetailsOpen] = useState(false);
+  const detailsDirty = petHair !== "none" || condition !== "maintenance" || zip.trim() !== "";
+  useEffect(() => {
+    if (detailsDirty) setDetailsOpen(true);
+  }, [detailsDirty]);
+  const detailSummary = useMemo(() => {
+    const parts: string[] = [];
+    if (petHair !== "none") parts.push(petHair === "some" ? "Some pets" : "Heavy pet hair");
+    if (condition !== "maintenance") parts.push(condition === "moderate" ? "Moderate condition" : "Heavy condition");
+    if (zip.trim()) parts.push(`ZIP ${zip.trim()}`);
+    return parts.length > 0 ? parts.join(" · ") : "Optional — all set to the usual defaults";
+  }, [petHair, condition, zip]);
 
   const [contactName, setContactName] = useState("");
   const [contactEmail, setContactEmail] = useState("");
@@ -804,20 +824,17 @@ export function InstantEstimate({ defaultCategory, bookingIntent = false }: Inst
                 </div>
               </div>
 
+              {/* Bathrooms. The eleven-dot fill rail and its "Tap + / − ·
+                  half-baths count too" caption were replaced by the number
+                  itself between the two buttons: the rail encoded the value a
+                  second time, less precisely, and the caption explained a
+                  control that a plus and a minus sign already explain. */}
               <div>
-                <div className="flex justify-between items-baseline mb-1.5">
-                  <label className="label-sm !mb-0">Bathrooms</label>
-                  <span className="text-lg font-bold text-primary tabular-nums" data-testid="value-bathrooms">
-                    {bathrooms % 1 === 0.5 ? `${Math.floor(bathrooms)}½` : bathrooms}
-                    <span className="text-xs font-medium text-muted-foreground ml-1">
-                      {bathrooms === 1 ? "bath" : "baths"}
-                    </span>
-                  </span>
-                </div>
+                <label className="label-sm" id="label-bathrooms">Bathrooms</label>
                 <div
                   className="flex items-center gap-2"
                   role="group"
-                  aria-label={`Bathrooms, currently ${bathrooms % 1 === 0.5 ? `${Math.floor(bathrooms)} and a half` : bathrooms}`}
+                  aria-labelledby="label-bathrooms"
                 >
                   <button
                     type="button"
@@ -826,21 +843,16 @@ export function InstantEstimate({ defaultCategory, bookingIntent = false }: Inst
                     data-testid="button-bath-minus"
                     aria-label={`Decrease bathrooms, currently ${bathrooms % 1 === 0.5 ? `${Math.floor(bathrooms)} and a half` : bathrooms}`}
                   >&minus;</button>
-                  <div className="flex-1 h-10 rounded-lg bg-muted/30 border border-border/40 flex items-center justify-center gap-1 px-2">
-                    {[1, 1.5, 2, 2.5, 3, 3.5, 4, 4.5, 5, 5.5, 6].map(n => {
-                      const isHalf = n % 1 === 0.5;
-                      const filled = n <= bathrooms;
-                      return (
-                        <div
-                          key={n}
-                          className={`transition-all ${
-                            isHalf
-                              ? `w-1 h-1 rounded-full ${filled ? "bg-primary/60" : "bg-muted-foreground/20"}`
-                              : `w-2.5 h-2.5 rounded-full ${filled ? "bg-primary shadow-[0_0_6px_hsl(var(--primary)/0.5)]" : "bg-muted-foreground/25"}`
-                          }`}
-                        />
-                      );
-                    })}
+                  <div
+                    className="flex-1 h-12 rounded-xl bg-muted/30 border border-border/40 flex items-baseline justify-center gap-1.5"
+                    data-testid="value-bathrooms"
+                  >
+                    <span className="text-lg font-bold text-primary tabular-nums">
+                      {bathrooms % 1 === 0.5 ? `${Math.floor(bathrooms)}½` : bathrooms}
+                    </span>
+                    <span className="text-xs font-medium text-muted-foreground">
+                      {bathrooms === 1 ? "bath" : "baths"}
+                    </span>
                   </div>
                   <button
                     type="button"
@@ -850,9 +862,6 @@ export function InstantEstimate({ defaultCategory, bookingIntent = false }: Inst
                     aria-label={`Increase bathrooms, currently ${bathrooms % 1 === 0.5 ? `${Math.floor(bathrooms)} and a half` : bathrooms}`}
                   >+</button>
                 </div>
-                <p className="text-[10.5px] text-muted-foreground/70 mt-1.5 text-center">
-                  Tap + / − · half-baths count too
-                </p>
               </div>
 
               {category === "residential" && (
@@ -870,42 +879,82 @@ export function InstantEstimate({ defaultCategory, bookingIntent = false }: Inst
                 </div>
               )}
 
-              <div className="border-t border-border/30 pt-5 space-y-4">
-                <div>
-                  <label className="label-sm">Pet hair</label>
-                  <Seg
-                    options={[{ id: "none" as PetHair, label: "None" }, { id: "some" as PetHair, label: "Some" }, { id: "heavy" as PetHair, label: "Heavy" }]}
-                    value={petHair} onChange={setPetHair} id="seg-pet"
+              {/* Pet hair, condition and ZIP live behind a disclosure.
+                  Every one of them has a sensible default and the estimate is
+                  correct without touching any of them, so showing all three
+                  up front tripled the apparent length of the form for no gain.
+                  Nothing is lost: the fields keep their state, they still
+                  price, and they still submit. The panel opens itself and
+                  stays open whenever a value is off-default (including when
+                  VoiceInput fills it), and the summary line below the toggle
+                  shows what is set while it's shut, so this is never hidden
+                  state the customer can't see. */}
+              <div className="rounded-xl border border-border/50 bg-muted/20 overflow-hidden">
+                <button
+                  type="button"
+                  onClick={() => setDetailsOpen(o => !o)}
+                  className="w-full flex items-center justify-between gap-3 px-4 py-3 text-left hover:bg-muted/40 transition-colors min-h-[48px]"
+                  aria-expanded={detailsOpen}
+                  aria-controls="estimate-details-panel"
+                  data-testid="button-toggle-details"
+                >
+                  <span className="min-w-0">
+                    <span className="block text-sm font-semibold text-foreground">
+                      Pets, condition &amp; ZIP
+                    </span>
+                    <span className="block text-[11.5px] text-muted-foreground truncate">
+                      {detailSummary}
+                    </span>
+                  </span>
+                  <ChevronDown
+                    className={`w-4 h-4 text-muted-foreground flex-shrink-0 transition-transform duration-300 ${detailsOpen ? "rotate-180" : ""}`}
+                    aria-hidden="true"
                   />
-                </div>
-                <div>
-                  <label className="label-sm">Home condition</label>
-                  <Seg
-                    options={[{ id: "maintenance" as HomeCondition, label: "Maintained" }, { id: "moderate" as HomeCondition, label: "Moderate" }, { id: "heavy" as HomeCondition, label: "Heavy" }]}
-                    value={condition} onChange={setCondition} id="seg-cond"
-                  />
-                </div>
+                </button>
+
+                {detailsOpen && (
+                  <div id="estimate-details-panel" className="px-4 pb-4 pt-1 space-y-4 border-t border-border/40">
+                    <div>
+                      <label className="label-sm">Pet hair</label>
+                      <Seg
+                        options={[{ id: "none" as PetHair, label: "None" }, { id: "some" as PetHair, label: "Some" }, { id: "heavy" as PetHair, label: "Heavy" }]}
+                        value={petHair} onChange={setPetHair} id="seg-pet"
+                      />
+                    </div>
+                    <div>
+                      <label className="label-sm">Home condition</label>
+                      <Seg
+                        options={[{ id: "maintenance" as HomeCondition, label: "Maintained" }, { id: "moderate" as HomeCondition, label: "Moderate" }, { id: "heavy" as HomeCondition, label: "Heavy" }]}
+                        value={condition} onChange={setCondition} id="seg-cond"
+                      />
+                    </div>
+                    <div>
+                      <label className="label-sm" htmlFor="input-zip">ZIP code <span className="font-normal text-muted-foreground">(optional)</span></label>
+                      <Input
+                        id="input-zip"
+                        placeholder="e.g. 04101"
+                        value={zip}
+                        onChange={(e) => setZip(e.target.value.replace(/[^\d-]/g, "").slice(0, 10))}
+                        className="h-10 rounded-xl border-border bg-card mt-1"
+                        data-testid="input-zip"
+                        inputMode="numeric"
+                        autoComplete="postal-code"
+                        pattern="\d{5}(-\d{4})?"
+                      />
+                    </div>
+                  </div>
+                )}
               </div>
 
-              <div>
-                <label className="label-sm">ZIP code <span className="font-normal text-muted-foreground">(optional)</span></label>
-                <Input
-                  placeholder="e.g. 04101"
-                  value={zip}
-                  onChange={(e) => setZip(e.target.value.replace(/[^\d-]/g, "").slice(0, 10))}
-                  className="h-10 rounded-xl border-border bg-card mt-1"
-                  data-testid="input-zip"
-                  inputMode="numeric"
-                  autoComplete="postal-code"
-                  pattern="\d{5}(-\d{4})?"
-                />
-              </div>
-
-              <div className="relative rounded-2xl bg-gradient-to-br from-emerald-500/12 via-teal-500/8 to-blue-500/12 border border-emerald-500/25 p-5 overflow-hidden shadow-[inset_0_1px_0_rgba(255,255,255,0.06)]">
-                <div className="absolute -top-8 -right-6 w-32 h-32 rounded-full bg-emerald-400/10 blur-2xl pointer-events-none" aria-hidden="true" />
-                <div className="absolute -bottom-10 -left-6 w-32 h-32 rounded-full bg-blue-400/10 blur-2xl pointer-events-none" aria-hidden="true" />
+              {/* The price. Was a three-stop gradient with two blurred colour
+                  blobs behind it; on a panel that already carried ten bordered
+                  blocks, the loudest decoration in the form sat on the one
+                  element that didn't need any help being noticed. One flat
+                  tint, and the availability line folded in from what used to
+                  be a separate blue banner below it. */}
+              <div className="rounded-2xl bg-primary/[0.07] border border-primary/20 p-5">
                 <div className="flex items-center gap-1.5 mb-1.5" data-testid="label-range">
-                  <Sparkles className="w-3 h-3 text-emerald-500/80" />
+                  <Sparkles className="w-3 h-3 text-primary/70" />
                   <span className="text-xs font-semibold tracking-wide text-muted-foreground uppercase">
                     Estimated range
                   </span>
@@ -929,7 +978,7 @@ export function InstantEstimate({ defaultCategory, bookingIntent = false }: Inst
                     </span>
                   )}
                   {condition !== "maintenance" && (
-                    <span className="text-[11px] font-medium bg-amber-500/10 border border-amber-500/20 text-amber-500 dark:text-amber-400 rounded-full px-2 py-0.5">
+                    <span className="text-[11px] font-medium bg-amber-500/10 border border-amber-500/20 text-amber-600 dark:text-amber-400 rounded-full px-2 py-0.5">
                       {condition === "moderate" ? "Moderate condition" : "Heavy condition"}
                     </span>
                   )}
@@ -939,20 +988,19 @@ export function InstantEstimate({ defaultCategory, bookingIntent = false }: Inst
                     </span>
                   )}
                 </div>
-                <p className="text-xs text-muted-foreground mt-2 italic leading-relaxed" data-testid="text-disclaimer">
-                  Non-binding estimate. Final price confirmed after review.
-                </p>
-              </div>
-
-              <div className="flex items-center gap-2.5 px-3.5 py-2.5 rounded-xl bg-blue-500/10 border border-blue-500/30" data-testid="text-availability">
-                <Clock className="w-4 h-4 text-blue-500 flex-shrink-0" />
-                <p className="text-xs text-blue-600 dark:text-blue-400 leading-relaxed">
-                  <span className="font-semibold">Typical availability:</span> 3-7 business days
-                </p>
+                <div className="mt-3 pt-3 border-t border-primary/15 flex flex-wrap items-center gap-x-4 gap-y-1.5">
+                  <span className="inline-flex items-center gap-1.5 text-xs text-muted-foreground" data-testid="text-availability">
+                    <Clock className="w-3.5 h-3.5 text-primary/70 flex-shrink-0" aria-hidden="true" />
+                    <span><span className="font-semibold text-foreground">Typical availability:</span> 3-7 business days</span>
+                  </span>
+                  <span className="text-xs text-muted-foreground italic" data-testid="text-disclaimer">
+                    Non-binding estimate. Final price confirmed after review.
+                  </span>
+                </div>
               </div>
 
               <Button className="w-full h-[52px] rounded-xl text-base font-bold shadow-md group min-h-[48px]" onClick={() => setStep(2)} data-testid="button-review">
-                Review & Submit <ChevronRight className="ml-1 w-5 h-5 group-hover:translate-x-0.5 transition-transform" />
+                Review &amp; Submit <ChevronRight className="ml-1 w-5 h-5 group-hover:translate-x-0.5 transition-transform" />
               </Button>
             </motion.div>
           )}

@@ -128,11 +128,15 @@ export default function About() {
             <SectionHeading
               align="left"
               title="Built on Trust. Driven by Care."
-              lead="The Maine Cleaning Co. was founded in 2018 with one belief: cleaning should feel effortless for clients and meaningful for the people doing it. We've grown from a small residential team into Southern Maine's most trusted cleaning service — serving homes, vacation rentals, and commercial spaces across York and Cumberland counties."
+              lead={
+                <>
+                  The Maine Cleaning Co. was founded in 2018 with one belief: cleaning should feel effortless for clients and meaningful for the people doing it. We've grown from a small residential team into Southern Maine's most trusted cleaning service — serving homes, vacation rentals, and commercial spaces across York and Cumberland counties.
+                  <span className="block mt-4">
+                    Every cleaner on our team is trained, background-checked, and genuinely invested in delivering results that go beyond the surface. With 30+ years of combined experience and {CLEANS_SINCE_2018_PLAIN} completed cleans, we've earned a {RECURRING_CLIENT_RATE} client retention rate.
+                  </span>
+                </>
+              }
             />
-            <p className="text-muted-foreground text-[15px] leading-relaxed mb-8">
-              Every cleaner on our team is trained, background-checked, and genuinely invested in delivering results that go beyond the surface. With 30+ years of combined experience and {CLEANS_SINCE_2018_PLAIN} completed cleans, we've earned a {RECURRING_CLIENT_RATE} client retention rate.
-            </p>
 
             {/* What sets us apart — integrated values */}
             <h3 className="text-sm font-bold text-foreground uppercase tracking-wider mb-4">What sets us apart</h3>
@@ -223,13 +227,17 @@ export default function About() {
             <SectionHeading
               align="left"
               title={<>Powered by Melaleuca EcoSense<sup className="text-xs">®</sup></>}
-              lead="We exclusively use Melaleuca EcoSense® and Sal Suds — professional-grade, non-toxic, and biodegradable. Safe for your family, your pets, and every surface we clean. Zero harsh chemicals. Full results."
+              lead={
+                <>
+                  We exclusively use Melaleuca EcoSense® and Sal Suds — professional-grade, non-toxic, and biodegradable. Safe for your family, your pets, and every surface we clean. Zero harsh chemicals. Full results.
+                  <span className="mt-5 flex flex-wrap gap-2">
+                    {["Non-Toxic", "Biodegradable", "Kid & Pet Safe", "No Harsh Chemicals", "Professional Grade"].map((tag) => (
+                      <span key={tag} className="text-[11px] font-medium border border-emerald-600/30 dark:border-emerald-700/40 bg-emerald-500/10 dark:bg-emerald-900/30 text-emerald-700 dark:text-emerald-300 rounded-full px-2.5 py-0.5">{tag}</span>
+                    ))}
+                  </span>
+                </>
+              }
             />
-            <div className="flex flex-wrap gap-2 mb-7">
-              {["Non-Toxic", "Biodegradable", "Kid & Pet Safe", "No Harsh Chemicals", "Professional Grade"].map((tag) => (
-                <span key={tag} className="text-[11px] font-medium border border-emerald-600/30 dark:border-emerald-700/40 bg-emerald-500/10 dark:bg-emerald-900/30 text-emerald-700 dark:text-emerald-300 rounded-full px-2.5 py-0.5">{tag}</span>
-              ))}
-            </div>
             <AICleaningTip />
           </motion.div>
         </div>

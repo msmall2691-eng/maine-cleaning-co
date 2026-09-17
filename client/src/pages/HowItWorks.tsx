@@ -3,12 +3,11 @@ import { motion } from "framer-motion";
 import { Link } from "wouter";
 import { useSEO } from "@/hooks/use-seo";
 import {
-  ArrowRight, Phone, Zap, CheckCircle2, ClipboardList, CalendarCheck,
+  ArrowRight, Zap, CheckCircle2, ClipboardList, CalendarCheck,
   Sparkles, MessageSquare,
 } from "lucide-react";
 import { Accordion, AccordionItem, AccordionTrigger, AccordionContent } from "@/components/ui/accordion";
 import { Button } from "@/components/ui/button";
-import { companyInfo } from "@/lib/company-info";
 import { COMMUNITIES_SERVED } from "@/lib/company-stats";
 import { Section, SectionHeading } from "@/components/layout/Section";
 import { ClosingCTA } from "@/components/layout/ClosingCTA";

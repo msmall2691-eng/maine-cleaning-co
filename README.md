@@ -345,7 +345,19 @@ Address autocomplete using OpenStreetMap Nominatim. Debounced 400ms, filtered to
 
 ## Pricing Engine
 
-**Location**: `client/src/components/ui/InstantEstimate.tsx` — `useMemo` block
+**Location**: `shared/pricing.ts` — `computeEstimate()`.
+
+This is the *only* implementation of the math. The browser widget
+(`InstantEstimate.tsx`) and the server recompute (`server/lib/quoteEngine.ts`)
+both import that one function, which is what makes the price a customer sees
+and the price forwarded to BrightBase equal by construction rather than by
+coincidence. **Change pricing here and nowhere else** — a second copy anywhere
+is a customer being quoted one number and the operator receiving another.
+
+`shared/pricing-vectors.json` is the cross-repo contract pinning this engine
+against Bright-Space's Python port; `server/__tests__/pricingParity.test.ts`
+enforces it. Regenerate with `npm run gen:pricing-vectors` after any
+intentional rate change.
 
 ### Category Flow
 
@@ -398,16 +410,28 @@ max = round(final × 1.04 / 5) × 5
 
 | Size | 2 Bath Standard | 2 Bath Deep Clean |
 |------|-----------------|-------------------|
-| 1,000 sq ft | $130 (min) | $225 (min) |
-| 1,500 sq ft | $150–$160 | $245–$265 |
-| 2,000 sq ft | $180–$190 | $290–$315 |
-| 2,500 sq ft | $215–$230 | $370–$395 |
-| 3,000 sq ft | $255–$275 | $440–$475 |
-| 4,000 sq ft | $305–$330 | $545–$580 |
+| 1,000 sq ft | $125–$135 | $215–$235 |
+| 1,500 sq ft | $150–$160 | $250–$270 |
+| 2,000 sq ft | $180–$190 | $295–$315 |
+| 2,500 sq ft | $205–$225 | $360–$390 |
+| 3,000 sq ft | $230–$250 | $410–$440 |
+| 4,000 sq ft | $275–$295 | $495–$535 |
+
+<sub>Biweekly, maintained condition, no pets — the widget's defaults. Generated
+from `computeEstimate()`; the previous table had drifted by up to $50 at the
+larger sizes. Regenerate rather than hand-editing.</sub>
 
 ### Half-Bath Support
 
-Bathrooms stepper increments in 0.5 steps (1.0, 1.5, 2.0, 2.5 … 6.0). Displayed as "1½", "2½" etc. Visual indicator: large dots = full baths, small dots = half baths. Submitted to API as `Math.round(bathrooms)` (integer) for DB compatibility.
+Bathrooms stepper increments in 0.5 steps (1.0, 1.5, 2.0, 2.5 … 6.0). Displayed as "1½", "2½" etc.
+
+The true fractional count is submitted to the API — **not** `Math.round()`. An
+earlier version of this file documented rounding "for DB compatibility"; that
+was the cause of a real parity bug (a 2.5-bath home priced as 2 baths on the
+server and 2.5 in the browser) and the column is `real`, so there was never
+anything to be compatible with. `bathrooms` is validated as `multipleOf(0.5)`
+in `server/lib/validators.ts` precisely to keep the half-bath intact. Do not
+reintroduce the rounding.
 
 ### Estimate Display
 

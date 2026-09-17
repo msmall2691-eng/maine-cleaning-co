@@ -386,7 +386,7 @@ export default function ShortTermRentals() {
               ))}
             </div>
 
-            <div className="grid grid-cols-3 gap-4 sm:gap-6">
+            <div className="flex flex-wrap justify-center lg:justify-start gap-5 sm:gap-7">
               {[
                 { icon: MapPin, label: "York & Cumberland County", sub: "We serve all of Southern Maine" },
                 { icon: Users, label: "Dedicated STR Team", sub: "Specialists in short-term rental care" },
@@ -394,7 +394,7 @@ export default function ShortTermRentals() {
               ].map((item, i) => {
                 const Icon = item.icon;
                 return (
-                  <div key={i} className="flex flex-col items-center gap-2 text-center" data-testid={`trust-str-${i}`}>
+                  <div key={i} className="flex flex-col items-center gap-2 text-center max-w-[140px]" data-testid={`trust-str-${i}`}>
                     <div className="w-11 h-11 rounded-xl bg-primary/10 flex items-center justify-center">
                       <Icon className="w-5 h-5 text-primary" />
                     </div>

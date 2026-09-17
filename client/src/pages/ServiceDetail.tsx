@@ -65,6 +65,9 @@ export default function ServiceDetail() {
   const estimateCategory = slugToCategoryMap[service.id] || "residential";
 
   const heroPhoto = SERVICE_PHOTOS[service.id] || photos.toolkit;
+  // Only a few frames in the library read well behind text once desaturated
+  // to ~10% — see `ambientPhotos` in lib/photos.ts.
+  const ambientPhoto = estimateCategory === "commercial" ? photos.commercialAisle : photos.rentalBathroom;
 
   const scrollToEstimate = () => {
     const el = document.getElementById("estimate-section-anchor");
@@ -215,9 +218,16 @@ export default function ServiceDetail() {
         </div>
       </Section>
 
-      {/* ── Estimate ── */}
+      {/* ── Estimate ──
+          One of our own photos runs behind this band at ~10-16% so the page
+          doesn't end on a flat rectangle. It's decoration, so it's
+          aria-hidden and lazy; `isolate` is what keeps the z-index:-1 layer
+          above the band's own background instead of behind the page. */}
       {showEstimate ? (
-        <Section measure="prose" tone="sink">
+        <Section measure="prose" className="isolate">
+          <div className="photo-ambient">
+            <img src={ambientPhoto.src} alt="" aria-hidden="true" loading="lazy" />
+          </div>
           <LogoWatermark position="right" />
           <div className="relative">
             <div id="estimate-section-anchor" className="absolute -top-32" />

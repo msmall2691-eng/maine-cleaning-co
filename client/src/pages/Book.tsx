@@ -33,6 +33,12 @@ import { photos } from "@/lib/photos";
 type BookServiceParam = "residential" | "deep-clean" | "str" | "commercial";
 const validServices: BookServiceParam[] = ["residential", "deep-clean", "str", "commercial"];
 
+// Same value and same fallback as before — `center` is optional on the
+// company-info shape, so it's read through an optional type rather than off
+// the literal (which is what was making tsc unhappy about this file).
+const serviceAreaCenter =
+  (companyInfo.serviceArea as { center?: string }).center || "Southern Maine";
+
 const reassurance = [
   {
     icon: CheckCircle2,
@@ -94,15 +100,15 @@ export default function Book() {
             <p className="mt-8 text-[15px] sm:text-base text-muted-foreground leading-relaxed max-w-[34rem]">
               Get an instant estimate, tell us a few essentials, and pick a date — we confirm every
               booking by call or text {RESPONSE_WINDOW}. Serving{" "}
-              {companyInfo.serviceArea?.center || "Southern Maine"} and the surrounding communities
+              {serviceAreaCenter} and the surrounding communities
               all across York and Cumberland County.
             </p>
           </div>
 
           {/* Two of our own jobs, so the page where the purchase decision
               closes shows the work rather than only describing it. */}
-          <div className="grid grid-cols-2 lg:grid-cols-1 gap-3 sm:gap-4">
-            <figure className="photo-frame aspect-[4/5] sm:aspect-[4/3] lg:aspect-[16/9]">
+          <div className="grid grid-cols-2 gap-3 sm:gap-4">
+            <figure className="photo-frame aspect-[3/4]">
               <img
                 src={photos.rentalBathroom.src}
                 alt={photos.rentalBathroom.alt}
@@ -110,10 +116,10 @@ export default function Book() {
                 decoding="async"
               />
             </figure>
-            <figure className="photo-frame aspect-[4/5] sm:aspect-[4/3] lg:aspect-[16/9]">
+            <figure className="photo-frame aspect-[3/4]">
               <img
-                src={photos.vacuumFleet.src}
-                alt={photos.vacuumFleet.alt}
+                src={photos.toolkit.src}
+                alt={photos.toolkit.alt}
                 loading="lazy"
                 decoding="async"
               />
