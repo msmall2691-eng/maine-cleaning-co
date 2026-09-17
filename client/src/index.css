@@ -79,6 +79,13 @@
     --band-sink: 30 10% 93%;
 
     /* Component-specific theme tokens */
+    /* Decorative weather tint. applyWeatherAccent() writes
+       --weather-accent-light / -dark onto <html> at runtime; with neither set
+       — no data, API down, first paint — this resolves to --primary and the
+       site is exactly the brand. Nothing that carries meaning may use it:
+       see lib/weather-accent.ts for why that is a hard rule. */
+    --weather-accent: var(--weather-accent-light, var(--primary));
+
     --navbar-glass-bg: 0 0% 100% / 0.88;  /* was 0.72 — page headings read
                                              straight through the bar once light
                                              became the default. Matches dark. */
@@ -123,6 +130,8 @@
 
     --band-tint: 222 21% 12%;
     --band-sink: 222 20% 14%;
+
+    --weather-accent: var(--weather-accent-dark, var(--primary));
 
     --navbar-glass-bg: 222 22% 15% / 0.88;
     --navbar-glass-border: 222 16% 21% / 0.5;
@@ -298,7 +307,8 @@
   width: 3.5rem;
   height: 3px;
   border-radius: 2px;
-  background: linear-gradient(90deg, transparent, hsl(var(--primary) / 0.6), hsl(var(--primary)), hsl(var(--primary) / 0.6), transparent);
+  background: linear-gradient(90deg, transparent, hsl(var(--weather-accent) / 0.6), hsl(var(--weather-accent)), hsl(var(--weather-accent) / 0.6), transparent);
+  transition: background 0.8s ease;
 }
 
 .service-icon-hover {
@@ -371,7 +381,8 @@
   width: 3rem;
   height: 3px;
   border-radius: 2px;
-  background: linear-gradient(90deg, hsl(var(--primary)), hsl(var(--primary) / 0.25));
+  background: linear-gradient(90deg, hsl(var(--weather-accent)), hsl(var(--weather-accent) / 0.25));
+  transition: background 0.8s ease;
 }
 
 /* ── Quiet photography ───────────────────────────────────────────────────

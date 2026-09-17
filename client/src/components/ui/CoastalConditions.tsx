@@ -1,8 +1,8 @@
-import { useEffect, useState } from "react";
 import { Wind, Droplets, MapPin } from "lucide-react";
 import { LighthouseMark } from "@/components/brand/Logo";
 import { tipFor } from "@/lib/coastal-tips";
-import type { Conditions, Sky } from "@/lib/weather-types";
+import { useWeather } from "@/lib/weather";
+import type { Sky } from "@/lib/weather-types";
 
 /**
  * "On the coast right now" — the real weather in Portland, ME, with our own
@@ -24,29 +24,13 @@ import type { Conditions, Sky } from "@/lib/weather-types";
  * widget has no business interrupting a page about booking a cleaner.
  */
 export function CoastalConditions({ className = "" }: { className?: string }) {
-  const [data, setData] = useState<Conditions | null>(null);
-  const [ready, setReady] = useState(false);
+  // Reads the app-wide provider rather than fetching its own copy: the accent
+  // tint needs the same answer, and two fetches could disagree.
+  const data = useWeather();
 
-  useEffect(() => {
-    let alive = true;
-    fetch("/api/weather")
-      .then((r) => (r.ok ? r.json() : null))
-      .then((body) => {
-        if (!alive) return;
-        setData(body?.conditions ?? null);
-        setReady(true);
-      })
-      .catch(() => {
-        if (alive) setReady(true);
-      });
-    return () => {
-      alive = false;
-    };
-  }, []);
-
-  // Render nothing until we know, and nothing at all if there's no data —
-  // never a skeleton that might sit there forever.
-  if (!ready || !data) return null;
+  // Nothing at all until the data lands, and nothing forever if it never
+  // does — never a skeleton that might sit there indefinitely.
+  if (!data) return null;
 
   const night = !data.isDay;
 
