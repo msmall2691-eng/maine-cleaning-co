@@ -736,7 +736,37 @@ OPENAI_API_KEY=...               # GPT-4o-mini for chat widget + cleaning tips
 # Webhook (optional)
 WEBHOOK_URL=...                  # Fire-and-forget webhook on new leads
 WEBHOOK_SECRET=...               # Bearer token for webhook auth
+
+# Failed-forward retry sweep (all optional — sensible defaults)
+RETRY_SWEEP_INTERVAL_MINUTES=10  # Cadence. Floored at 1 min; bad values fall back to 10
+RETRY_SWEEP_DISABLED=1           # Set to switch the background sweep off entirely
+CRON_SECRET=...                  # Only needed for an EXTERNAL cron; see below
 ```
+
+### The failed-forward retry sweep
+
+When a booking can't be forwarded to BrightBase, the inline retries in
+`server/lib/leadForward.ts` give up after about three seconds and the attempt
+becomes a `failed` row in the `lead_forwards` ledger — payload and target URL
+included, so it can be replayed verbatim. Without something replaying them,
+a BrightBase outage longer than a few seconds means the site accepts the
+booking, emails the customer "Booking Request Received!", and the job never
+reaches the operator.
+
+`server/lib/retryScheduler.ts` runs that replay in-process on a timer. It
+needs **no configuration and no secret** — it starts automatically wherever
+the app runs, as long as `DATABASE_URL` is set (with no database there is no
+ledger to replay, so it doesn't start). It won't overlap itself, and it only
+logs when a sweep actually found something.
+
+`POST /api/admin/forwards/retry` is unchanged and still available for a human
+triggering a sweep on demand. It also accepts `x-cron-secret: $CRON_SECRET`,
+so an external cron can be pointed at it as a second trigger — that is the
+only reason to set `CRON_SECRET`, and it is not required for the scheduler
+above. Both paths call the same `sweepFailedForwards()`, so they can't drift.
+
+To check on it: `GET /api/admin/lead-forwards?status=failed` lists whatever
+is still stuck.
 
 ---
 
