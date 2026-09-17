@@ -11,6 +11,7 @@ import { Section, SectionHeading } from "@/components/layout/Section";
 import { ClosingCTA } from "@/components/layout/ClosingCTA";
 import { LogoWatermark } from "@/components/brand/Logo";
 import { photos } from "@/lib/photos";
+import { AmbientPhoto } from "@/components/ui/AmbientPhoto";
 
 const fadeUp = {
   hidden: { opacity: 0, y: 20 },
@@ -175,9 +176,7 @@ export default function ServiceAreas() {
           aria-hidden, lazy, and the band carries `isolate` because
           .photo-ambient sits at z-index:-1. */}
       <Section measure="wide" className="isolate">
-        <div className="photo-ambient">
-          <img src={photos.commercialAisle.src} alt="" aria-hidden="true" loading="lazy" decoding="async" />
-        </div>
+        <AmbientPhoto photo={photos.commercialAisle} />
         <LogoWatermark position="right" />
 
         <SectionHeading
