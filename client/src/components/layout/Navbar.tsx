@@ -5,6 +5,7 @@ import { Menu, X, Phone, Calendar, User } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { ThemeToggle } from "@/components/ui/ThemeToggle";
 import { companyInfo } from "@/lib/company-info";
+import { LogoLockup } from "@/components/brand/Logo";
 
 // Four links, deliberately. The bar previously carried eight plus the phone,
 // Sign In, the theme toggle and TWO call-to-action buttons — more than fits
@@ -85,16 +86,18 @@ export default function Navbar() {
       }`}
     >
       <div className="container mx-auto px-5 sm:px-8 flex items-center justify-between gap-4">
-        {/* Wordmark */}
-        <Link href="/" className="flex-shrink-0 group" data-testid="link-home-logo">
-          <div className="flex flex-col leading-none">
-            <span className="font-serif font-bold text-[15px] sm:text-[17px] md:text-[18px] tracking-[-0.01em] text-foreground group-hover:text-primary transition-colors duration-200">
-              The Maine Cleaning Co.
-            </span>
-            <span className="text-[9.5px] sm:text-[10px] tracking-[0.1em] text-muted-foreground/70 uppercase font-medium hidden sm:block mt-0.5 group-hover:text-muted-foreground transition-colors">
-              Est. 2018 · Southern Maine
-            </span>
-          </div>
+        {/* Logo lockup — the lighthouse mark plus the wordmark. Below sm the
+            small size draws the mark `minimal`: the spruce and water lines
+            are noise at 28px on a phone, and dropping them keeps the
+            silhouette legible. The tagline goes too, so the bar still fits
+            the theme toggle and menu button on a 320px screen. */}
+        <Link href="/" className="flex-shrink-0 group" data-testid="link-home-logo" aria-label="The Maine Cleaning Co. — home">
+          <span className="hidden sm:block">
+            <LogoLockup size="md" showTagline />
+          </span>
+          <span className="block sm:hidden">
+            <LogoLockup size="sm" showTagline={false} />
+          </span>
         </Link>
 
         {/* Desktop nav */}

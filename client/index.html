@@ -9,8 +9,8 @@
     <!-- Tint the mobile browser chrome to match the site's light/dark backgrounds
          so the iOS status bar / Android URL bar blends with the page. Values
          match --background in index.css. -->
-    <meta name="theme-color" media="(prefers-color-scheme: light)" content="#ffffff" />
-    <meta name="theme-color" media="(prefers-color-scheme: dark)" content="#0a0a0a" />
+    <meta name="theme-color" media="(prefers-color-scheme: light)" content="#fbfbfa" />
+    <meta name="theme-color" media="(prefers-color-scheme: dark)" content="#141821" />
     <!-- Stop iOS Safari from auto-linkifying prices ($240), dates (Jul 8),
          and ZIP codes as tel: links, which broke copy behavior on estimate
          summaries. address=no also prevents Maps deep-links on street text. -->
@@ -21,7 +21,7 @@
     <meta name="apple-mobile-web-app-capable" content="yes" />
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
     <meta name="apple-mobile-web-app-title" content="Maine Clean Co." />
-    <link rel="apple-touch-icon" href="/favicon.png" />
+    <link rel="apple-touch-icon" sizes="512x512" href="/apple-touch-icon.png" />
     <meta name="description" content="The Maine Cleaning Co. — Southern Maine's premier cleaning & short-term rental management company. Airbnb & VRBO turnovers, iCal scheduling, property management, residential & commercial cleaning across York & Cumberland County." />
     <meta name="keywords" content="Airbnb cleaning Southern Maine, VRBO turnover cleaning Maine, short-term rental cleaning Maine, vacation rental management Maine, Airbnb management Maine, STR cleaning service, cleaning service Southern Maine, Portland Maine cleaning, Kennebunkport cleaning, Old Orchard Beach Airbnb cleaning, residential cleaning Maine, eco-friendly cleaning, Maine Cleaning Co, iCal sync cleaning, property management Southern Maine" />
     <meta name="robots" content="index, follow, max-snippet:-1, max-image-preview:large, max-video-preview:-1" />
@@ -48,7 +48,10 @@
     </script>
 
     <title>The Maine Cleaning Co. | Airbnb Cleaning & STR Management — Southern Maine</title>
-    <link rel="icon" type="image/png" href="/favicon.png" />
+    <!-- SVG first so the mark stays sharp on hi-dpi tabs; the PNG is the
+         fallback for browsers that still refuse SVG favicons. -->
+    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+    <link rel="icon" type="image/png" sizes="180x180" href="/favicon.png" />
 
     <script>
       (function () {
@@ -72,7 +75,8 @@
       "@context": "https://schema.org",
       "@type": "LocalBusiness",
       "name": "The Maine Cleaning Co.",
-      "image": "https://www.maine-clean.co/logo.png",
+      "image": "https://www.maine-clean.co/opengraph.jpg",
+      "logo": "https://www.maine-clean.co/apple-touch-icon.png",
       "description": "Dependable residential, commercial, and short-term rental cleaning across Southern Maine since 2018. Eco-friendly products, transparent pricing, and consistent results.",
       "url": "https://www.maine-clean.co/",
       "telephone": "+12075720502",

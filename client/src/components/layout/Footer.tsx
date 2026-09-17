@@ -2,6 +2,8 @@ import { Link, useLocation } from "wouter";
 import { Phone, MessageSquare, Mail, MapPin, ArrowRight } from "lucide-react";
 import { companyInfo } from "@/lib/company-info";
 import { Button } from "@/components/ui/button";
+import { LogoLockup, LogoWatermark } from "@/components/brand/Logo";
+import { photos } from "@/lib/photos";
 
 export default function Footer() {
   const [location] = useLocation();
@@ -14,16 +16,34 @@ export default function Footer() {
   };
 
   return (
-    <footer className="bg-card border-t border-border/40 pt-16 pb-8 relative">
-      <div className="container mx-auto px-4 sm:px-6">
+    /* No top border. A 1px rule across the full width is exactly the kind of
+       hard seam that made the page read as a stack of unrelated slabs; the
+       footer instead fades up out of the page background into the card tone. */
+    <footer className="relative overflow-hidden pt-20 pb-8 bg-gradient-to-b from-transparent via-card to-card">
+      <LogoWatermark position="left" />
+      <div className="container mx-auto px-5 sm:px-6 lg:px-8 relative">
 
-        {/* ── CTA banner ── */}
-        <div className="bg-primary/10 border border-primary/20 rounded-2xl px-6 py-6 mb-14 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
-          <div>
-            <p className="font-semibold text-foreground">The Maine choice for a clean space.</p>
-            <p className="text-sm text-muted-foreground mt-0.5">Free estimate in under 60 seconds — no commitment required.</p>
+        {/* ── CTA banner ──
+            One of our own job photos sits behind this, run right down under
+            the primary tint so it reads as texture. It is the last thing on
+            every page, so it should feel like the company, not like a box. */}
+        <div className="relative overflow-hidden rounded-3xl border border-primary/20 px-6 py-7 sm:px-8 mb-16 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-5">
+          <div className="absolute inset-0">
+            <img
+              src={photos.restroomTrailer.src}
+              alt=""
+              aria-hidden="true"
+              loading="lazy"
+              className="w-full h-full object-cover opacity-[0.18] dark:opacity-[0.14] saturate-50"
+            />
+            <div className="absolute inset-0 bg-primary/10 backdrop-blur-[2px]" />
+            <div className="absolute inset-0 bg-gradient-to-r from-card/90 via-card/70 to-card/40" />
           </div>
-          <a href="/#get-estimate" onClick={scrollToEstimate} data-testid="link-footer-cta-estimate">
+          <div className="relative">
+            <p className="font-serif font-bold text-lg text-foreground">The Maine choice for a clean space.</p>
+            <p className="text-sm text-muted-foreground mt-1">Free estimate in under 60 seconds — no commitment required.</p>
+          </div>
+          <a href="/#get-estimate" onClick={scrollToEstimate} className="relative flex-shrink-0" data-testid="link-footer-cta-estimate">
             <Button size="sm" className="rounded-full h-9 px-5 text-sm gap-1.5 flex-shrink-0">
               Get Estimate <ArrowRight className="w-3.5 h-3.5" />
             </Button>
@@ -33,14 +53,7 @@ export default function Footer() {
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-10 mb-14">
           {/* Brand */}
           <div className="sm:col-span-2 lg:col-span-1">
-            <div className="mb-4">
-              <span className="font-serif font-bold text-lg tracking-[-0.02em] text-foreground block">
-                The Maine Cleaning Co.
-              </span>
-              <span className="text-xs tracking-[0.06em] text-muted-foreground uppercase font-medium mt-0.5 block">
-                Est. 2018 · Southern Maine
-              </span>
-            </div>
+            <LogoLockup size="lg" className="mb-5" />
             <p className="text-muted-foreground text-sm leading-relaxed mb-6 max-w-xs">
               Professional cleaning for homes, businesses, and vacation rentals across Southern Maine since 2018.
             </p>

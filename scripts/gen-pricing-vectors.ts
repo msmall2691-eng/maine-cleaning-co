@@ -58,13 +58,32 @@ for (const sqft of SQFTS) {
     }
   }
 }
-for (const frequency of FREQS) {
-  for (const condition of CONDS) {
-    for (const petHair of PETS) {
-      const input: EstimateInputs = { sqft: 1800, bathrooms: 2, cleanType: "standard", frequency, condition, petHair };
-      const e = computeEstimate(input);
-      assertEquiv(input, e);
-      vectors.push({ input, expected: { min: e.min, max: e.max, mid: e.mid } });
+// The freq/condition/pet sweep runs for BOTH clean types, not just standard.
+//
+// This matters more than it looks. In computeEstimate the condition and pet
+// ADDENDS are multiplied by deepMult *before* the frequency multiply:
+//
+//     labor = (sqftUnits + bathAdj + condU + petU) * deepMult
+//     raw   = labor * freqU * RATE
+//
+// A port that applies deepMult after the addends — the natural mistake, and
+// the one an independent implementation is most likely to make — produces
+// different money for exactly one combination: a deep clean that also has a
+// condition, pet or frequency factor. Every vector in this file used to pin
+// `deep` at one-time/maintenance/none, so that port would have matched all
+// 156 rows and still quoted differently in production. These 36 extra rows
+// are the ones that catch it.
+for (const cleanType of CLEAN_TYPES) {
+  for (const frequency of FREQS) {
+    for (const condition of CONDS) {
+      for (const petHair of PETS) {
+        // The standard rows here duplicate nothing: the grid above only
+        // covers one-time/maintenance/none.
+        const input: EstimateInputs = { sqft: 1800, bathrooms: 2, cleanType, frequency, condition, petHair };
+        const e = computeEstimate(input);
+        assertEquiv(input, e);
+        vectors.push({ input, expected: { min: e.min, max: e.max, mid: e.mid } });
+      }
     }
   }
 }

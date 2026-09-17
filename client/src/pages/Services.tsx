@@ -6,6 +6,9 @@ import { getServicesList } from "@/lib/services-data";
 import { motion } from "framer-motion";
 import { CleaningQuiz } from "@/components/ui/CleaningQuiz";
 import { EstimateCTA } from "@/components/ui/EstimateCTA";
+import { Section, SectionHeading } from "@/components/layout/Section";
+import { LogoWatermark } from "@/components/brand/Logo";
+import { photos } from "@/lib/photos";
 
 export default function Services() {
   useSEO({ title: "Residential, Commercial & Airbnb Cleaning Services", description: "Residential, deep cleaning, Airbnb turnovers, commercial janitorial, and move-in/move-out cleaning across Southern Maine. Eco-friendly products, transparent pricing." });
@@ -16,25 +19,59 @@ export default function Services() {
   }, []);
 
   return (
-    <div className="min-h-screen pb-12 sm:pb-16">
-      <section className="relative bg-background border-b border-border pt-20 sm:pt-28 pb-10 sm:pb-12 overflow-hidden">
-        <div className="absolute inset-0 z-0">
-          <img
-            src="/images/services-hero-clean-home.jpeg"
-            alt="Professional cleaning services"
-            className="w-full h-full object-cover opacity-[0.07]"
-          />
-        </div>
-        <div className="container mx-auto px-4 sm:px-6 max-w-3xl text-center relative z-10">
-          <h1 className="text-3xl sm:text-5xl font-serif font-bold mb-4 text-foreground">Our Services</h1>
-          <p className="text-muted-foreground text-base sm:text-lg leading-relaxed max-w-xl mx-auto">
-            Tailored cleaning solutions for homes, rentals, and businesses across Southern Maine.
-          </p>
+    <div className="w-full overflow-x-hidden">
+      {/* ── Hero ──
+          Same shape as the homepage: copy left, one of our own photos right,
+          collapsing to centred copy over a single wide photo on a phone. The
+          page used to run this same photo full-bleed behind the text at 7%
+          opacity, which is invisible — it read as an empty grey band with a
+          heading floating in it. */}
+      <section className="relative pt-28 sm:pt-36 lg:pt-40 pb-14 sm:pb-20 overflow-hidden">
+        <div className="hero-aurora" aria-hidden="true" />
+        <div className="hero-dot-grid" aria-hidden="true" />
+
+        <div className="container mx-auto px-5 sm:px-6 lg:px-8 relative z-10">
+          <div className="max-w-[78rem] mx-auto grid lg:grid-cols-[minmax(0,1.05fr)_minmax(0,1fr)] gap-10 lg:gap-16 items-center">
+            <div className="text-center lg:text-left">
+              <motion.h1
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.7, ease: [0.22, 1, 0.36, 1] }}
+                className="text-[2.25rem] sm:text-5xl md:text-[3.5rem] leading-[1.05] font-serif font-bold tracking-[-0.02em] mb-6 text-foreground"
+              >
+                Our Services
+              </motion.h1>
+              <motion.p
+                initial={{ opacity: 0, y: 14 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.7, delay: 0.12 }}
+                className="text-muted-foreground text-base sm:text-lg leading-relaxed max-w-lg mx-auto lg:mx-0"
+              >
+                Tailored cleaning solutions for homes, rentals, and businesses across Southern Maine.
+              </motion.p>
+            </div>
+
+            {/* Eager, not lazy — this is the LCP candidate on desktop. */}
+            <motion.figure
+              initial={{ opacity: 0, scale: 0.97 }}
+              animate={{ opacity: 1, scale: 1 }}
+              transition={{ duration: 0.9, delay: 0.15, ease: [0.22, 1, 0.36, 1] }}
+              className="photo-frame aspect-[4/3] lg:aspect-[5/4] max-w-md mx-auto lg:max-w-none w-full"
+            >
+              <img
+                src={photos.vacuumFleet.src}
+                alt={photos.vacuumFleet.alt}
+                fetchPriority="high"
+                decoding="async"
+              />
+            </motion.figure>
+          </div>
         </div>
       </section>
 
-      <div className="container mx-auto px-4 sm:px-6 mt-10 sm:mt-14">
-        <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-5 max-w-5xl mx-auto mb-14 sm:mb-20">
+      {/* ── The services themselves ── */}
+      <Section measure="wide" rhythm="tight">
+        <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-5">
           {services.map((service, i) => {
             const Icon = service.icon;
             return (
@@ -44,42 +81,62 @@ export default function Services() {
                   whileInView={{ opacity: 1, y: 0 }}
                   viewport={{ once: true }}
                   transition={{ delay: i * 0.08 }}
-                  className="group cursor-pointer bg-card p-5 sm:p-6 rounded-2xl border border-border shadow-[0_2px_12px_rgba(0,0,0,0.03)] hover:shadow-[0_8px_30px_rgba(0,0,0,0.2)] hover:-translate-y-0.5 transition-all duration-300 flex flex-col h-full"
+                  className="group cursor-pointer card-glass p-6 sm:p-7 hover:-translate-y-0.5 transition-all duration-300 flex flex-col h-full min-h-[13.5rem]"
                 >
-                  <div className={`w-11 h-11 rounded-xl flex items-center justify-center mb-4 ${service.color}`}>
-                    <Icon className="w-5 h-5" />
+                  <div className={`w-11 h-11 rounded-xl flex items-center justify-center mb-5 flex-shrink-0 ${service.color}`}>
+                    <Icon className="w-5 h-5 service-icon-hover" />
                   </div>
-                  <h3 className="text-lg font-bold text-foreground mb-1.5 group-hover:text-primary transition-colors">{service.title}</h3>
-                  <p className="text-sm text-muted-foreground leading-relaxed flex-grow mb-3">{service.shortDesc}</p>
-                  <span className="inline-flex items-center text-sm font-semibold text-primary group-hover:translate-x-0.5 transition-transform">
-                    View details <ArrowRight className="ml-1 w-3.5 h-3.5" />
+                  <h3 className="font-bold text-foreground text-base mb-2 group-hover:text-primary transition-colors">{service.title}</h3>
+                  <p className="text-sm text-muted-foreground leading-relaxed flex-grow">{service.shortDesc}</p>
+                  <span className="inline-flex items-center text-sm font-semibold text-primary mt-5 group-hover:translate-x-1 transition-transform duration-300">
+                    View details <ArrowRight className="ml-1.5 w-3.5 h-3.5" />
                   </span>
                 </motion.div>
               </Link>
             );
           })}
         </div>
+      </Section>
 
-        <div className="max-w-5xl mx-auto mb-14 sm:mb-20">
-          <div className="text-center max-w-md mx-auto mb-10 sm:mb-14">
-            <h2 className="text-[1.75rem] sm:text-4xl md:text-[2.5rem] font-serif font-bold text-foreground tracking-[-0.01em] mb-3">Not Sure Where to Start?</h2>
-            <p className="text-muted-foreground text-[15px] leading-relaxed">Take our 30-second quiz and we'll recommend the perfect cleaning service for your needs.</p>
-          </div>
-          <CleaningQuiz />
-        </div>
+      {/* ── Quiz ── */}
+      <Section measure="default" tone="tint">
+        <SectionHeading
+          title="Not Sure Where to Start?"
+          lead="Take our 30-second quiz and we'll recommend the perfect cleaning service for your needs."
+        />
+        <CleaningQuiz />
+      </Section>
 
-        <div className="max-w-xl mx-auto mb-14 sm:mb-20 relative">
+      {/* ── Estimate ── */}
+      <Section measure="prose">
+        <div className="relative">
           <div id="estimate-section-anchor" className="absolute -top-32" />
           <EstimateCTA />
         </div>
+      </Section>
 
-        <div className="max-w-3xl mx-auto">
+      {/* ── How we clean ──
+          The eco copy used to be a lone bordered box on an otherwise empty
+          band. It now sits beside the bottles themselves, which is both the
+          missing visual weight and the evidence for the claim next to it. */}
+      <Section measure="default">
+        <LogoWatermark position="left" />
+        <div className="grid lg:grid-cols-[minmax(0,0.85fr)_minmax(0,1fr)] gap-8 lg:gap-12 items-center">
+          <figure className="photo-frame aspect-[4/3] max-w-md mx-auto lg:max-w-none w-full order-last lg:order-first">
+            <img
+              src={photos.ecoProducts.src}
+              alt={photos.ecoProducts.alt}
+              loading="lazy"
+              decoding="async"
+            />
+          </figure>
+
           <div className="bg-emerald-500/10 border border-emerald-500/30 rounded-2xl p-6 sm:p-8 flex flex-col sm:flex-row gap-5 items-start">
             <div className="w-12 h-12 rounded-xl bg-card flex items-center justify-center flex-shrink-0 shadow-sm text-emerald-600 dark:text-emerald-400">
               <Leaf className="w-6 h-6" />
             </div>
-            <div>
-              <h2 className="font-bold text-emerald-700 dark:text-emerald-300 mb-2">Our Cleaning Approach</h2>
+            <div className="min-w-0">
+              <h2 className="font-bold text-emerald-700 dark:text-emerald-300 text-base mb-2">Our Cleaning Approach</h2>
               <p className="text-sm text-emerald-600/80 dark:text-emerald-400/80 leading-relaxed mb-3">
                 We exclusively use Melaleuca EcoSense & Sal Suds — eco-friendly products that deliver a thorough clean without harsh chemicals.
               </p>
@@ -93,7 +150,7 @@ export default function Services() {
             </div>
           </div>
         </div>
-      </div>
+      </Section>
     </div>
   );
 }

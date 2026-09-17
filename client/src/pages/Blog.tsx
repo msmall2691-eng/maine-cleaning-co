@@ -3,30 +3,52 @@ import { Link } from "wouter";
 import { useSEO } from "@/hooks/use-seo";
 import { motion } from "framer-motion";
 import { Calendar, Clock, ArrowRight } from "lucide-react";
+import { Section } from "@/components/layout/Section";
+import { photos } from "@/lib/photos";
 
 export default function Blog() {
   useSEO({ title: "Journal & Insights", description: "Cleaning tips, home maintenance advice, and short-term rental insights from The Maine Cleaning Co. — Southern Maine's trusted cleaning experts." });
   const posts = getBlogPosts();
 
   return (
-    <div className="bg-background min-h-screen pb-12 sm:pb-16">
-      <div className="relative bg-secondary/50 pt-24 sm:pt-32 pb-12 sm:pb-20 border-b border-border overflow-hidden">
-        <div className="absolute inset-0 z-0">
-          <img
-            src="/images/blog-hero-cleaning-tips.jpeg"
-            alt="Clean home interior"
-            className="w-full h-full object-cover opacity-[0.05]"
-          />
-        </div>
-        <div className="container mx-auto px-4 sm:px-6 max-w-4xl text-center relative z-10">
-          <h1 className="text-3xl sm:text-4xl md:text-6xl font-serif font-bold text-foreground mb-4 sm:mb-6" data-testid="text-blog-heading">Journal & Insights</h1>
-          <p className="text-base sm:text-xl text-muted-foreground font-medium max-w-2xl mx-auto leading-relaxed">
-            Cleaning tips, company news, and insights for maintaining a beautiful home or business in Southern Maine.
-          </p>
-        </div>
-      </div>
+    <>
+      {/* Header and grid now share one measure (`wide`). The old header was
+          max-w-4xl over a max-w-6xl grid, so the page's own title read as
+          narrower than the cards under it. The hero photo used to sit behind
+          the text at opacity 0.05 — invisible, and a near-duplicate of the
+          library's rental-bathroom shot; it's a real photograph now, beside
+          the heading rather than ghosted under it. */}
+      <Section
+        measure="wide"
+        rhythm="none"
+        reveal={false}
+        className="pt-28 sm:pt-36 lg:pt-40 pb-[clamp(2rem,3.5vw,3rem)] overflow-hidden"
+      >
+        <div className="grid lg:grid-cols-[minmax(0,1.15fr)_minmax(0,0.85fr)] gap-10 lg:gap-14 items-center">
+          <div>
+            <h1
+              className="text-[2.25rem] sm:text-5xl md:text-[3.5rem] leading-[1.05] font-serif font-bold tracking-[-0.02em] text-foreground heading-rule-left"
+              data-testid="text-blog-heading"
+            >
+              Journal & Insights
+            </h1>
+            <p className="mt-8 text-[15px] sm:text-base text-muted-foreground leading-relaxed max-w-[34rem]">
+              Cleaning tips, company news, and insights for maintaining a beautiful home or business in Southern Maine.
+            </p>
+          </div>
 
-      <div className="container mx-auto px-4 sm:px-6 mt-8 sm:mt-16 max-w-6xl">
+          <figure className="photo-frame hidden lg:block aspect-[4/3]">
+            <img
+              src={photos.toolkit.src}
+              alt={photos.toolkit.alt}
+              loading="lazy"
+              decoding="async"
+            />
+          </figure>
+        </div>
+      </Section>
+
+      <Section measure="wide" rhythm="tight" className="pb-[clamp(3.25rem,6vw,5.5rem)]">
         <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-5 sm:gap-8">
           {posts.map((post, i) => (
             <motion.div
@@ -38,9 +60,9 @@ export default function Blog() {
               data-testid={`card-blog-${post.id}`}
             >
               <Link href={`/blog/${post.id}`} className="block overflow-hidden relative aspect-[4/3]">
-                <img 
-                  src={post.image} 
-                  alt={post.title} 
+                <img
+                  src={post.image}
+                  alt={post.title}
                   className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
                   loading="lazy"
                 />
@@ -48,25 +70,25 @@ export default function Blog() {
                   {post.category}
                 </div>
               </Link>
-              
-              <div className="p-5 sm:p-8 flex flex-col flex-grow">
+
+              <div className="p-5 sm:p-7 flex flex-col flex-grow">
                 <div className="flex items-center gap-3 sm:gap-4 text-xs text-muted-foreground font-medium mb-3 sm:mb-4">
                   <span className="flex items-center gap-1.5"><Calendar className="w-3.5 h-3.5" /> {post.date}</span>
                   <span className="flex items-center gap-1.5"><Clock className="w-3.5 h-3.5" /> {post.readTime}</span>
                 </div>
-                
+
                 <Link href={`/blog/${post.id}`}>
-                  <h3 className="text-xl sm:text-2xl font-bold font-serif mb-2 sm:mb-3 text-foreground group-hover:text-primary transition-colors line-clamp-2">
+                  <h3 className="text-lg sm:text-xl leading-snug font-serif font-bold mb-3 text-foreground group-hover:text-primary transition-colors line-clamp-2">
                     {post.title}
                   </h3>
                 </Link>
-                
-                <p className="text-sm sm:text-base text-muted-foreground mb-4 sm:mb-6 flex-grow line-clamp-3 leading-relaxed">
+
+                <p className="text-sm sm:text-[15px] text-muted-foreground mb-5 sm:mb-6 flex-grow line-clamp-3 leading-relaxed">
                   {post.excerpt}
                 </p>
-                
+
                 <Link href={`/blog/${post.id}`}>
-                  <span className="inline-flex items-center text-sm sm:text-base font-semibold text-primary hover:text-primary/80 transition-colors" data-testid={`link-read-${post.id}`}>
+                  <span className="inline-flex items-center text-sm font-semibold text-primary hover:text-primary/80 transition-colors" data-testid={`link-read-${post.id}`}>
                     Read Article <ArrowRight className="ml-2 w-4 h-4 group-hover:translate-x-1 transition-transform" />
                   </span>
                 </Link>
@@ -74,7 +96,7 @@ export default function Blog() {
             </motion.div>
           ))}
         </div>
-      </div>
-    </div>
+      </Section>
+    </>
   );
 }

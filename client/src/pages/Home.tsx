@@ -29,7 +29,11 @@ import { SparkleField } from "@/components/ui/SparkleField";
 import { CoverageCheck } from "@/components/ui/CoverageCheck";
 import { companyInfo } from "@/lib/company-info";
 import { RESPONSE_REPLY, AVAILABILITY_NOTE } from "@/lib/response-time";
+import { ResponseNote } from "@/components/ui/ResponseNote";
 import { COMMUNITIES_SERVED, CLEANS_SINCE_2018 } from "@/lib/company-stats";
+import { Section, SectionHeading } from "@/components/layout/Section";
+import { LogoWatermark } from "@/components/brand/Logo";
+import { photos } from "@/lib/photos";
 
 const fadeUp = {
   hidden: { opacity: 0, y: 20 },
@@ -60,47 +64,59 @@ const trustSignals = [
 ];
 
 
-function useSectionFade() {
-  const ref = useRef<HTMLElement>(null);
-  useEffect(() => {
-    const el = ref.current;
-    if (!el) return;
-    if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) { el.classList.add("visible"); return; }
-    const observer = new IntersectionObserver(
-      ([entry]) => { if (entry.isIntersecting) { el.classList.add("visible"); observer.unobserve(el); } },
-      { threshold: 0.08, rootMargin: "0px 0px -40px 0px" }
-    );
-    observer.observe(el);
-    return () => observer.disconnect();
-  }, []);
-  return ref;
-}
+/**
+ * The hero's photo column: one tall shot plus two stacked, all our own work.
+ *
+ * Eager, not lazy — this is the LCP candidate on desktop, and deferring it
+ * just moves the empty space from "always" to "for the first second".
+ */
+function HeroCollage() {
+  // Chosen from lib/photos.ts by what's in the frame, not by filename. The
+  // bathroom leads because it's the only shot in the library of a finished,
+  // guest-ready room; the other two are proof that we go inside things.
+  const [lead, upper, lower] = [photos.rentalBathroom, photos.restroomTrailer, photos.fridgeInterior];
 
-function FadeSection({ className = "", children, id, ...rest }: { className?: string; children: React.ReactNode; id?: string; [key: string]: any }) {
-  const ref = useSectionFade();
-  return <section ref={ref} className={`section-fade ${className}`} id={id} {...rest}>{children}</section>;
-}
-
-
-function WaveDivider({ flip = false, className = "" }: { flip?: boolean; className?: string }) {
   return (
-    <div className={`w-full overflow-hidden leading-[0] wave-divider-cream ${flip ? "rotate-180" : ""} ${className}`} aria-hidden="true">
-      <svg viewBox="0 0 1440 80" preserveAspectRatio="none" className="w-full h-[35px] sm:h-[50px] md:h-[70px]">
-        <path d="M0,50 C180,80 360,20 540,45 C720,70 900,15 1080,40 C1200,55 1350,25 1440,35 L1440,80 L0,80 Z" fill="currentColor" opacity="0.6" />
-        <path d="M0,55 C240,75 480,25 720,50 C960,75 1200,20 1440,45 L1440,80 L0,80 Z" fill="currentColor" />
-      </svg>
-    </div>
-  );
-}
+    <motion.div
+      initial={{ opacity: 0, scale: 0.97 }}
+      animate={{ opacity: 1, scale: 1 }}
+      transition={{ duration: 0.9, delay: 0.2, ease: [0.22, 1, 0.36, 1] }}
+      className="relative"
+    >
+      {/* Phones get one shot — a three-up collage at 360px is mush. Eager,
+          because this is the LCP element; deferring it only moves the empty
+          space from "always" to "for the first second". */}
+      <figure className="photo-frame lg:hidden aspect-[4/3] max-w-md mx-auto">
+        <img src={lead.src} alt={lead.alt} fetchPriority="high" decoding="async" />
+      </figure>
 
-function WaveDividerCream({ flip = false }: { flip?: boolean }) {
-  return (
-    <div className={`w-full overflow-hidden leading-[0] wave-divider-warm ${flip ? "rotate-180" : ""}`} aria-hidden="true">
-      <svg viewBox="0 0 1440 80" preserveAspectRatio="none" className="w-full h-[35px] sm:h-[50px] md:h-[70px]">
-        <path d="M0,40 C180,70 360,10 540,35 C720,60 900,20 1080,50 C1260,70 1380,30 1440,40 L1440,80 L0,80 Z" fill="currentColor" opacity="0.5" />
-        <path d="M0,50 C240,75 480,15 720,45 C960,70 1200,25 1440,50 L1440,80 L0,80 Z" fill="currentColor" />
-      </svg>
-    </div>
+      <div className="hidden lg:grid grid-cols-5 grid-rows-6 gap-3 h-[30rem] xl:h-[34rem]">
+        <figure className="photo-frame col-span-3 row-span-6">
+          <img src={lead.src} alt={lead.alt} fetchPriority="high" decoding="async" />
+        </figure>
+        <figure className="photo-frame col-start-4 col-span-2 row-span-3">
+          <img src={upper.src} alt={upper.alt} loading="lazy" decoding="async" />
+        </figure>
+        <figure className="photo-frame col-start-4 col-span-2 row-span-3">
+          <img src={lower.src} alt={lower.alt} loading="lazy" decoding="async" />
+        </figure>
+      </div>
+
+      {/* Overlapping proof chip. Tucked into the collage rather than parked in
+          its own row — the overlap is what makes the block read as composed
+          rather than as three pictures in a box. */}
+      <div className="absolute -bottom-5 left-4 lg:-left-6 kpi-card px-4 py-3 flex items-center gap-3">
+        <div className="flex gap-0.5" aria-hidden="true">
+          {[1, 2, 3, 4, 5].map((i) => (
+            <Star key={i} className="w-3.5 h-3.5 fill-yellow-400 text-yellow-500 dark:text-yellow-400" />
+          ))}
+        </div>
+        <div className="leading-tight">
+          <div className="text-[13px] font-semibold text-foreground">4.9 on Google</div>
+          <div className="text-[11px] text-muted-foreground">{CLEANS_SINCE_2018} cleans since 2018</div>
+        </div>
+      </div>
+    </motion.div>
   );
 }
 
@@ -317,104 +333,122 @@ export default function Home() {
         />
       </div>
 
-      {/* ── Hero ── */}
-      <section className="relative pt-32 sm:pt-40 md:pt-44 pb-20 sm:pb-28 overflow-hidden">
+      {/* ── Hero ──
+          Two columns from lg up. The hero used to be a centred column of text
+          capped at max-w-3xl floating in the middle of an otherwise empty
+          1536px band — the single biggest source of "there's nothing here" on
+          a laptop. The right-hand column is now three of our own job photos,
+          which is both the missing visual weight and the proof the copy is
+          making a claim about. Below lg it collapses back to centred copy with
+          one wide photo, which is the right shape on a phone. */}
+      <section className="relative pt-28 sm:pt-36 lg:pt-40 pb-16 sm:pb-20 overflow-hidden">
         <div className="hero-aurora" aria-hidden="true" />
         <div className="hero-dot-grid" aria-hidden="true" />
         <SparkleField />
 
-        <div className="container mx-auto px-4 sm:px-6 relative z-10 text-center max-w-2xl lg:max-w-3xl">
-          <motion.div initial={{ opacity: 0, y: 14 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.5 }} className="mb-4">
-            <span className="inline-flex items-center gap-2 text-[11px] sm:text-xs font-semibold uppercase tracking-[0.2em] text-primary/80" data-testid="text-hero-label">
-              Southern Maine's Premier Cleaning Co.
-            </span>
-          </motion.div>
+        <div className="container mx-auto px-5 sm:px-6 lg:px-8 relative z-10">
+          <div className="max-w-[78rem] mx-auto grid lg:grid-cols-[minmax(0,1.04fr)_minmax(0,1fr)] gap-12 lg:gap-14 xl:gap-20 items-center">
 
-          <motion.h1
-            initial={{ opacity: 0, y: 24 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.8, ease: [0.22, 1, 0.36, 1] }}
-            className="text-[2.75rem] sm:text-[3.5rem] md:text-[4.25rem] lg:text-[5.5rem] font-extrabold leading-[1.02] tracking-[-0.04em] text-foreground mb-6"
-            data-testid="text-hero-title"
-          >
-            The Way Cleaning{" "}<span className="hero-gradient-text">Should Be.</span>
-          </motion.h1>
+            {/* ── Copy ── */}
+            <div className="text-center lg:text-left">
+              <motion.div initial={{ opacity: 0, y: 14 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.5 }} className="mb-4">
+                <span className="inline-flex items-center gap-2 text-[11px] sm:text-xs font-semibold uppercase tracking-[0.2em] text-primary/80" data-testid="text-hero-label">
+                  Southern Maine's Premier Cleaning Co.
+                </span>
+              </motion.div>
 
-          <motion.p
-            initial={{ opacity: 0, y: 14 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.7, delay: 0.15 }}
-            className="text-[15px] sm:text-lg text-muted-foreground max-w-md sm:max-w-lg mx-auto leading-relaxed mb-10"
-            data-testid="text-hero-subtitle"
-          >
-            Residential, rental, and commercial cleaning across Southern Maine — eco-friendly products, consistent results, and a team that genuinely cares.
-          </motion.p>
+              <motion.h1
+                initial={{ opacity: 0, y: 24 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.8, ease: [0.22, 1, 0.36, 1] }}
+                className="text-[2.75rem] sm:text-[3.5rem] lg:text-[3.75rem] xl:text-[4.5rem] font-extrabold leading-[1.02] tracking-[-0.04em] text-foreground mb-6"
+                data-testid="text-hero-title"
+              >
+                The Way Cleaning{" "}<span className="hero-gradient-text">Should Be.</span>
+              </motion.h1>
 
-          <motion.div
-            initial={{ opacity: 0, y: 14 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.5, delay: 0.3 }}
-            className="flex flex-col sm:flex-row justify-center gap-3 sm:gap-4 mb-12 sm:mb-14"
-          >
-            <Link href="/book">
-              <Button size="lg" className="w-full sm:w-auto h-13 sm:h-14 px-8 sm:px-10 rounded-full text-base sm:text-[17px] font-semibold shadow-[0_2px_12px_rgba(0,0,0,0.12)]" data-testid="button-hero-book">
-                <Calendar className="mr-2 w-4 h-4" /> Book a Cleaning
-              </Button>
-            </Link>
-            <Button size="lg" variant="outline" className="w-full sm:w-auto h-13 sm:h-14 px-8 sm:px-10 rounded-full text-base border-2 border-primary hover:bg-primary/5 bg-card/80 backdrop-blur-sm shadow-[0_1px_4px_rgba(0,0,0,0.15)]" onClick={scrollToEstimate} data-testid="button-hero-estimate">
-              Get an Instant Quote <ArrowRight className="ml-2.5 w-4 h-4" />
-            </Button>
-          </motion.div>
+              <motion.p
+                initial={{ opacity: 0, y: 14 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.7, delay: 0.15 }}
+                className="text-[15px] sm:text-lg text-muted-foreground max-w-lg mx-auto lg:mx-0 leading-relaxed mb-8"
+                data-testid="text-hero-subtitle"
+              >
+                Residential, rental, and commercial cleaning across Southern Maine — eco-friendly products, consistent results, and a team that genuinely cares.
+              </motion.p>
 
-          {/* Still here, still taking work. A plain availability statement —
-              deliberately not scarcity ("only N slots left"), which would be
-              both untrue and the opposite of how we actually operate. */}
-          <motion.div
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            transition={{ duration: 0.5, delay: 0.4 }}
-            className="flex justify-center -mt-6 sm:-mt-8 mb-10 sm:mb-12"
-          >
-            <span
-              className="inline-flex items-center gap-2 rounded-full border border-emerald-600/30 dark:border-emerald-500/30 bg-emerald-500/10 px-4 py-1.5 text-[13px] font-medium text-emerald-700 dark:text-emerald-300"
-              data-testid="badge-availability"
-            >
-              <span className="relative flex h-2 w-2" aria-hidden="true">
-                <span className="absolute inline-flex h-full w-full rounded-full bg-emerald-500 opacity-60 motion-safe:animate-ping" />
-                <span className="relative inline-flex h-2 w-2 rounded-full bg-emerald-600 dark:bg-emerald-400" />
-              </span>
-              {AVAILABILITY_NOTE}
-            </span>
-          </motion.div>
+              <motion.div
+                initial={{ opacity: 0, y: 14 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.5, delay: 0.3 }}
+                className="flex flex-col sm:flex-row justify-center lg:justify-start gap-3 sm:gap-4 mb-6"
+              >
+                <Link href="/book">
+                  <Button size="lg" className="w-full sm:w-auto h-13 sm:h-14 px-8 sm:px-10 rounded-full text-base sm:text-[17px] font-semibold shadow-[0_2px_12px_rgba(0,0,0,0.12)]" data-testid="button-hero-book">
+                    <Calendar className="mr-2 w-4 h-4" /> Book a Cleaning
+                  </Button>
+                </Link>
+                <Button size="lg" variant="outline" className="w-full sm:w-auto h-13 sm:h-14 px-8 sm:px-10 rounded-full text-base border-2 border-primary hover:bg-primary/5 bg-card/80 backdrop-blur-sm shadow-[0_1px_4px_rgba(0,0,0,0.15)]" onClick={scrollToEstimate} data-testid="button-hero-estimate">
+                  Get an Instant Quote <ArrowRight className="ml-2.5 w-4 h-4" />
+                </Button>
+              </motion.div>
 
-          {/* Trust signals */}
-          <motion.div
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            transition={{ duration: 0.6, delay: 0.5 }}
-            className="flex flex-wrap justify-center gap-x-5 gap-y-2 sm:gap-x-8"
-          >
-            {trustSignals.map((signal, i) => (
-              <div key={i} className="flex items-center gap-1.5 text-muted-foreground">
-                <signal.icon className="w-3.5 h-3.5 text-primary/70" />
-                <span className="text-xs sm:text-[13px] font-medium tracking-wide">{signal.label}</span>
-              </div>
-            ))}
-          </motion.div>
+              {/* Still here, still taking work. A plain availability statement —
+                  deliberately not scarcity ("only N slots left"), which would be
+                  both untrue and the opposite of how we actually operate. */}
+              <motion.div
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                transition={{ duration: 0.5, delay: 0.4 }}
+                className="flex justify-center lg:justify-start mb-8"
+              >
+                <span
+                  className="inline-flex items-center gap-2 rounded-full border border-emerald-600/30 dark:border-emerald-500/30 bg-emerald-500/10 px-4 py-1.5 text-[13px] font-medium text-emerald-700 dark:text-emerald-300"
+                  data-testid="badge-availability"
+                >
+                  <span className="relative flex h-2 w-2" aria-hidden="true">
+                    <span className="absolute inline-flex h-full w-full rounded-full bg-emerald-500 opacity-60 motion-safe:animate-ping" />
+                    <span className="relative inline-flex h-2 w-2 rounded-full bg-emerald-600 dark:bg-emerald-400" />
+                  </span>
+                  {AVAILABILITY_NOTE}
+                </span>
+              </motion.div>
 
+              {/* Trust signals */}
+              <motion.div
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                transition={{ duration: 0.6, delay: 0.5 }}
+                className="flex flex-wrap justify-center lg:justify-start gap-x-5 gap-y-2 sm:gap-x-7"
+              >
+                {trustSignals.map((signal, i) => (
+                  <div key={i} className="flex items-center gap-1.5 text-muted-foreground">
+                    <signal.icon className="w-3.5 h-3.5 text-primary/70" />
+                    <span className="text-xs sm:text-[13px] font-medium tracking-wide">{signal.label}</span>
+                  </div>
+                ))}
+              </motion.div>
+            </div>
+
+            {/* ── Photos ── */}
+            <HeroCollage />
+          </div>
         </div>
       </section>
 
-      {/* ── Quick Action Strip ── */}
-      <div className="relative z-20 bg-card/90 backdrop-blur-xl border-y border-border/40 shadow-[0_4px_24px_rgba(0,0,0,0.25)]">
-        <div className="container mx-auto px-4 sm:px-6 py-3 sm:py-4">
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-2 sm:gap-3 max-w-3xl mx-auto">
+      {/* ── Quick Action Strip ──
+          Was a full-bleed slab with a hard 1px border top and bottom. It is
+          now a floating card pulled up into the hero's bottom padding, which
+          ties the two together instead of ruling a line between them. */}
+      <div className="relative z-20 container mx-auto px-5 sm:px-6 lg:px-8 -mt-4 sm:-mt-6">
+        <div className="max-w-[52rem] mx-auto card-glass px-3 py-2.5 sm:px-4 sm:py-3">
+          <div className="grid grid-cols-2 md:grid-cols-3 gap-1.5 sm:gap-2">
             <a href={companyInfo.contact.phoneHref} data-testid="quick-action-call" className="group flex items-center gap-3 p-3 sm:p-3.5 rounded-xl hover:bg-secondary/60 active:bg-secondary/80 transition-all border border-transparent hover:border-border/60">
               <div className="w-9 h-9 rounded-lg bg-blue-500/10 flex items-center justify-center flex-shrink-0 group-hover:bg-blue-500/20 transition-colors">
                 <Phone className="w-4 h-4 text-blue-600 dark:text-blue-400" />
               </div>
               <div className="min-w-0">
-                <div className="text-[13px] font-semibold text-foreground group-hover:text-blue-600 dark:text-blue-400 transition-colors truncate">Call Now</div>
+                <div className="text-[13px] font-semibold text-foreground group-hover:text-blue-600 dark:group-hover:text-blue-400 transition-colors truncate">Call Now</div>
                 <div className="text-[11px] text-muted-foreground truncate">{companyInfo.contact.phoneDisplay}</div>
               </div>
             </a>
@@ -423,7 +457,7 @@ export default function Home() {
                 <MessageSquare className="w-4 h-4 text-emerald-600 dark:text-emerald-400" />
               </div>
               <div className="min-w-0">
-                <div className="text-[13px] font-semibold text-foreground group-hover:text-emerald-600 dark:text-emerald-400 transition-colors truncate">Text Us</div>
+                <div className="text-[13px] font-semibold text-foreground group-hover:text-emerald-600 dark:group-hover:text-emerald-400 transition-colors truncate">Text Us</div>
                 <div className="text-[11px] text-muted-foreground truncate">Quick reply</div>
               </div>
             </a>
@@ -432,16 +466,16 @@ export default function Home() {
                 <MessageSquare className="w-4 h-4 text-emerald-600 dark:text-emerald-400" />
               </div>
               <div className="min-w-0">
-                <div className="text-[13px] font-semibold text-foreground group-hover:text-emerald-600 dark:text-emerald-400 transition-colors truncate">Call or Text</div>
+                <div className="text-[13px] font-semibold text-foreground group-hover:text-emerald-600 dark:group-hover:text-emerald-400 transition-colors truncate">Call or Text</div>
                 <div className="text-[11px] text-muted-foreground truncate">{companyInfo.contact.phoneDisplay}</div>
               </div>
             </a>
-            <Link href="/service-areas" data-testid="quick-action-areas" className="group flex items-center gap-3 p-3 sm:p-3.5 rounded-xl hover:bg-secondary/60 active:bg-secondary/80 transition-all border border-transparent hover:border-border/60">
+            <Link href="/service-areas" data-testid="quick-action-areas" className="col-span-2 md:col-span-1 group flex items-center gap-3 p-3 sm:p-3.5 rounded-xl hover:bg-secondary/60 active:bg-secondary/80 transition-all border border-transparent hover:border-border/60">
               <div className="w-9 h-9 rounded-lg bg-orange-500/10 flex items-center justify-center flex-shrink-0 group-hover:bg-orange-500/20 transition-colors">
                 <MapPin className="w-4 h-4 text-orange-600 dark:text-orange-400" />
               </div>
               <div className="min-w-0">
-                <div className="text-[13px] font-semibold text-foreground group-hover:text-orange-600 dark:text-orange-400 transition-colors truncate">Service Areas</div>
+                <div className="text-[13px] font-semibold text-foreground group-hover:text-orange-600 dark:group-hover:text-orange-400 transition-colors truncate">Service Areas</div>
                 <div className="text-[11px] text-muted-foreground truncate">{COMMUNITIES_SERVED} communities</div>
               </div>
             </Link>
@@ -450,85 +484,85 @@ export default function Home() {
       </div>
 
       {/* ── Instant Coverage Check ── */}
-      <div className="relative z-10 section-white">
-        <div className="container mx-auto px-4 sm:px-6 pt-6 sm:pt-10 pb-2 sm:pb-4">
-          <CoverageCheck />
+      <Section rhythm="tight" measure="default" reveal={false}>
+        <CoverageCheck />
+      </Section>
+
+      {/* ── Services Grid ──
+          Four across at lg. Two columns capped at max-w-4xl left roughly a
+          third of the band empty on any laptop; four fills it and reads as
+          one row of offers rather than a stubby 2x2 block. */}
+      <Section id="services" measure="wide" tone="tint">
+        <SectionHeading
+          eyebrow="What we do"
+          title="Cleaning, done properly"
+          lead="Tailored cleaning for homes, rentals, and businesses across Southern Maine."
+        />
+
+        <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-5 mb-12">
+          {homepageServices.map((svc, i) => {
+            const Icon = svc.icon;
+            return (
+              <Link key={svc.id} href={`/services/${svc.id}`} data-testid={`card-service-${svc.id}`}>
+                <motion.div
+                  variants={fadeUp}
+                  initial="hidden"
+                  whileInView="visible"
+                  viewport={{ once: true }}
+                  custom={i}
+                  className="group card-glass p-6 sm:p-7 cursor-pointer h-full flex flex-col min-h-[13.5rem]"
+                >
+                  <div className={`w-11 h-11 rounded-xl flex items-center justify-center mb-5 flex-shrink-0 ${svc.color}`}>
+                    <Icon className="w-5 h-5 service-icon-hover" />
+                  </div>
+                  <h3 className="font-bold text-foreground mb-2 group-hover:text-primary transition-colors text-base">{svc.title}</h3>
+                  <p className="text-sm text-muted-foreground leading-relaxed flex-grow">{svc.desc}</p>
+                  <span className="inline-flex items-center text-sm font-semibold text-primary mt-5 group-hover:translate-x-1 transition-transform duration-300">
+                    Learn more <ArrowRight className="ml-1.5 w-3.5 h-3.5" />
+                  </span>
+                </motion.div>
+              </Link>
+            );
+          })}
         </div>
-      </div>
 
-      {/* ── Services Grid ── */}
-      <WaveDivider />
-      <FadeSection className="py-14 sm:py-20 section-white" id="services">
-        <div className="container mx-auto px-4 sm:px-6">
-          <div className="text-center max-w-md mx-auto mb-12 sm:mb-16">
-            <h2 className="text-[1.75rem] sm:text-4xl md:text-[2.5rem] font-serif font-bold text-foreground tracking-[-0.01em] mb-5 section-heading-accent">What We Do</h2>
-            <p className="text-muted-foreground text-[15px] leading-relaxed">Tailored cleaning for homes, rentals, and businesses across Southern Maine.</p>
-          </div>
-
-          <div className="grid sm:grid-cols-2 gap-4 sm:gap-5 max-w-2xl lg:max-w-4xl mx-auto mb-10">
-            {homepageServices.map((svc, i) => {
-              const Icon = svc.icon;
-              return (
-                <Link key={svc.id} href={`/services/${svc.id}`} data-testid={`card-service-${svc.id}`}>
-                  <motion.div
-                    variants={fadeUp}
-                    initial="hidden"
-                    whileInView="visible"
-                    viewport={{ once: true }}
-                    custom={i}
-                    className="group card-glass p-6 sm:p-8 cursor-pointer h-full flex flex-col min-h-[180px]"
-                  >
-                    <div className={`w-11 h-11 rounded-xl flex items-center justify-center mb-4 flex-shrink-0 ${svc.color}`}>
-                      <Icon className="w-5 h-5" />
-                    </div>
-                    <h3 className="font-bold text-foreground mb-2 group-hover:text-primary transition-colors text-base">{svc.title}</h3>
-                    <p className="text-sm text-muted-foreground leading-relaxed flex-grow">{svc.desc}</p>
-                    <span className="inline-flex items-center text-sm font-semibold text-primary mt-5 group-hover:translate-x-1 transition-transform duration-300">
-                      Learn more <ArrowRight className="ml-1.5 w-3.5 h-3.5" />
-                    </span>
-                  </motion.div>
-                </Link>
-              );
-            })}
-          </div>
-
-          <div className="text-center">
-            <Link href="/services">
-              <Button variant="outline" className="h-10 px-6 rounded-full border-border text-sm font-semibold gap-2 shadow-[0_1px_4px_rgba(0,0,0,0.15)] hover:shadow-[0_2px_8px_rgba(0,0,0,0.25)] transition-shadow" data-testid="button-all-services">
-                View All Services <ArrowRight className="w-3.5 h-3.5" />
-              </Button>
-            </Link>
-          </div>
+        <div className="text-center">
+          <Link href="/services">
+            <Button variant="outline" className="h-10 px-6 rounded-full border-border text-sm font-semibold gap-2 shadow-[0_1px_4px_rgba(0,0,0,0.15)] hover:shadow-[0_2px_8px_rgba(0,0,0,0.25)] transition-shadow" data-testid="button-all-services">
+              View All Services <ArrowRight className="w-3.5 h-3.5" />
+            </Button>
+          </Link>
         </div>
-      </FadeSection>
+      </Section>
 
       {/* ── See Our Work ── */}
       {/* Proof of work sits between "here's what we do" (Services) and
           "here's what people say" (Reviews). Cheap to render — local JPEGs,
           all lazy — so it earns a slot this high. The Facebook embed
           deliberately does NOT come with it; see the section further down. */}
-      <FadeSection className="py-14 sm:py-20" id="our-work">
-        <div className="container mx-auto px-4 sm:px-6 max-w-4xl">
-          <WorkGallery />
-        </div>
-      </FadeSection>
+      <Section id="our-work" measure="wide">
+        <WorkGallery />
+      </Section>
 
       {/* ── Reviews ── */}
-      <WaveDivider />
-      <FadeSection className="py-14 sm:py-20 section-cream" id="reviews">
-        <div className="container mx-auto px-4 sm:px-6">
-          <div className="flex flex-col sm:flex-row sm:items-end sm:justify-between mb-10 sm:mb-14 max-w-4xl mx-auto gap-4">
-            <div>
-              <h2 className="text-[1.75rem] sm:text-4xl md:text-[2.5rem] font-serif font-bold text-foreground tracking-[-0.01em] mb-4 section-heading-accent">What Clients Say</h2>
-              <p className="text-muted-foreground text-[15px] mb-4">Real feedback from our Southern Maine customers.</p>
-              <div className="flex flex-wrap justify-start gap-x-5 gap-y-1.5 text-xs sm:text-[13px] text-muted-foreground font-medium">
+      <Section id="reviews" measure="wide" tone="sink">
+        <SectionHeading
+          align="left"
+          eyebrow="Reviews"
+          title="What clients say"
+          lead={
+            <>
+              Real feedback from our Southern Maine customers.
+              <span className="mt-4 flex flex-wrap gap-x-5 gap-y-1.5 text-xs sm:text-[13px] font-medium">
                 <span>7+ Years</span>
                 <span className="text-muted-foreground/50">·</span>
                 <span>{CLEANS_SINCE_2018} Cleans</span>
                 <span className="text-muted-foreground/50">·</span>
                 <span>4.9★ Google</span>
-              </div>
-            </div>
+              </span>
+            </>
+          }
+          aside={
             <div className="hidden sm:flex gap-2">
               <button onClick={() => scrollCarousel(-1)} className="w-9 h-9 rounded-full border border-border flex items-center justify-center hover:bg-card hover:shadow-[0_2px_8px_rgba(0,0,0,0.2)] transition-all" aria-label="Previous review">
                 <ChevronLeft className="w-4 h-4" />
@@ -537,118 +571,131 @@ export default function Home() {
                 <ChevronRight className="w-4 h-4" />
               </button>
             </div>
-          </div>
+          }
+        />
 
-          <div ref={carouselRef} className="flex gap-4 overflow-x-auto snap-x snap-mandatory scroll-smooth pb-4 -mx-4 px-4 sm:mx-0 sm:px-0 max-w-4xl lg:mx-auto no-scrollbar">
-            {reviews.map((r, i) => (
-              <div key={i} className="snap-start flex-shrink-0 w-[85%] sm:w-[48%] lg:w-[32%] card-soft p-5 sm:p-6" data-testid={`card-review-${i}`}>
-                <div className="flex gap-0.5 mb-3">
-                  {[1,2,3,4,5].map(s => <Star key={s} className="w-3.5 h-3.5 fill-yellow-400 text-yellow-500 dark:text-yellow-400" />)}
-                </div>
-                <p className="text-sm text-foreground leading-relaxed mb-4 italic">"{r.text}"</p>
-                <div className="flex items-center justify-between">
-                  <span className="text-xs font-semibold text-muted-foreground">— {r.author}</span>
-                  <span className="text-[11px] text-muted-foreground/60">{r.date}</span>
-                </div>
+        <div ref={carouselRef} className="flex gap-4 overflow-x-auto snap-x snap-mandatory scroll-smooth pb-4 -mx-5 px-5 sm:mx-0 sm:px-0 no-scrollbar">
+          {reviews.map((r, i) => (
+            <div key={i} className="snap-start flex-shrink-0 w-[85%] sm:w-[48%] lg:w-[31.5%] card-soft p-5 sm:p-6" data-testid={`card-review-${i}`}>
+              <div className="flex gap-0.5 mb-3">
+                {[1,2,3,4,5].map(s => <Star key={s} className="w-3.5 h-3.5 fill-yellow-400 text-yellow-500 dark:text-yellow-400" />)}
               </div>
-            ))}
-          </div>
-
-          <div className="flex sm:hidden justify-center gap-1.5 mt-4" data-testid="review-dots">
-            {reviews.map((_, i) => (
-              <button
-                key={i}
-                className={`h-2 rounded-full transition-all duration-300 ${activeReviewIndex === i ? "bg-primary w-5" : "bg-muted-foreground/30 w-2"}`}
-                onClick={() => {
-                  const el = carouselRef.current;
-                  if (!el || !el.children[i]) return;
-                  (el.children[i] as HTMLElement).scrollIntoView({ behavior: "smooth", inline: "start", block: "nearest" });
-                }}
-                aria-label={`Go to review ${i + 1}`}
-              />
-            ))}
-          </div>
-
-          <div className="text-center mt-8 sm:mt-10 max-w-4xl lg:mx-auto">
-            <a href="https://g.page/r/CYnY6ulFfvDtEAE/review" target="_blank" rel="noopener noreferrer" data-testid="link-google-reviews">
-              <Button variant="outline" className="h-10 px-6 rounded-full border-border text-sm font-semibold gap-2 shadow-[0_1px_4px_rgba(0,0,0,0.15)]">
-                <Star className="w-4 h-4 fill-yellow-400 text-yellow-500 dark:text-yellow-400" />
-                See all reviews on Google
-              </Button>
-            </a>
-          </div>
-        </div>
-      </FadeSection>
-
-      {/* ── Instant Estimate ── */}
-      <WaveDividerCream />
-      <FadeSection className="py-14 sm:py-20 section-cream" id="get-estimate">
-        <div className="container mx-auto px-4 sm:px-6">
-          <div className="grid lg:grid-cols-2 gap-12 lg:gap-20 items-start max-w-4xl lg:max-w-5xl mx-auto">
-            <div className="max-w-sm lg:max-w-md">
-              <h2 className="text-[1.75rem] sm:text-4xl md:text-[2.5rem] font-serif font-bold text-foreground tracking-[-0.01em] mb-5 section-heading-accent">Transparent Pricing</h2>
-              <p className="text-muted-foreground text-[15px] mb-7 leading-relaxed">
-                Get an instant ballpark estimate, or reach out for a custom quote. No hidden fees, no surprises.
-              </p>
-              <ul className="space-y-3 mb-9">
-                {["No hidden fees", "Custom plans for unique spaces", "Flexible scheduling", "Satisfaction guaranteed"].map((t, i) => (
-                  <li key={i} className="flex items-center gap-3 text-sm font-medium text-foreground">
-                    <CheckCircle2 className="w-4 h-4 text-primary flex-shrink-0" /> {t}
-                  </li>
-                ))}
-              </ul>
-              <div className="text-sm text-muted-foreground space-y-3">
-                <p className="font-semibold text-foreground text-xs uppercase tracking-[0.15em] mb-3">Prefer to talk?</p>
-                <a href={companyInfo.contact.phoneHref} className="flex items-center gap-2.5 hover:text-foreground transition-colors" data-testid="link-est-call">
-                  <Phone className="w-4 h-4 text-primary" /> {companyInfo.contact.phoneDisplay}
-                </a>
-                <a href={companyInfo.contact.smsHref} className="flex items-center gap-2.5 hover:text-foreground transition-colors" data-testid="link-est-text">
-                  <MessageSquare className="w-4 h-4 text-primary" /> Text us
-                </a>
-                <a href={companyInfo.contact.emailHref} className="flex items-center gap-2.5 hover:text-foreground transition-colors" data-testid="link-est-email">
-                  <Mail className="w-4 h-4 text-primary" /> {companyInfo.contact.email}
-                </a>
+              <p className="text-sm text-foreground leading-relaxed mb-4 italic">"{r.text}"</p>
+              <div className="flex items-center justify-between">
+                <span className="text-xs font-semibold text-muted-foreground">— {r.author}</span>
+                <span className="text-[11px] text-muted-foreground/60">{r.date}</span>
               </div>
             </div>
-            <InstantEstimate />
-          </div>
+          ))}
         </div>
-      </FadeSection>
+
+        <div className="flex sm:hidden justify-center gap-1.5 mt-4" data-testid="review-dots">
+          {reviews.map((_, i) => (
+            <button
+              key={i}
+              className={`h-2 rounded-full transition-all duration-300 ${activeReviewIndex === i ? "bg-primary w-5" : "bg-muted-foreground/30 w-2"}`}
+              onClick={() => {
+                const el = carouselRef.current;
+                if (!el || !el.children[i]) return;
+                (el.children[i] as HTMLElement).scrollIntoView({ behavior: "smooth", inline: "start", block: "nearest" });
+              }}
+              aria-label={`Go to review ${i + 1}`}
+            />
+          ))}
+        </div>
+
+        <div className="text-center mt-10">
+          <a href="https://g.page/r/CYnY6ulFfvDtEAE/review" target="_blank" rel="noopener noreferrer" data-testid="link-google-reviews">
+            <Button variant="outline" className="h-10 px-6 rounded-full border-border text-sm font-semibold gap-2 shadow-[0_1px_4px_rgba(0,0,0,0.15)]">
+              <Star className="w-4 h-4 fill-yellow-400 text-yellow-500 dark:text-yellow-400" />
+              See all reviews on Google
+            </Button>
+          </a>
+        </div>
+      </Section>
+
+      {/* ── Instant Estimate ──
+          One of our own photos runs behind this band at ~10% so the pricing
+          section isn't a flat rectangle of form controls. It's decoration, so
+          it's aria-hidden and lazy. */}
+      <Section id="get-estimate" measure="wide" className="isolate">
+        <div className="photo-ambient">
+          <img src={photos.rentalBathroom.src} alt="" aria-hidden="true" loading="lazy" />
+        </div>
+        <LogoWatermark position="right" />
+
+        {/* The estimator is ~1,400px tall and this column is ~600px, so the
+            column used to run out a third of the way down and leave a tall
+            hole beside the form. `items-start` + a sticky column means the
+            pitch travels with you as you work through the estimate instead —
+            no hole, and the reassurance is on screen at the moment you are
+            deciding whether to submit. */}
+        <div className="grid lg:grid-cols-[minmax(0,0.8fr)_minmax(0,1fr)] gap-12 lg:gap-16 items-start">
+          <div className="lg:sticky lg:top-28">
+            <SectionHeading
+              align="left"
+              eyebrow="Pricing"
+              title="Transparent pricing"
+              lead="Get an instant ballpark estimate, or reach out for a custom quote. No hidden fees, no surprises."
+              className="mb-8"
+            />
+            <ul className="space-y-3 mb-8">
+              {["No hidden fees", "Custom plans for unique spaces", "Flexible scheduling", "Satisfaction guaranteed"].map((t, i) => (
+                <li key={i} className="flex items-center gap-3 text-sm font-medium text-foreground">
+                  <CheckCircle2 className="w-4 h-4 text-primary flex-shrink-0" /> {t}
+                </li>
+              ))}
+            </ul>
+
+            {/* The 48-hour promise belongs here, next to the button that
+                sends it — it is what someone wants to know at the moment
+                they're deciding whether to submit, and it was previously
+                only shown after submitting. It also carries the call and
+                text links, so the bare "Prefer to talk?" list that used to
+                sit here (same two links, plus email) went with it; email
+                moved below to keep all three channels. */}
+            <ResponseNote />
+
+            <a
+              href={companyInfo.contact.emailHref}
+              className="inline-flex items-center gap-2.5 mt-4 text-sm text-muted-foreground hover:text-foreground transition-colors"
+              data-testid="link-est-email"
+            >
+              <Mail className="w-4 h-4 text-primary" /> {companyInfo.contact.email}
+            </a>
+          </div>
+          <InstantEstimate />
+        </div>
+      </Section>
 
       {/* ── Social ── */}
       {/* Below the estimate on purpose. This pulls a third-party iframe, so
           it must not compete with the booking CTA above it. Lazy — nothing is
           requested from facebook.com until it's scrolled near. */}
-      <FadeSection className="py-14 sm:py-20" id="social">
-        <div className="container mx-auto px-4 sm:px-6">
-          <SocialFollow />
-        </div>
-      </FadeSection>
+      <Section id="social" measure="wide" tone="tint">
+        <SocialFollow />
+      </Section>
 
       {/* ── Contact Form ── */}
-      <WaveDividerCream flip />
-      <FadeSection className="py-14 sm:py-20" id="contact">
-        <div className="container mx-auto px-4 sm:px-6">
-          <div className="max-w-2xl mx-auto">
-            <h2 className="text-[1.75rem] sm:text-4xl md:text-[2.5rem] font-serif font-bold text-foreground tracking-[-0.01em] mb-3 text-center section-heading-accent">Get in Touch</h2>
-            <p className="text-muted-foreground text-[15px] mb-10 leading-relaxed text-center max-w-lg mx-auto">
-              Have a question or need more info? Drop us a message and you'll hear from us within 48 hours.
-            </p>
-            <ContactForm />
-            <div className="mt-10 flex flex-col sm:flex-row items-center justify-center gap-6 text-sm text-muted-foreground">
-              <a href={companyInfo.contact.phoneHref} className="flex items-center gap-2 hover:text-foreground transition-colors">
-                <Phone className="w-4 h-4 text-primary" /> {companyInfo.contact.phoneDisplay}
-              </a>
-              <a href={companyInfo.contact.emailHref} className="flex items-center gap-2 hover:text-foreground transition-colors">
-                <Mail className="w-4 h-4 text-primary" /> {companyInfo.contact.email}
-              </a>
-              <a href={companyInfo.contact.smsHref} className="flex items-center gap-2 hover:text-foreground transition-colors sm:hidden">
-                <MessageSquare className="w-4 h-4 text-primary" /> Text Us
-              </a>
-            </div>
-          </div>
+      <Section id="contact" measure="prose">
+        <SectionHeading
+          eyebrow="Contact"
+          title="Get in touch"
+          lead="Have a question or need more info? Drop us a message and you'll hear from us within 48 hours."
+        />
+        <ContactForm />
+        <div className="mt-10 flex flex-col sm:flex-row items-center justify-center gap-6 text-sm text-muted-foreground">
+          <a href={companyInfo.contact.phoneHref} className="flex items-center gap-2 hover:text-foreground transition-colors">
+            <Phone className="w-4 h-4 text-primary" /> {companyInfo.contact.phoneDisplay}
+          </a>
+          <a href={companyInfo.contact.emailHref} className="flex items-center gap-2 hover:text-foreground transition-colors">
+            <Mail className="w-4 h-4 text-primary" /> {companyInfo.contact.email}
+          </a>
+          <a href={companyInfo.contact.smsHref} className="flex items-center gap-2 hover:text-foreground transition-colors sm:hidden">
+            <MessageSquare className="w-4 h-4 text-primary" /> Text Us
+          </a>
         </div>
-      </FadeSection>
+      </Section>
 
       {/* Back to Top */}
       <motion.button
