@@ -99,7 +99,16 @@ const SIZES = {
   lg: { mark: "w-11 h-11", name: "text-xl", tag: "text-[11px]" },
 } as const;
 
-/** Mark + wordmark, as used in the navbar and footer. */
+/**
+ * Mark + wordmark, as used in the navbar and footer.
+ *
+ * NOTE: this sets its own `display` (inline-flex). Don't pass a display
+ * utility in `className` to show/hide it responsively — Tailwind resolves
+ * competing display utilities by CSS source order, not by the order they
+ * appear in the attribute, so `hidden` passed here loses to the `inline-flex`
+ * below and the element stays visible. Wrap it in an element that carries the
+ * responsive display instead.
+ */
 export function LogoLockup({ size = "md", showTagline = true, className = "" }: LockupProps) {
   const s = SIZES[size];
   return (

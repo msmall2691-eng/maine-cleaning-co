@@ -1,5 +1,7 @@
+import { ArrowUpRight, Instagram } from "lucide-react";
 import { galleryItems } from "@/lib/gallery-data";
 import { companyInfo } from "@/lib/company-info";
+import { SectionHeading } from "@/components/layout/Section";
 
 /**
  * "See Our Work" — our own photos of real jobs.
@@ -13,46 +15,88 @@ import { companyInfo } from "@/lib/company-info";
  * otherwise opens the profile.
  *
  * `compact` drops the heading block for callers that supply their own.
+ *
+ * LAYOUT: this was eight identical squares in a flat 4-column grid, which
+ * gave every photo the same weight and read as a contact sheet. The first
+ * tile now spans 2x2 so the set has a lead image and an actual composition.
+ * Captions were hover-only, which meant they did not exist on a phone at
+ * all; they are now always legible over a scrim that is only painted where
+ * the caption sits.
+ *
+ * The follow tile at the end is not decoration: eight photos plus a 2x2 lead
+ * needs 11 cells, and a 4-column grid only comes in multiples of 4, so
+ * without it the last row ends in a hole. It fills the twelfth cell and is
+ * the one place in the grid that asks for something.
  */
 export function WorkGallery({ compact = false }: { compact?: boolean }) {
   return (
     <>
       {!compact && (
-        <div className="text-center mb-10">
-          <h2 className="text-[1.75rem] sm:text-3xl font-serif font-bold text-foreground tracking-[-0.01em] mb-4">
-            See Our Work
-          </h2>
-          <p className="text-muted-foreground text-[15px] leading-relaxed max-w-md mx-auto">
-            Real homes, rentals and commercial spaces across Southern Maine — photographed
-            on the job, not staged in a studio.
-          </p>
-        </div>
+        <SectionHeading
+          eyebrow="Our work"
+          title="See our work"
+          lead="Real homes, rentals and commercial spaces across Southern Maine — photographed on the job, not staged in a studio."
+        />
       )}
 
-      <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 sm:gap-3">
-        {galleryItems.map((item) => (
-          <a
-            key={item.id}
-            href={item.postUrl ?? companyInfo.socials.instagram}
-            target="_blank"
-            rel="noopener noreferrer"
-            className="group relative aspect-square rounded-xl overflow-hidden border border-border/60"
-            data-testid={`work-gallery-${item.id}`}
-            title={item.caption}
-          >
-            <img
-              src={item.image}
-              alt={item.alt}
-              className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
-              loading="lazy"
-            />
-            <div className="absolute inset-0 flex items-end bg-gradient-to-t from-black/70 via-black/0 to-black/0 opacity-0 group-hover:opacity-100 transition-opacity duration-300">
-              <span className="p-3 text-[11px] sm:text-xs font-medium text-white leading-snug">
-                {item.caption}
+      <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 auto-rows-[9rem] sm:auto-rows-[11rem] lg:auto-rows-[12.5rem] gap-2.5 sm:gap-3">
+        {galleryItems.map((item, i) => {
+          // One lead tile. Two cells wide and tall on anything but a phone,
+          // where a 2x2 tile would swallow the whole first screen.
+          const isLead = i === 0;
+          return (
+            <a
+              key={item.id}
+              href={item.postUrl ?? companyInfo.socials.instagram}
+              target="_blank"
+              rel="noopener noreferrer"
+              className={`photo-frame group ${isLead ? "sm:col-span-2 sm:row-span-2" : ""}`}
+              data-testid={`work-gallery-${item.id}`}
+              title={item.caption}
+            >
+              <img
+                src={item.image}
+                alt={item.alt}
+                className="w-full h-full object-cover"
+                loading="lazy"
+                decoding="async"
+              />
+
+              {/* Always readable, not hover-only — hover doesn't exist on a
+                  phone, which is where most of this traffic is. */}
+              <span
+                className={`photo-caption flex items-end justify-between gap-2 ${
+                  isLead ? "sm:text-sm" : ""
+                }`}
+              >
+                <span className="min-w-0">{item.caption}</span>
+                <ArrowUpRight
+                  className="w-3.5 h-3.5 flex-shrink-0 opacity-0 group-hover:opacity-100 group-focus-visible:opacity-100 transition-opacity"
+                  aria-hidden="true"
+                />
               </span>
-            </div>
-          </a>
-        ))}
+            </a>
+          );
+        })}
+
+        {/* Fills the grid's last cell (see the note above). Spans the full
+            width on a phone, where the lead tile isn't 2x2 and the maths
+            works out differently. */}
+        <a
+          href={companyInfo.socials.instagram}
+          target="_blank"
+          rel="noopener noreferrer"
+          className="col-span-2 sm:col-span-1 group flex flex-col items-center justify-center gap-2 rounded-[1.25rem] border border-dashed border-border bg-muted/30 px-4 text-center transition-colors hover:border-primary/50 hover:bg-primary/5"
+          data-testid="work-gallery-follow"
+        >
+          <Instagram className="w-5 h-5 text-primary" aria-hidden="true" />
+          <span className="text-[13px] font-semibold text-foreground leading-tight">
+            More on Instagram
+          </span>
+          <span className="inline-flex items-center gap-1 text-xs text-muted-foreground group-hover:text-primary transition-colors">
+            @mainecleaningco <ArrowUpRight className="w-3 h-3" aria-hidden="true" />
+          </span>
+        </a>
       </div>
     </>
   );

@@ -10,6 +10,10 @@ import { Accordion, AccordionItem, AccordionTrigger, AccordionContent } from "@/
 import { Button } from "@/components/ui/button";
 import { companyInfo } from "@/lib/company-info";
 import { COMMUNITIES_SERVED } from "@/lib/company-stats";
+import { Section, SectionHeading } from "@/components/layout/Section";
+import { ClosingCTA } from "@/components/layout/ClosingCTA";
+import { LogoWatermark } from "@/components/brand/Logo";
+import { photos } from "@/lib/photos";
 
 const fadeUp = {
   hidden: { opacity: 0, y: 20 },
@@ -76,153 +80,160 @@ export default function HowItWorks() {
 
   return (
     <div className="w-full overflow-x-hidden">
-      {/* ── Page Hero ── */}
-      <section className="relative pt-32 sm:pt-40 pb-12 sm:pb-14 overflow-hidden">
+      {/* ── Page Hero ──
+          Copy left, one photo right from lg; centred copy over a single wide
+          photo below that. The text-only version of this hero was an almost
+          entirely empty screenful on a laptop. */}
+      <section className="relative pt-28 sm:pt-36 lg:pt-40 pb-14 sm:pb-20 overflow-hidden">
         <div className="hero-aurora" aria-hidden="true" />
         <div className="hero-dot-grid" aria-hidden="true" />
-        <div className="container mx-auto px-4 sm:px-6 relative z-10 text-center max-w-2xl">
-          <motion.span
-            initial={{ opacity: 0, y: 10 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.5 }}
-            className="inline-flex items-center gap-2 text-[11px] sm:text-xs font-semibold uppercase tracking-[0.2em] text-primary/80 mb-4"
-          >
-            Simple & Transparent
-          </motion.span>
-          <motion.h1
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.7, ease: [0.22, 1, 0.36, 1] }}
-            className="text-[2.5rem] sm:text-[3.5rem] md:text-[4rem] font-extrabold leading-[1.04] tracking-[-0.04em] text-foreground mb-5"
-          >
-            What Happens <span className="hero-gradient-text">Next</span>
-          </motion.h1>
-          <motion.p
-            initial={{ opacity: 0, y: 12 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.6, delay: 0.15 }}
-            className="text-[15px] sm:text-lg text-muted-foreground leading-relaxed max-w-lg mx-auto mb-8"
-          >
-            From your first message to a spotless space — five simple steps that take the guesswork out of professional cleaning.
-          </motion.p>
-          <motion.div
-            initial={{ opacity: 0, y: 10 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.5, delay: 0.3 }}
-          >
-            <Link href="/#get-estimate">
-              <Button size="lg" className="rounded-full px-9 h-13 font-semibold gap-2 shadow-[0_2px_12px_rgba(0,0,0,0.12)]" data-testid="button-hiw-hero-estimate">
-                Get My Estimate <ArrowRight className="w-4 h-4" />
-              </Button>
-            </Link>
-          </motion.div>
+        <div className="container mx-auto px-5 sm:px-6 lg:px-8 relative z-10">
+          <div className="max-w-[78rem] mx-auto grid lg:grid-cols-[minmax(0,1.04fr)_minmax(0,1fr)] gap-10 lg:gap-14 xl:gap-20 items-center">
+            <div className="text-center lg:text-left">
+              <motion.span
+                initial={{ opacity: 0, y: 10 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.5 }}
+                className="inline-flex items-center gap-2 text-[11px] sm:text-xs font-semibold uppercase tracking-[0.2em] text-primary/80 mb-4"
+              >
+                Simple & Transparent
+              </motion.span>
+              <motion.h1
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.7, ease: [0.22, 1, 0.36, 1] }}
+                className="text-[2.5rem] sm:text-[3.5rem] md:text-[4rem] font-extrabold leading-[1.04] tracking-[-0.04em] text-foreground mb-5"
+              >
+                What Happens <span className="hero-gradient-text">Next</span>
+              </motion.h1>
+              <motion.p
+                initial={{ opacity: 0, y: 12 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.6, delay: 0.15 }}
+                className="text-[15px] sm:text-lg text-muted-foreground leading-relaxed max-w-lg mx-auto lg:mx-0 mb-8"
+              >
+                From your first message to a spotless space — five simple steps that take the guesswork out of professional cleaning.
+              </motion.p>
+              <motion.div
+                initial={{ opacity: 0, y: 10 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.5, delay: 0.3 }}
+                className="flex justify-center lg:justify-start"
+              >
+                <Link href="/#get-estimate">
+                  <Button size="lg" className="w-full sm:w-auto h-13 sm:h-14 px-8 sm:px-10 rounded-full text-base sm:text-[17px] font-semibold gap-2 shadow-[0_2px_12px_rgba(0,0,0,0.12)]" data-testid="button-hiw-hero-estimate">
+                    Get My Estimate <ArrowRight className="w-4 h-4" />
+                  </Button>
+                </Link>
+              </motion.div>
+            </div>
+
+            {/* The kit that turns up at step 4 — our own, not stock. */}
+            <motion.figure
+              initial={{ opacity: 0, scale: 0.97 }}
+              animate={{ opacity: 1, scale: 1 }}
+              transition={{ duration: 0.9, delay: 0.2, ease: [0.22, 1, 0.36, 1] }}
+              className="photo-frame aspect-[4/3] lg:aspect-[4/5] max-w-md mx-auto lg:max-w-none w-full"
+            >
+              <img
+                src={photos.toolkit.src}
+                alt={photos.toolkit.alt}
+                fetchPriority="high"
+                decoding="async"
+              />
+            </motion.figure>
+          </div>
         </div>
       </section>
 
       {/* ── 5 Steps ── */}
-      <section className="py-12 sm:py-16">
-        <div className="container mx-auto px-4 sm:px-6 max-w-5xl">
-          <div className="space-y-6 sm:space-y-8">
-            {steps.map((item, i) => {
-              const Icon = item.icon;
-              return (
-                <motion.div
-                  key={i}
-                  variants={fadeUp}
-                  initial="hidden"
-                  whileInView="visible"
-                  viewport={{ once: true }}
-                  custom={i}
-                  className="card-glass p-6 sm:p-8 flex gap-5 sm:gap-8 items-start"
-                  data-testid={`step-${i + 1}`}
-                >
-                  <div className="flex-shrink-0 flex flex-col items-center gap-3">
-                    <div className="w-12 h-12 rounded-full bg-primary/10 border-2 border-primary/30 flex items-center justify-center text-sm font-bold text-primary shadow-[0_0_0_4px_hsl(var(--background))]">
-                      {item.step}
-                    </div>
-                    {i < steps.length - 1 && (
-                      <div className="w-px h-6 sm:h-10 bg-border/50" />
-                    )}
+      <Section measure="default">
+        <LogoWatermark position="left" />
+        <div className="space-y-6 sm:space-y-8">
+          {steps.map((item, i) => {
+            const Icon = item.icon;
+            return (
+              <motion.div
+                key={i}
+                variants={fadeUp}
+                initial="hidden"
+                whileInView="visible"
+                viewport={{ once: true }}
+                custom={i}
+                className="card-glass p-6 sm:p-8 flex gap-5 sm:gap-8 items-start"
+                data-testid={`step-${i + 1}`}
+              >
+                <div className="flex-shrink-0 flex flex-col items-center gap-3">
+                  <div className="w-12 h-12 rounded-full bg-primary/10 border-2 border-primary/30 flex items-center justify-center text-sm font-bold text-primary shadow-[0_0_0_4px_hsl(var(--background))]">
+                    {item.step}
                   </div>
-                  <div className="flex-1 pt-1">
-                    <div className="flex items-center gap-3 mb-2">
-                      <Icon className="w-4 h-4 text-primary flex-shrink-0" />
-                      <h3 className="font-bold text-foreground text-base sm:text-lg">{item.title}</h3>
-                    </div>
-                    <p className="text-[15px] text-muted-foreground leading-relaxed mb-2">{item.desc}</p>
-                    <p className="text-sm text-muted-foreground/70 leading-relaxed italic">{item.detail}</p>
+                  {i < steps.length - 1 && (
+                    <div className="w-px h-6 sm:h-10 bg-border/50" />
+                  )}
+                </div>
+                <div className="flex-1 pt-1">
+                  <div className="flex items-center gap-3 mb-2">
+                    <Icon className="w-4 h-4 text-primary flex-shrink-0" />
+                    <h3 className="font-bold text-foreground text-base">{item.title}</h3>
                   </div>
-                </motion.div>
-              );
-            })}
-          </div>
+                  <p className="text-[15px] text-muted-foreground leading-relaxed mb-2">{item.desc}</p>
+                  <p className="text-sm text-muted-foreground/70 leading-relaxed italic">{item.detail}</p>
+                </div>
+              </motion.div>
+            );
+          })}
         </div>
-      </section>
+      </Section>
 
-      {/* ── STR Callout (condensed) ── */}
-      <section className="py-12 sm:py-16">
-        <div className="container mx-auto px-4 sm:px-6 max-w-3xl">
-          <div className="card-glass p-6 sm:p-8 flex flex-col sm:flex-row items-start sm:items-center gap-5">
-            <div className="w-12 h-12 rounded-xl bg-primary/10 flex items-center justify-center flex-shrink-0">
-              <Zap className="w-5 h-5 text-primary" />
-            </div>
-            <div className="flex-1">
-              <h3 className="font-bold text-foreground text-base mb-1">Airbnb & VRBO host?</h3>
-              <p className="text-sm text-muted-foreground leading-relaxed">We offer same-day turnovers, iCal sync, and full property management for short-term rental hosts across Southern Maine.</p>
-            </div>
-            <Link href="/short-term-rentals">
-              <Button className="rounded-full px-6 h-10 font-semibold gap-2 flex-shrink-0" data-testid="button-hiw-str">
-                Learn More <ArrowRight className="w-4 h-4" />
-              </Button>
-            </Link>
-          </div>
+      {/* ── STR Callout (condensed) ──
+          One of our own turnover photos runs behind this band at ~10%, so the
+          short-term-rental pitch sits on something rather than floating in
+          white space. Decoration only: aria-hidden, lazy, and the band carries
+          `isolate` because .photo-ambient is z-index:-1. */}
+      <Section rhythm="tight" className="isolate">
+        <div className="photo-ambient">
+          <img src={photos.rentalBathroom.src} alt="" aria-hidden="true" loading="lazy" decoding="async" />
         </div>
-      </section>
+        <div className="card-glass p-6 sm:p-8 flex flex-col sm:flex-row items-start sm:items-center gap-5">
+          <div className="w-12 h-12 rounded-xl bg-primary/10 flex items-center justify-center flex-shrink-0">
+            <Zap className="w-5 h-5 text-primary" />
+          </div>
+          <div className="flex-1">
+            <h3 className="font-bold text-foreground text-base mb-2">Airbnb & VRBO host?</h3>
+            <p className="text-sm text-muted-foreground leading-relaxed">We offer same-day turnovers, iCal sync, and full property management for short-term rental hosts across Southern Maine.</p>
+          </div>
+          <Link href="/short-term-rentals">
+            <Button className="rounded-full px-6 h-10 font-semibold gap-2 flex-shrink-0" data-testid="button-hiw-str">
+              Learn More <ArrowRight className="w-4 h-4" />
+            </Button>
+          </Link>
+        </div>
+      </Section>
 
       {/* ── FAQ ── */}
-      <section className="py-12 sm:py-16 bg-card/30">
-        <div className="container mx-auto px-4 sm:px-6 max-w-xl lg:max-w-2xl">
-          <h2 className="text-[1.75rem] sm:text-4xl font-serif font-bold text-foreground tracking-[-0.01em] mb-10 sm:mb-14 text-center section-heading-accent">
-            Frequently Asked Questions
-          </h2>
-          <Accordion type="single" collapsible className="space-y-3">
-            {faqs.map((faq, i) => (
-              <AccordionItem key={i} value={`faq-${i}`} className="card-soft overflow-hidden border-0" data-testid={`faq-${i}`}>
-                <AccordionTrigger className="p-5 sm:p-6 font-semibold text-foreground text-sm sm:text-[15px] min-h-[52px] hover:no-underline [&[data-state=open]>svg]:rotate-180">
-                  {faq.q}
-                </AccordionTrigger>
-                <AccordionContent className="px-5 sm:px-6 pb-5 sm:pb-6 text-sm text-muted-foreground leading-relaxed">
-                  {faq.a}
-                </AccordionContent>
-              </AccordionItem>
-            ))}
-          </Accordion>
-        </div>
-      </section>
+      <Section measure="prose" tone="sink">
+        <SectionHeading title="Frequently Asked Questions" />
+        <Accordion type="single" collapsible className="space-y-3">
+          {faqs.map((faq, i) => (
+            <AccordionItem key={i} value={`faq-${i}`} className="card-soft overflow-hidden border-0" data-testid={`faq-${i}`}>
+              <AccordionTrigger className="p-5 sm:p-6 font-semibold text-foreground text-sm sm:text-[15px] min-h-[52px] hover:no-underline [&[data-state=open]>svg]:rotate-180">
+                {faq.q}
+              </AccordionTrigger>
+              <AccordionContent className="px-5 sm:px-6 pb-5 sm:pb-6 text-sm text-muted-foreground leading-relaxed">
+                {faq.a}
+              </AccordionContent>
+            </AccordionItem>
+          ))}
+        </Accordion>
+      </Section>
 
       {/* ── Final CTA ── */}
-      <section className="py-12 sm:py-16 bg-primary text-primary-foreground">
-        <div className="container mx-auto px-4 sm:px-6 text-center max-w-lg">
-          <h2 className="text-[1.75rem] sm:text-4xl font-serif font-bold mb-5 tracking-[-0.01em]">
-            Simple as that.
-          </h2>
-          <p className="text-base opacity-85 mb-10 leading-relaxed">
-            It takes less than 2 minutes to get your instant estimate — try it now.
-          </p>
-          <div className="flex flex-col sm:flex-row justify-center gap-3">
-            <Link href="/#get-estimate">
-              <Button size="lg" className="w-full sm:w-auto h-14 px-9 rounded-full bg-background text-foreground hover:bg-background/90 shadow-[0_4px_20px_rgba(0,0,0,0.3)] font-semibold text-base" data-testid="button-hiw-cta-estimate">
-                Get My Estimate
-              </Button>
-            </Link>
-            <a href={companyInfo.contact.phoneHref}>
-              <Button size="lg" variant="outline" className="w-full sm:w-auto h-14 px-9 rounded-full border-white/20 hover:bg-white/10 text-white font-semibold text-base">
-                <Phone className="w-4 h-4 mr-2" /> Call {companyInfo.contact.phoneDisplay}
-              </Button>
-            </a>
-          </div>
-        </div>
-      </section>
+      <ClosingCTA
+        title="Simple as that."
+        lead="It takes less than 2 minutes to get your instant estimate — try it now."
+        ctaTestId="button-hiw-cta-estimate"
+        photo={photos.restroomTrailer}
+      />
     </div>
   );
 }

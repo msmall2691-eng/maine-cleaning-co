@@ -469,7 +469,7 @@ export default function Home() {
                 <div className="text-[11px] text-muted-foreground truncate">{companyInfo.contact.phoneDisplay}</div>
               </div>
             </a>
-            <Link href="/service-areas" data-testid="quick-action-areas" className="group flex items-center gap-3 p-3 sm:p-3.5 rounded-xl hover:bg-secondary/60 active:bg-secondary/80 transition-all border border-transparent hover:border-border/60">
+            <Link href="/service-areas" data-testid="quick-action-areas" className="col-span-2 md:col-span-1 group flex items-center gap-3 p-3 sm:p-3.5 rounded-xl hover:bg-secondary/60 active:bg-secondary/80 transition-all border border-transparent hover:border-border/60">
               <div className="w-9 h-9 rounded-lg bg-orange-500/10 flex items-center justify-center flex-shrink-0 group-hover:bg-orange-500/20 transition-colors">
                 <MapPin className="w-4 h-4 text-orange-600 dark:text-orange-400" />
               </div>

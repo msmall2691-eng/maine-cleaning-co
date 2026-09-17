@@ -92,8 +92,12 @@ export default function Navbar() {
             silhouette legible. The tagline goes too, so the bar still fits
             the theme toggle and menu button on a 320px screen. */}
         <Link href="/" className="flex-shrink-0 group" data-testid="link-home-logo" aria-label="The Maine Cleaning Co. — home">
-          <LogoLockup size="md" showTagline className="hidden sm:inline-flex" />
-          <LogoLockup size="sm" showTagline={false} className="sm:hidden" />
+          <span className="hidden sm:block">
+            <LogoLockup size="md" showTagline />
+          </span>
+          <span className="block sm:hidden">
+            <LogoLockup size="sm" showTagline={false} />
+          </span>
         </Link>
 
         {/* Desktop nav */}

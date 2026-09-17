@@ -5,6 +5,9 @@ import { useSEO } from "@/hooks/use-seo";
 import { InstantEstimate } from "@/components/ui/InstantEstimate";
 import { companyInfo } from "@/lib/company-info";
 import { RESPONSE_WINDOW } from "@/lib/response-time";
+import { Section } from "@/components/layout/Section";
+import { LogoWatermark } from "@/components/brand/Logo";
+import { photos } from "@/lib/photos";
 
 /**
  * /book — dedicated booking landing page.
@@ -19,9 +22,40 @@ import { RESPONSE_WINDOW } from "@/lib/response-time";
  * Reuses <InstantEstimate/> intentionally — a single pricing engine and
  * one payload shape flowing to /api/booking/submit means we don't grow
  * a second maintenance surface.
+ *
+ * Layout note: this was the only page that opted out of the container
+ * system entirely (`max-w-4xl mx-auto px-4` hand-rolled, no `container`),
+ * and the only page in the funnel with no photograph on it at all — the
+ * place where the decision closes was the place with the least reassurance.
+ * It's on <Section> now, with two of our own shots beside the header and a
+ * third running quietly behind the estimator.
  */
 type BookServiceParam = "residential" | "deep-clean" | "str" | "commercial";
 const validServices: BookServiceParam[] = ["residential", "deep-clean", "str", "commercial"];
+
+const reassurance = [
+  {
+    icon: CheckCircle2,
+    tint: "bg-emerald-500/15",
+    iconColor: "text-emerald-500",
+    title: "Instant estimate",
+    detail: "Live pricing as you fill it in",
+  },
+  {
+    icon: Calendar,
+    tint: "bg-blue-500/15",
+    iconColor: "text-blue-500",
+    title: "Pick your date",
+    detail: "2+ days out, anywhere in Southern Maine",
+  },
+  {
+    icon: Clock,
+    tint: "bg-amber-500/15",
+    iconColor: "text-amber-500",
+    title: "Confirm in 1 day",
+    detail: "We'll call or text to lock it in",
+  },
+];
 
 export default function Book() {
   const [location] = useLocation();
@@ -41,59 +75,78 @@ export default function Book() {
   }, [location]);
 
   return (
-    <div className="min-h-screen bg-background">
+    <>
       {/* Hero */}
-      <section className="relative overflow-hidden border-b border-border/40">
-        <div className="max-w-4xl mx-auto px-4 sm:px-6 pt-28 sm:pt-32 pb-10 sm:pb-14">
-          <div className="flex items-center gap-2 text-xs font-semibold uppercase tracking-wider text-primary mb-3">
-            <Sparkles className="w-3.5 h-3.5" /> Book in Minutes
+      <Section
+        measure="wide"
+        rhythm="none"
+        reveal={false}
+        className="pt-28 sm:pt-36 lg:pt-40 pb-[clamp(2rem,3.5vw,3rem)] overflow-hidden"
+      >
+        <div className="grid lg:grid-cols-[minmax(0,1fr)_minmax(0,0.78fr)] gap-10 lg:gap-14 items-center">
+          <div>
+            <p className="flex items-center gap-2 text-[11px] sm:text-xs font-semibold uppercase tracking-[0.2em] text-primary/80 mb-4">
+              <Sparkles className="w-3.5 h-3.5" /> Book in Minutes
+            </p>
+            <h1 className="text-[2.25rem] sm:text-5xl md:text-[3.5rem] leading-[1.05] font-serif font-bold tracking-[-0.02em] text-foreground heading-rule-left">
+              Book Your Cleaning
+            </h1>
+            <p className="mt-8 text-[15px] sm:text-base text-muted-foreground leading-relaxed max-w-[34rem]">
+              Get an instant estimate, tell us a few essentials, and pick a date — we confirm every
+              booking by call or text {RESPONSE_WINDOW}. Serving{" "}
+              {companyInfo.serviceArea?.center || "Southern Maine"} and the surrounding communities
+              all across York and Cumberland County.
+            </p>
           </div>
-          <h1 className="text-3xl sm:text-4xl md:text-5xl font-bold text-foreground leading-tight">
-            Book Your Cleaning
-          </h1>
-          <p className="mt-3 text-base text-muted-foreground max-w-2xl leading-relaxed">
-            Get an instant estimate, tell us a few essentials, and pick a date — we confirm every
-            booking by call or text {RESPONSE_WINDOW}. Serving{" "}
-            {companyInfo.serviceArea?.center || "Southern Maine"} and the surrounding communities
-            all across York and Cumberland County.
-          </p>
 
-          <div className="mt-6 grid grid-cols-1 sm:grid-cols-3 gap-3 max-w-3xl">
-            <div className="flex items-start gap-2.5 rounded-xl border border-border/40 bg-card px-3.5 py-3">
-              <div className="w-8 h-8 rounded-lg bg-emerald-500/15 flex items-center justify-center flex-shrink-0">
-                <CheckCircle2 className="w-4 h-4 text-emerald-500" />
-              </div>
-              <div>
-                <p className="text-sm font-semibold text-foreground">Instant estimate</p>
-                <p className="text-xs text-muted-foreground mt-0.5">Live pricing as you fill it in</p>
-              </div>
-            </div>
-            <div className="flex items-start gap-2.5 rounded-xl border border-border/40 bg-card px-3.5 py-3">
-              <div className="w-8 h-8 rounded-lg bg-blue-500/15 flex items-center justify-center flex-shrink-0">
-                <Calendar className="w-4 h-4 text-blue-500" />
-              </div>
-              <div>
-                <p className="text-sm font-semibold text-foreground">Pick your date</p>
-                <p className="text-xs text-muted-foreground mt-0.5">2+ days out, anywhere in Southern Maine</p>
-              </div>
-            </div>
-            <div className="flex items-start gap-2.5 rounded-xl border border-border/40 bg-card px-3.5 py-3">
-              <div className="w-8 h-8 rounded-lg bg-amber-500/15 flex items-center justify-center flex-shrink-0">
-                <Clock className="w-4 h-4 text-amber-500" />
-              </div>
-              <div>
-                <p className="text-sm font-semibold text-foreground">Confirm in 1 day</p>
-                <p className="text-xs text-muted-foreground mt-0.5">We'll call or text to lock it in</p>
-              </div>
-            </div>
+          {/* Two of our own jobs, so the page where the purchase decision
+              closes shows the work rather than only describing it. */}
+          <div className="grid grid-cols-2 lg:grid-cols-1 gap-3 sm:gap-4">
+            <figure className="photo-frame aspect-[4/5] sm:aspect-[4/3] lg:aspect-[16/9]">
+              <img
+                src={photos.rentalBathroom.src}
+                alt={photos.rentalBathroom.alt}
+                loading="lazy"
+                decoding="async"
+              />
+            </figure>
+            <figure className="photo-frame aspect-[4/5] sm:aspect-[4/3] lg:aspect-[16/9]">
+              <img
+                src={photos.vacuumFleet.src}
+                alt={photos.vacuumFleet.alt}
+                loading="lazy"
+                decoding="async"
+              />
+            </figure>
           </div>
         </div>
-      </section>
 
-      {/* Estimator + Booking */}
-      <section className="max-w-3xl mx-auto px-4 sm:px-6 py-8 sm:py-12">
+        <div className="mt-10 sm:mt-12 grid grid-cols-1 sm:grid-cols-3 gap-3">
+          {reassurance.map((item) => (
+            <div key={item.title} className="flex items-start gap-2.5 rounded-xl border border-border/40 bg-card px-3.5 py-3">
+              <div className={`w-8 h-8 rounded-lg ${item.tint} flex items-center justify-center flex-shrink-0`}>
+                <item.icon className={`w-4 h-4 ${item.iconColor}`} />
+              </div>
+              <div>
+                <p className="text-sm font-semibold text-foreground">{item.title}</p>
+                <p className="text-xs text-muted-foreground mt-0.5">{item.detail}</p>
+              </div>
+            </div>
+          ))}
+        </div>
+      </Section>
+
+      {/* Estimator + Booking. `prose` is the site's single-column form measure,
+          so the wizard reads at the same width as every other column of input
+          on the site; the photo behind it is texture, not content. */}
+      <Section measure="prose" rhythm="tight" className="isolate overflow-hidden pb-[clamp(3.25rem,6vw,5.5rem)]">
+        <div className="photo-ambient">
+          <img src={photos.fridgeInterior.src} alt="" aria-hidden="true" loading="lazy" />
+        </div>
+        <LogoWatermark position="right" />
+
         <InstantEstimate defaultCategory={defaultCategory} bookingIntent />
-      </section>
-    </div>
+      </Section>
+    </>
   );
 }
