@@ -169,6 +169,13 @@ export async function registerRoutes(
 
   (async () => {
     try {
+      // DO NOT "fix" this to maineclean.co to match the site's domain.
+      // This is not a URL — it is the seeded admin account's login identity,
+      // and an account already exists under it in production. Changing the
+      // string would make this lookup miss, seed a SECOND admin user, and
+      // leave the real one unreachable from the sign-in form. If the address
+      // genuinely needs to change, rename the existing user's email in the
+      // database and update this and the placeholder in Admin.tsx together.
       const adminEmail = "admin@maine-clean.co";
       const existing = await storage.getUserByEmail(adminEmail);
       if (!existing) {
@@ -304,7 +311,12 @@ export async function registerRoutes(
         const token = crypto.randomBytes(32).toString("hex");
         const expiry = new Date(Date.now() + 60 * 60 * 1000);
         await storage.setResetToken(user.id, token, expiry);
-        const host = req.headers.host || "maine-clean.co";
+        // Fallback host for the reset link. req.headers.host is present on
+        // any real request so this effectively never fires — but it used to
+        // read "maine-clean.co", which is a different site on different DNS,
+        // so on the one occasion it did fire it would have emailed someone a
+        // password-reset link to a host that has never heard of their account.
+        const host = req.headers.host || "www.maineclean.co";
         const protocol = (req.headers["x-forwarded-proto"] as string) || req.protocol || "https";
         const resetLink = `${protocol}://${host}/portal/reset-password?token=${token}`;
         log("INFO", "auth", "Sending reset email", { to: user.email || normalizedEmail });
