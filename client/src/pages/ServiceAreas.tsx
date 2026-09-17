@@ -116,8 +116,8 @@ export default function ServiceAreas() {
               className="photo-frame aspect-[4/3] lg:aspect-[4/5] max-w-md mx-auto lg:max-w-none w-full"
             >
               <img
-                src={photos.rentalBathroom.src}
-                alt={photos.rentalBathroom.alt}
+                src={photos.restroomTrailer.src}
+                alt={photos.restroomTrailer.alt}
                 fetchPriority="high"
                 decoding="async"
               />

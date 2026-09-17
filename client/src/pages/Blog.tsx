@@ -39,8 +39,8 @@ export default function Blog() {
 
           <figure className="photo-frame hidden lg:block aspect-[4/3]">
             <img
-              src={photos.rentalBathroom.src}
-              alt={photos.rentalBathroom.alt}
+              src={photos.toolkit.src}
+              alt={photos.toolkit.alt}
               loading="lazy"
               decoding="async"
             />

@@ -110,8 +110,8 @@ export default function Book() {
           <div className="grid grid-cols-2 gap-3 sm:gap-4">
             <figure className="photo-frame aspect-[3/4]">
               <img
-                src={photos.rentalBathroom.src}
-                alt={photos.rentalBathroom.alt}
+                src={photos.commercialAisle.src}
+                alt={photos.commercialAisle.alt}
                 loading="lazy"
                 decoding="async"
               />

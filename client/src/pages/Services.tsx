@@ -59,8 +59,8 @@ export default function Services() {
               className="photo-frame aspect-[4/3] lg:aspect-[5/4] max-w-md mx-auto lg:max-w-none w-full"
             >
               <img
-                src={photos.toolkit.src}
-                alt={photos.toolkit.alt}
+                src={photos.vacuumFleet.src}
+                alt={photos.vacuumFleet.alt}
                 fetchPriority="high"
                 decoding="async"
               />

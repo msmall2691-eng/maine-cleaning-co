@@ -191,7 +191,7 @@ export default function HowItWorks() {
           `isolate` because .photo-ambient is z-index:-1. */}
       <Section rhythm="tight" className="isolate">
         <div className="photo-ambient">
-          <img src={photos.rentalBathroom.src} alt="" aria-hidden="true" loading="lazy" decoding="async" />
+          <img src={photos.beforeAfter.src} alt="" aria-hidden="true" loading="lazy" decoding="async" />
         </div>
         <div className="card-glass p-6 sm:p-8 flex flex-col sm:flex-row items-start sm:items-center gap-5">
           <div className="w-12 h-12 rounded-xl bg-primary/10 flex items-center justify-center flex-shrink-0">
