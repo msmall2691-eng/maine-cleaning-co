@@ -27,6 +27,7 @@ import { WorkGallery } from "@/components/ui/WorkGallery";
 import { SocialFollow } from "@/components/ui/SocialFollow";
 import { SparkleField } from "@/components/ui/SparkleField";
 import { CoverageCheck } from "@/components/ui/CoverageCheck";
+import { CoastalConditions } from "@/components/ui/CoastalConditions";
 import { companyInfo } from "@/lib/company-info";
 import { RESPONSE_REPLY, AVAILABILITY_NOTE } from "@/lib/response-time";
 import { ResponseNote } from "@/components/ui/ResponseNote";
@@ -34,6 +35,8 @@ import { COMMUNITIES_SERVED, CLEANS_SINCE_2018 } from "@/lib/company-stats";
 import { Section, SectionHeading } from "@/components/layout/Section";
 import { LogoWatermark } from "@/components/brand/Logo";
 import { photos } from "@/lib/photos";
+import { AmbientPhoto } from "@/components/ui/AmbientPhoto";
+import { useParallax } from "@/lib/parallax";
 
 const fadeUp = {
   hidden: { opacity: 0, y: 20 },
@@ -76,6 +79,13 @@ function HeroCollage() {
   // guest-ready room; the other two are proof that we go inside things.
   const [lead, upper, lower] = [photos.rentalBathroom, photos.restroomTrailer, photos.fridgeInterior];
 
+  // Each frame drifts at its own rate, which is what reads as depth rather
+  // than as the whole block sliding. The lead frame is tallest so it moves
+  // least; the two stacked frames move against it.
+  const leadRef = useParallax<HTMLElement>(0.05);
+  const upperRef = useParallax<HTMLElement>(0.1);
+  const lowerRef = useParallax<HTMLElement>(0.14);
+
   return (
     <motion.div
       initial={{ opacity: 0, scale: 0.97 }}
@@ -91,13 +101,13 @@ function HeroCollage() {
       </figure>
 
       <div className="hidden lg:grid grid-cols-5 grid-rows-6 gap-3 h-[30rem] xl:h-[34rem]">
-        <figure className="photo-frame col-span-3 row-span-6">
+        <figure ref={leadRef} className="photo-frame parallax-layer col-span-3 row-span-6">
           <img src={lead.src} alt={lead.alt} fetchPriority="high" decoding="async" />
         </figure>
-        <figure className="photo-frame col-start-4 col-span-2 row-span-3">
+        <figure ref={upperRef} className="photo-frame parallax-layer col-start-4 col-span-2 row-span-3">
           <img src={upper.src} alt={upper.alt} loading="lazy" decoding="async" />
         </figure>
-        <figure className="photo-frame col-start-4 col-span-2 row-span-3">
+        <figure ref={lowerRef} className="photo-frame parallax-layer col-start-4 col-span-2 row-span-3">
           <img src={lower.src} alt={lower.alt} loading="lazy" decoding="async" />
         </figure>
       </div>
@@ -483,9 +493,24 @@ export default function Home() {
         </div>
       </div>
 
-      {/* ── Instant Coverage Check ── */}
+      {/* ── Coverage check + coastal conditions ──
+          Paired on one row because they answer the same two questions a local
+          visitor actually has on arrival: do you come here, and what's it
+          doing outside. CoastalConditions renders nothing at all when the
+          weather API is unreachable, so the grid is written to look right
+          with one child or two. */}
       <Section rhythm="tight" measure="default" reveal={false}>
-        <CoverageCheck />
+        {/* Flex, not grid, and deliberately so: CoastalConditions renders
+            NOTHING when the weather API is unreachable, and a two-column grid
+            would still hold its empty column open — leaving the coverage bar
+            stranded at two-thirds width beside a hole. With flex, the bar's
+            flex-1 simply takes the whole row when it's alone. */}
+        <div className="flex flex-col lg:flex-row gap-4 items-stretch">
+          <div className="flex-1 min-w-0">
+            <CoverageCheck />
+          </div>
+          <CoastalConditions className="lg:w-[26rem] lg:flex-shrink-0" />
+        </div>
       </Section>
 
       {/* ── Services Grid ──
@@ -619,9 +644,7 @@ export default function Home() {
           section isn't a flat rectangle of form controls. It's decoration, so
           it's aria-hidden and lazy. */}
       <Section id="get-estimate" measure="wide" className="isolate">
-        <div className="photo-ambient">
-          <img src={photos.rentalBathroom.src} alt="" aria-hidden="true" loading="lazy" />
-        </div>
+        <AmbientPhoto photo={photos.restroomTrailer} />
         <LogoWatermark position="right" />
 
         {/* The estimator is ~1,400px tall and this column is ~600px, so the

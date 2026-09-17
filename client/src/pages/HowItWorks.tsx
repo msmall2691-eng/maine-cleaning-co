@@ -13,6 +13,7 @@ import { Section, SectionHeading } from "@/components/layout/Section";
 import { ClosingCTA } from "@/components/layout/ClosingCTA";
 import { LogoWatermark } from "@/components/brand/Logo";
 import { photos } from "@/lib/photos";
+import { AmbientPhoto } from "@/components/ui/AmbientPhoto";
 
 const fadeUp = {
   hidden: { opacity: 0, y: 20 },
@@ -190,9 +191,7 @@ export default function HowItWorks() {
           white space. Decoration only: aria-hidden, lazy, and the band carries
           `isolate` because .photo-ambient is z-index:-1. */}
       <Section rhythm="tight" className="isolate">
-        <div className="photo-ambient">
-          <img src={photos.beforeAfter.src} alt="" aria-hidden="true" loading="lazy" decoding="async" />
-        </div>
+        <AmbientPhoto photo={photos.beforeAfter} />
         <div className="card-glass p-6 sm:p-8 flex flex-col sm:flex-row items-start sm:items-center gap-5">
           <div className="w-12 h-12 rounded-xl bg-primary/10 flex items-center justify-center flex-shrink-0">
             <Zap className="w-5 h-5 text-primary" />

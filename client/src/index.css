@@ -389,16 +389,44 @@
   overflow: hidden;
   pointer-events: none;
 }
+/* Legibility note: these were once opacity 0.055 with a 1.5px blur, which is
+   past "quiet" and into "you cannot tell what it is" — a photograph nobody
+   can read is just noise on the background. No blur at all now, and enough
+   opacity to make out the subject. Body text still clears AA over it: the
+   photos are desaturated, and a 14% overlay on --background moves its
+   luminance by well under a tenth, against a --foreground at 20% lightness. */
 .photo-ambient img {
   width: 100%;
+  /* Oversized, and pulled up, so .parallax-layer has room to travel without
+     ever exposing an edge of the band. */
   height: 100%;
   object-fit: cover;
-  opacity: 0.12;
-  filter: saturate(0.35) contrast(0.9) blur(1px);
+  opacity: 0.2;
+  filter: saturate(0.45) contrast(0.95);
 }
 :root:not(.dark) .photo-ambient img {
-  opacity: 0.055;
-  filter: saturate(0.2) contrast(0.85) blur(1.5px);
+  opacity: 0.14;
+  filter: saturate(0.3) contrast(0.92);
+}
+
+/* The moving layer. The image is 140% of the band and offset -20%, so a
+   parallax of up to ±0.18 of the image's own height (±25% of the band) stays
+   inside the overhang. transform only — it stays on the compositor. */
+.parallax-layer img {
+  height: 140%;
+  top: -20%;
+  position: absolute;
+  left: 0;
+  transform: translate3d(0, calc(var(--parallax, 0) * 1%), 0);
+  will-change: transform;
+}
+@media (prefers-reduced-motion: reduce) {
+  .parallax-layer img {
+    height: 100%;
+    top: 0;
+    transform: none;
+    will-change: auto;
+  }
 }
 /* Feathered edges so an ambient photo never draws a rectangle. */
 .photo-ambient::after {
@@ -412,7 +440,7 @@
       hsl(var(--background) / 0) 72%,
       hsl(var(--background)) 100%
     ),
-    radial-gradient(ellipse 80% 70% at 50% 50%, hsl(var(--background) / 0) 30%, hsl(var(--background) / 0.85) 100%);
+    radial-gradient(ellipse 85% 80% at 50% 50%, hsl(var(--background) / 0) 55%, hsl(var(--background) / 0.7) 100%);
 }
 
 /* Standard treatment for a real photo placed as content. */
@@ -807,5 +835,135 @@
     animation: none;
     opacity: 0.7;
     transform: scale(1);
+  }
+}
+
+/* ── Coastal conditions widget ───────────────────────────────────────────
+   The weather scene behind <CoastalConditions>. Everything here animates
+   transform and opacity only, so it composites without repainting; counts
+   are tiny because this is one small card, not a background layer. The
+   removed WeatherAtmosphere (bd31967) was ~148 lines of exactly this kind of
+   CSS applied to the entire site — the point of keeping it small is not
+   going back there.
+
+   Every keyframe below is switched off by the reduced-motion block. */
+
+/* Turns after dark, like the real thing. */
+.lighthouse-beam {
+  position: absolute;
+  top: 20%;
+  left: 50%;
+  width: 150%;
+  height: 22%;
+  transform-origin: 0% 50%;
+  background: linear-gradient(90deg, hsl(45 100% 75% / 0.5), transparent 70%);
+  filter: blur(3px);
+  border-radius: 50%;
+  animation: lighthouse-sweep 7s linear infinite;
+  pointer-events: none;
+}
+@keyframes lighthouse-sweep {
+  0%   { transform: rotate(-32deg); opacity: 0; }
+  12%  { opacity: 0.95; }
+  38%  { opacity: 0; }
+  50%  { transform: rotate(-32deg); opacity: 0; }
+  100% { transform: rotate(-32deg); opacity: 0; }
+}
+
+.rain-drop {
+  position: absolute;
+  top: -12%;
+  width: 1px;
+  height: 14%;
+  border-radius: 1px;
+  background: linear-gradient(hsl(205 80% 70% / 0), hsl(205 80% 70% / 0.65));
+  animation: rain-fall linear infinite;
+}
+@keyframes rain-fall {
+  0%   { transform: translate3d(0, 0, 0); opacity: 0; }
+  10%  { opacity: 1; }
+  100% { transform: translate3d(-8px, 760%, 0); opacity: 0; }
+}
+
+.snow-flake {
+  position: absolute;
+  top: -10%;
+  width: 4px;
+  height: 4px;
+  border-radius: 50%;
+  background: hsl(0 0% 100% / 0.85);
+  box-shadow: 0 0 4px hsl(0 0% 100% / 0.5);
+  animation: snow-fall linear infinite;
+}
+:root:not(.dark) .snow-flake {
+  background: hsl(205 40% 80% / 0.95);
+  box-shadow: 0 0 4px hsl(205 40% 70% / 0.5);
+}
+@keyframes snow-fall {
+  0%   { transform: translate3d(0, 0, 0); opacity: 0; }
+  10%  { opacity: 1; }
+  50%  { transform: translate3d(10px, 350%, 0); }
+  100% { transform: translate3d(-6px, 760%, 0); opacity: 0; }
+}
+
+.fog-bank {
+  position: absolute;
+  left: -30%;
+  width: 70%;
+  height: 26%;
+  border-radius: 999px;
+  background: hsl(210 15% 85% / 0.16);
+  filter: blur(9px);
+  animation: fog-drift 22s ease-in-out infinite;
+}
+@keyframes fog-drift {
+  0%, 100% { transform: translate3d(0, 0, 0); }
+  50%      { transform: translate3d(120%, 0, 0); }
+}
+
+.cloud-puff {
+  position: absolute;
+  left: -25%;
+  width: 46%;
+  height: 30%;
+  border-radius: 999px;
+  background: hsl(210 15% 70% / 0.13);
+  filter: blur(7px);
+  animation: cloud-cross 30s linear infinite;
+}
+@keyframes cloud-cross {
+  0%   { transform: translate3d(0, 0, 0); }
+  100% { transform: translate3d(320%, 0, 0); }
+}
+
+.storm-flash {
+  position: absolute;
+  inset: 0;
+  background: hsl(220 60% 92% / 0.55);
+  opacity: 0;
+  animation: storm-strike 9s ease-out infinite;
+}
+@keyframes storm-strike {
+  0%, 92%, 100% { opacity: 0; }
+  93%           { opacity: 0.5; }
+  94%           { opacity: 0.05; }
+  95.5%         { opacity: 0.35; }
+  97%           { opacity: 0; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .lighthouse-beam,
+  .rain-drop,
+  .snow-flake,
+  .fog-bank,
+  .cloud-puff,
+  .storm-flash {
+    animation: none;
+  }
+  /* Without the sweep the beam is a static wedge across the tower; and a
+     flash frozen mid-strike is a white sheet over the card. Both go. */
+  .lighthouse-beam,
+  .storm-flash {
+    display: none;
   }
 }

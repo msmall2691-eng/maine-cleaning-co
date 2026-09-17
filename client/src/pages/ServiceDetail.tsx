@@ -11,6 +11,7 @@ import { useSEO } from "@/hooks/use-seo";
 import { Section, SectionHeading } from "@/components/layout/Section";
 import { LogoWatermark } from "@/components/brand/Logo";
 import { photos, type Photo } from "@/lib/photos";
+import { AmbientPhoto } from "@/components/ui/AmbientPhoto";
 
 /**
  * One of our own photos per service, picked by what is actually in the frame
@@ -225,9 +226,7 @@ export default function ServiceDetail() {
           above the band's own background instead of behind the page. */}
       {showEstimate ? (
         <Section measure="prose" className="isolate">
-          <div className="photo-ambient">
-            <img src={ambientPhoto.src} alt="" aria-hidden="true" loading="lazy" />
-          </div>
+          <AmbientPhoto photo={ambientPhoto} />
           <LogoWatermark position="right" />
           <div className="relative">
             <div id="estimate-section-anchor" className="absolute -top-32" />

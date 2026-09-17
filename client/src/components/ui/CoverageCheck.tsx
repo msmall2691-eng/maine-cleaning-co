@@ -151,9 +151,15 @@ export function CoverageCheck() {
     return () => window.removeEventListener("mousedown", onClick);
   }, [focused]);
 
+  // No max-width of its own: the caller places it. The home page pairs it
+  // with CoastalConditions in a two-up row, where a self-cap would strand it
+  // in the middle of its own column.
   return (
-    <div className="max-w-3xl mx-auto" data-testid="coverage-check">
-      <div className="relative rounded-2xl border border-border/60 bg-card/70 backdrop-blur-md shadow-[0_4px_28px_rgba(0,0,0,0.14)] p-4 sm:p-5">
+    <div className="w-full h-full" data-testid="coverage-check">
+      {/* h-full + centred content so this sits level with whatever it is
+          paired with on a row, rather than floating at the top of a taller
+          neighbour. */}
+      <div className="relative h-full flex flex-col justify-center rounded-2xl border border-border/60 bg-card/70 backdrop-blur-md shadow-[0_4px_28px_rgba(0,0,0,0.14)] p-4 sm:p-5">
         <div className="flex items-start sm:items-center gap-3 sm:gap-4 flex-col sm:flex-row">
           <div className="flex items-center gap-3 sm:gap-4 min-w-0 flex-1">
             <div className="w-10 h-10 rounded-xl bg-primary/12 flex items-center justify-center flex-shrink-0 shadow-inner">

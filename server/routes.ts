@@ -9,6 +9,7 @@ import { normalizeIntakePayload } from "./lib/normalize";
 import { forwardLeadToBrightBase, forwardBookingUpdateToBrightBase } from "./lib/brightbase";
 import { calculateQuote, estimatesDiverge } from "./lib/quoteEngine";
 import { RATE, MIN_JOB, RANGE_BAND } from "@shared/pricing";
+import { getConditions } from "./lib/weather";
 import { CLEANS_SINCE_2018 } from "@/lib/company-stats";
 import { runForward, retryFailedForwards, recordSkipped } from "./lib/leadForward";
 import { leadForwards } from "@shared/schema";
@@ -1020,6 +1021,21 @@ export async function registerRoutes(
       log("ERROR", "admin", "Failed to archive quote lead", { id: req.params.id, error: String(error) });
       res.status(500).json({ message: "Failed to archive quote lead" });
     }
+  });
+
+  /**
+   * Current coastal conditions for the <CoastalConditions> widget.
+   *
+   * 200 with `{ conditions: null }` rather than a 5xx when the upstream is
+   * down: this is decoration, the widget hides itself on null, and a failing
+   * weather provider should not put a red line in anyone's console or a
+   * retry storm on the page. Caching and the stale-serve live in lib/weather.
+   */
+  app.get("/api/weather", async (_req, res) => {
+    const conditions = await getConditions();
+    // Let a CDN/proxy hold it too; the upstream only moves a few times an hour.
+    res.set("Cache-Control", "public, max-age=900");
+    res.json({ conditions });
   });
 
   let aiTipCache: { tip: string; timestamp: number } | null = null;

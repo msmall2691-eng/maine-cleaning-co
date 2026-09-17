@@ -8,6 +8,7 @@ import { RESPONSE_WINDOW } from "@/lib/response-time";
 import { Section } from "@/components/layout/Section";
 import { LogoWatermark } from "@/components/brand/Logo";
 import { photos } from "@/lib/photos";
+import { AmbientPhoto } from "@/components/ui/AmbientPhoto";
 
 /**
  * /book — dedicated booking landing page.
@@ -146,9 +147,7 @@ export default function Book() {
           so the wizard reads at the same width as every other column of input
           on the site; the photo behind it is texture, not content. */}
       <Section measure="prose" rhythm="tight" className="isolate overflow-hidden pb-[clamp(3.25rem,6vw,5.5rem)]">
-        <div className="photo-ambient">
-          <img src={photos.fridgeInterior.src} alt="" aria-hidden="true" loading="lazy" />
-        </div>
+        <AmbientPhoto photo={photos.vacuumFleet} />
         <LogoWatermark position="right" />
 
         <InstantEstimate defaultCategory={defaultCategory} bookingIntent />
