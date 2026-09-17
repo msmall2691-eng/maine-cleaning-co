@@ -12,6 +12,7 @@ import { RATE, MIN_JOB, RANGE_BAND } from "@shared/pricing";
 import { getConditions } from "./lib/weather";
 import { CLEANS_SINCE_2018 } from "@/lib/company-stats";
 import { runForward, retryFailedForwards, recordSkipped } from "./lib/leadForward";
+import { sweepFailedForwards } from "./lib/retrySweep";
 import { leadForwards } from "@shared/schema";
 import { db } from "./db";
 import { desc, eq } from "drizzle-orm";
@@ -1808,18 +1809,9 @@ Rules:
     try {
       if (!db) return res.status(503).json({ message: "Database not configured" });
       const limit = Math.min(Math.max(parseInt(String(req.body?.limit ?? req.query?.limit ?? "100"), 10) || 100, 1), 500);
-      const summary = await retryFailedForwards({
-        limit,
-        // A forward that lands on retry still needs its post-delivery side
-        // effect — capture BrightBase's returned booking id onto our row.
-        onDelivered: async (row, result) => {
-          if (row.destination !== "brightbase" || row.sourceType !== "booking" || !row.sourceId || !result.responseSnippet) return;
-          try {
-            const bookingId = JSON.parse(result.responseSnippet)?.bookingId;
-            if (bookingId != null) await storage.updateBookingRequestExternalIds(row.sourceId, { crmBookingId: String(bookingId) });
-          } catch { /* non-JSON response — nothing to capture */ }
-        },
-      });
+      // Shared with the background scheduler (lib/retryScheduler.ts) so the
+      // manual and scheduled paths can never behave differently.
+      const summary = await sweepFailedForwards(limit);
       log("INFO", "forwards-retry", "Retry sweep complete", summary);
       res.json({ success: true, ...summary });
     } catch (error) {

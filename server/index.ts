@@ -2,6 +2,7 @@ import express, { type Request, Response, NextFunction } from "express";
 import { registerRoutes } from "./routes";
 import { serveStatic } from "./static";
 import { createServer } from "http";
+import { startRetrySweepScheduler } from "./lib/retryScheduler";
 
 const app = express();
 app.set("trust proxy", true);
@@ -126,6 +127,13 @@ app.use((req, res, next) => {
     },
     () => {
       log(`serving on port ${port}`);
+
+      // Replays lead_forwards rows that failed to reach BrightBase. Without
+      // this, a forward that failed for longer than the ~3s of inline retries
+      // was never tried again — the booking was accepted, the customer got a
+      // confirmation email, and the job never reached the operator. Started
+      // after listen so a slow first sweep can't delay the health check.
+      startRetrySweepScheduler((msg, data) => log(data ? `${msg} ${JSON.stringify(data)}` : msg, "forwards-retry"));
     },
   );
 })();
