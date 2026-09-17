@@ -27,6 +27,7 @@ import { StickyMobileBar } from "@/components/ui/StickyMobileBar";
 import { AIChatWidget } from "@/components/ui/AIChatWidget";
 import { ThemeProvider } from "@/lib/theme";
 import { AuthProvider } from "@/lib/auth";
+import { WeatherProvider } from "@/lib/weather";
 
 function ScrollToTop() {
   const [location] = useLocation();
@@ -83,7 +84,8 @@ function App() {
   return (
     <ThemeProvider>
       <QueryClientProvider client={queryClient}>
-        <AuthProvider>
+        <WeatherProvider>
+          <AuthProvider>
           <TooltipProvider>
             <div className="relative z-10 flex min-h-screen flex-col text-foreground selection:bg-primary/30">
               <Navbar />
@@ -96,7 +98,8 @@ function App() {
             </div>
             <Toaster />
           </TooltipProvider>
-        </AuthProvider>
+          </AuthProvider>
+        </WeatherProvider>
       </QueryClientProvider>
     </ThemeProvider>
   );

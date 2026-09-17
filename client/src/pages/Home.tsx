@@ -337,9 +337,18 @@ export default function Home() {
     <div className="w-full overflow-x-hidden">
       {/* Scroll progress bar — driven by CSS var (compositor-only transform) */}
       <div className="fixed top-0 left-0 right-0 z-[60] h-[2px] bg-transparent pointer-events-none">
+        {/* Tinted by the weather (--weather-accent falls back to --primary,
+            so this is brand blue whenever there's no data). Decorative only:
+            the bar's job is conveyed by its width, never its hue. */}
         <div
-          className="h-full bg-primary/60 origin-left"
-          style={{ transform: "scaleX(var(--scroll-progress, 0))", willChange: "transform" }}
+          className="h-full origin-left"
+          data-testid="scroll-progress-bar"
+          style={{
+            background: "hsl(var(--weather-accent) / 0.6)",
+            transform: "scaleX(var(--scroll-progress, 0))",
+            willChange: "transform",
+            transition: "background 0.8s ease",
+          }}
         />
       </div>
 
