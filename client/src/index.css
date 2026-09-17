@@ -837,3 +837,133 @@
     transform: scale(1);
   }
 }
+
+/* ── Coastal conditions widget ───────────────────────────────────────────
+   The weather scene behind <CoastalConditions>. Everything here animates
+   transform and opacity only, so it composites without repainting; counts
+   are tiny because this is one small card, not a background layer. The
+   removed WeatherAtmosphere (bd31967) was ~148 lines of exactly this kind of
+   CSS applied to the entire site — the point of keeping it small is not
+   going back there.
+
+   Every keyframe below is switched off by the reduced-motion block. */
+
+/* Turns after dark, like the real thing. */
+.lighthouse-beam {
+  position: absolute;
+  top: 20%;
+  left: 50%;
+  width: 150%;
+  height: 22%;
+  transform-origin: 0% 50%;
+  background: linear-gradient(90deg, hsl(45 100% 75% / 0.5), transparent 70%);
+  filter: blur(3px);
+  border-radius: 50%;
+  animation: lighthouse-sweep 7s linear infinite;
+  pointer-events: none;
+}
+@keyframes lighthouse-sweep {
+  0%   { transform: rotate(-32deg); opacity: 0; }
+  12%  { opacity: 0.95; }
+  38%  { opacity: 0; }
+  50%  { transform: rotate(-32deg); opacity: 0; }
+  100% { transform: rotate(-32deg); opacity: 0; }
+}
+
+.rain-drop {
+  position: absolute;
+  top: -12%;
+  width: 1px;
+  height: 14%;
+  border-radius: 1px;
+  background: linear-gradient(hsl(205 80% 70% / 0), hsl(205 80% 70% / 0.65));
+  animation: rain-fall linear infinite;
+}
+@keyframes rain-fall {
+  0%   { transform: translate3d(0, 0, 0); opacity: 0; }
+  10%  { opacity: 1; }
+  100% { transform: translate3d(-8px, 760%, 0); opacity: 0; }
+}
+
+.snow-flake {
+  position: absolute;
+  top: -10%;
+  width: 4px;
+  height: 4px;
+  border-radius: 50%;
+  background: hsl(0 0% 100% / 0.85);
+  box-shadow: 0 0 4px hsl(0 0% 100% / 0.5);
+  animation: snow-fall linear infinite;
+}
+:root:not(.dark) .snow-flake {
+  background: hsl(205 40% 80% / 0.95);
+  box-shadow: 0 0 4px hsl(205 40% 70% / 0.5);
+}
+@keyframes snow-fall {
+  0%   { transform: translate3d(0, 0, 0); opacity: 0; }
+  10%  { opacity: 1; }
+  50%  { transform: translate3d(10px, 350%, 0); }
+  100% { transform: translate3d(-6px, 760%, 0); opacity: 0; }
+}
+
+.fog-bank {
+  position: absolute;
+  left: -30%;
+  width: 70%;
+  height: 26%;
+  border-radius: 999px;
+  background: hsl(210 15% 85% / 0.16);
+  filter: blur(9px);
+  animation: fog-drift 22s ease-in-out infinite;
+}
+@keyframes fog-drift {
+  0%, 100% { transform: translate3d(0, 0, 0); }
+  50%      { transform: translate3d(120%, 0, 0); }
+}
+
+.cloud-puff {
+  position: absolute;
+  left: -25%;
+  width: 46%;
+  height: 30%;
+  border-radius: 999px;
+  background: hsl(210 15% 70% / 0.13);
+  filter: blur(7px);
+  animation: cloud-cross 30s linear infinite;
+}
+@keyframes cloud-cross {
+  0%   { transform: translate3d(0, 0, 0); }
+  100% { transform: translate3d(320%, 0, 0); }
+}
+
+.storm-flash {
+  position: absolute;
+  inset: 0;
+  background: hsl(220 60% 92% / 0.55);
+  opacity: 0;
+  animation: storm-strike 9s ease-out infinite;
+}
+@keyframes storm-strike {
+  0%, 92%, 100% { opacity: 0; }
+  93%           { opacity: 0.5; }
+  94%           { opacity: 0.05; }
+  95.5%         { opacity: 0.35; }
+  97%           { opacity: 0; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .lighthouse-beam,
+  .rain-drop,
+  .snow-flake,
+  .fog-bank,
+  .cloud-puff,
+  .storm-flash {
+    animation: none;
+  }
+  /* Without the sweep the beam is a static wedge across the tower; and a
+     flash frozen mid-strike is a white sheet over the card. Both go. */
+  .lighthouse-beam,
+  .storm-flash {
+    display: none;
+  }
+}

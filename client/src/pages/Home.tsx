@@ -27,6 +27,7 @@ import { WorkGallery } from "@/components/ui/WorkGallery";
 import { SocialFollow } from "@/components/ui/SocialFollow";
 import { SparkleField } from "@/components/ui/SparkleField";
 import { CoverageCheck } from "@/components/ui/CoverageCheck";
+import { CoastalConditions } from "@/components/ui/CoastalConditions";
 import { companyInfo } from "@/lib/company-info";
 import { RESPONSE_REPLY, AVAILABILITY_NOTE } from "@/lib/response-time";
 import { ResponseNote } from "@/components/ui/ResponseNote";
@@ -492,9 +493,24 @@ export default function Home() {
         </div>
       </div>
 
-      {/* ── Instant Coverage Check ── */}
+      {/* ── Coverage check + coastal conditions ──
+          Paired on one row because they answer the same two questions a local
+          visitor actually has on arrival: do you come here, and what's it
+          doing outside. CoastalConditions renders nothing at all when the
+          weather API is unreachable, so the grid is written to look right
+          with one child or two. */}
       <Section rhythm="tight" measure="default" reveal={false}>
-        <CoverageCheck />
+        {/* Flex, not grid, and deliberately so: CoastalConditions renders
+            NOTHING when the weather API is unreachable, and a two-column grid
+            would still hold its empty column open — leaving the coverage bar
+            stranded at two-thirds width beside a hole. With flex, the bar's
+            flex-1 simply takes the whole row when it's alone. */}
+        <div className="flex flex-col lg:flex-row gap-4 items-stretch">
+          <div className="flex-1 min-w-0">
+            <CoverageCheck />
+          </div>
+          <CoastalConditions className="lg:w-[26rem] lg:flex-shrink-0" />
+        </div>
       </Section>
 
       {/* ── Services Grid ──
