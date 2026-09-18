@@ -39,7 +39,9 @@ export const SKY_ACCENTS: Record<Sky, Accent> = {
   clear: { light: "38 78% 44%", dark: "42 85% 58%" },
   // Deliberately the brand colour unchanged. Overcast is the default state of
   // a Maine sky, and the default state of the site should be the brand.
-  cloudy: { light: "210 58% 42%", dark: "210 58% 52%" },
+  // These two values MUST track --primary in index.css — the whole point of
+  // this bucket is that it is indistinguishable from no tint at all.
+  cloudy: { light: "214 55% 36%", dark: "212 58% 62%" },
   // Fog off the water: desaturated, still blue, never grey enough to read as
   // "disabled".
   fog: { light: "205 26% 46%", dark: "205 24% 64%" },

@@ -2,7 +2,7 @@ import { Link, useLocation } from "wouter";
 import { Phone, MessageSquare, Mail, MapPin, ArrowRight } from "lucide-react";
 import { companyInfo } from "@/lib/company-info";
 import { Button } from "@/components/ui/button";
-import { LogoLockup, LogoWatermark } from "@/components/brand/Logo";
+import { LogoLockup, LogoWatermark, LogoBadge } from "@/components/brand/Logo";
 import { photos } from "@/lib/photos";
 
 export default function Footer() {
@@ -39,6 +39,7 @@ export default function Footer() {
             <div className="absolute inset-0 bg-primary/10 backdrop-blur-[2px]" />
             <div className="absolute inset-0 bg-gradient-to-r from-card/90 via-card/70 to-card/40" />
           </div>
+          <LogoBadge className="relative hidden sm:inline-flex w-36 flex-shrink-0" />
           <div className="relative">
             <p className="font-serif font-bold text-lg text-foreground">The Maine choice for a clean space.</p>
             <p className="text-sm text-muted-foreground mt-1">Free estimate in under 60 seconds — no commitment required.</p>

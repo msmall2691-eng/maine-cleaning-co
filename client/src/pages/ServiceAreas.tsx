@@ -24,24 +24,24 @@ const kpiStats = [
     value: RECURRING_CLIENT_RATE,
     label: "Recurring Clients",
     desc: "Trust us to come back again & again",
-    color: "text-emerald-600 dark:text-emerald-400",
-    bg: "bg-emerald-500/10",
+    color: "text-brand-pine",
+    bg: "bg-brand-pine/10",
   },
   {
     icon: Sparkles,
     value: "7%",
     label: "One-Time Cleans",
     desc: "First-timers always welcome",
-    color: "text-blue-600 dark:text-blue-400",
-    bg: "bg-blue-500/10",
+    color: "text-brand-harbor",
+    bg: "bg-brand-harbor/10",
   },
   {
     icon: MapPin,
     value: COMMUNITIES_SERVED,
     label: "Communities",
     desc: "Across York & Cumberland County",
-    color: "text-orange-600 dark:text-orange-400",
-    bg: "bg-orange-500/10",
+    color: "text-brand-stone",
+    bg: "bg-brand-stone/10",
   },
   {
     icon: Calendar,
@@ -117,8 +117,8 @@ export default function ServiceAreas() {
               className="photo-frame aspect-[4/3] lg:aspect-[4/5] max-w-md mx-auto lg:max-w-none w-full"
             >
               <img
-                src={photos.restroomTrailer.src}
-                alt={photos.restroomTrailer.alt}
+                src={photos.kitchenLakeWindow.src}
+                alt={photos.kitchenLakeWindow.alt}
                 fetchPriority="high"
                 decoding="async"
               />

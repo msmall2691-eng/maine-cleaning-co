@@ -43,22 +43,22 @@ const serviceAreaCenter =
 const reassurance = [
   {
     icon: CheckCircle2,
-    tint: "bg-emerald-500/15",
-    iconColor: "text-emerald-500",
+    tint: "bg-brand-pine/15",
+    iconColor: "text-brand-pine",
     title: "Instant estimate",
     detail: "Live pricing as you fill it in",
   },
   {
     icon: Calendar,
-    tint: "bg-blue-500/15",
-    iconColor: "text-blue-500",
+    tint: "bg-brand-navy/15",
+    iconColor: "text-brand-navy",
     title: "Pick your date",
     detail: "2+ days out, anywhere in Southern Maine",
   },
   {
     icon: Clock,
-    tint: "bg-amber-500/15",
-    iconColor: "text-amber-500",
+    tint: "bg-brand-harbor/15",
+    iconColor: "text-brand-harbor",
     title: "Confirm in 1 day",
     detail: "We'll call or text to lock it in",
   },
@@ -111,8 +111,8 @@ export default function Book() {
           <div className="grid grid-cols-2 gap-3 sm:gap-4">
             <figure className="photo-frame aspect-[3/4]">
               <img
-                src={photos.commercialAisle.src}
-                alt={photos.commercialAisle.alt}
+                src={photos.kitchenIsland.src}
+                alt={photos.kitchenIsland.alt}
                 loading="lazy"
                 decoding="async"
               />

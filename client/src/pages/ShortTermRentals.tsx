@@ -265,8 +265,8 @@ export default function ShortTermRentals() {
                 className="group card-glass p-6 sm:p-7 h-full flex flex-col"
                 data-testid={`feature-turnover-${i}`}
               >
-                <div className="w-10 h-10 rounded-xl bg-primary/10 flex items-center justify-center mb-4 flex-shrink-0 group-hover:bg-primary/15 transition-colors">
-                  <Icon className="w-5 h-5 text-primary service-icon-hover" />
+                <div className="w-10 h-10 rounded-xl bg-brand-pine/10 flex items-center justify-center mb-4 flex-shrink-0 group-hover:bg-brand-pine/15 transition-colors">
+                  <Icon className="w-5 h-5 text-brand-pine service-icon-hover" />
                 </div>
                 <h3 className="font-bold text-foreground text-base mb-2">{feature.title}</h3>
                 <p className="text-sm text-muted-foreground leading-relaxed">{feature.desc}</p>
@@ -298,8 +298,8 @@ export default function ShortTermRentals() {
                 className="group card-soft p-6 sm:p-7 h-full flex flex-col"
                 data-testid={`feature-mgmt-${i}`}
               >
-                <div className="w-10 h-10 rounded-xl bg-primary/10 flex items-center justify-center mb-4 group-hover:bg-primary/15 transition-colors flex-shrink-0">
-                  <Icon className="w-5 h-5 text-primary service-icon-hover" />
+                <div className="w-10 h-10 rounded-xl bg-brand-pine/10 flex items-center justify-center mb-4 group-hover:bg-brand-pine/15 transition-colors flex-shrink-0">
+                  <Icon className="w-5 h-5 text-brand-pine service-icon-hover" />
                 </div>
                 <h3 className="font-bold text-foreground text-base mb-2">{svc.title}</h3>
                 <p className="text-sm text-muted-foreground leading-relaxed flex-grow">{svc.desc}</p>

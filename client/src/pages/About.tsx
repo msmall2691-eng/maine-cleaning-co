@@ -15,7 +15,7 @@ import { WorkGallery } from "@/components/ui/WorkGallery";
 import { SocialFollow } from "@/components/ui/SocialFollow";
 import { Section, SectionHeading } from "@/components/layout/Section";
 import { ClosingCTA } from "@/components/layout/ClosingCTA";
-import { LogoWatermark } from "@/components/brand/Logo";
+import { LogoWatermark, LogoBadge } from "@/components/brand/Logo";
 import { photos } from "@/lib/photos";
 
 const fadeUp = {
@@ -25,11 +25,11 @@ const fadeUp = {
 
 const achievements = [
   { icon: Calendar, value: "Est. 2018", label: "Founded in Maine", color: "text-primary", bg: "bg-primary/10" },
-  { icon: TrendingUp, value: CLEANS_SINCE_2018, label: "Cleans Completed", color: "text-emerald-600 dark:text-emerald-400", bg: "bg-emerald-500/10" },
-  { icon: RefreshCw, value: RECURRING_CLIENT_RATE, label: "Recurring Clients", color: "text-blue-600 dark:text-blue-400", bg: "bg-blue-500/10" },
-  { icon: MapPin, value: COMMUNITIES_SERVED, label: "Communities Served", color: "text-orange-600 dark:text-orange-400", bg: "bg-orange-500/10" },
+  { icon: TrendingUp, value: CLEANS_SINCE_2018, label: "Cleans Completed", color: "text-brand-pine", bg: "bg-brand-pine/10" },
+  { icon: RefreshCw, value: RECURRING_CLIENT_RATE, label: "Recurring Clients", color: "text-brand-harbor", bg: "bg-brand-harbor/10" },
+  { icon: MapPin, value: COMMUNITIES_SERVED, label: "Communities Served", color: "text-brand-stone", bg: "bg-brand-stone/10" },
   { icon: Star, value: "4.9★", label: "Google Rating", color: "text-yellow-500 dark:text-yellow-400", bg: "bg-yellow-500/10" },
-  { icon: Clock, value: "30+", label: "Yrs Combined Exp.", color: "text-violet-400", bg: "bg-violet-500/10" },
+  { icon: Clock, value: "30+", label: "Yrs Combined Exp.", color: "text-brand-navy", bg: "bg-brand-navy/10" },
 ];
 
 const testimonials = [
@@ -125,6 +125,12 @@ export default function About() {
             viewport={{ once: true }}
             transition={{ duration: 0.7, ease: [0.22, 1, 0.36, 1] }}
           >
+            {/* The painted badge, at the one place on the site that is actually
+                about who we are. It carries the company name itself here — the
+                heading beside it doesn't — so it gets a real `title` rather
+                than being hidden from screen readers. */}
+            <LogoBadge title="The Maine Cleaning Co. — cleaning & property management, est. 2018" className="w-52 sm:w-60 mb-7" />
+
             <SectionHeading
               align="left"
               title="Built on Trust. Driven by Care."
@@ -221,7 +227,7 @@ export default function About() {
             viewport={{ once: true }}
             transition={{ duration: 0.7, ease: [0.22, 1, 0.36, 1] }}
           >
-            <div className="inline-flex items-center gap-2 bg-emerald-500/10 border border-emerald-500/20 text-emerald-600 dark:text-emerald-400 text-xs font-semibold px-3 py-1.5 rounded-full mb-5">
+            <div className="inline-flex items-center gap-2 bg-brand-pine/10 border border-brand-pine/25 text-brand-pine text-xs font-semibold px-3 py-1.5 rounded-full mb-5">
               <Leaf className="w-3.5 h-3.5" /> Eco-Certified Products
             </div>
             <SectionHeading
@@ -232,7 +238,7 @@ export default function About() {
                   We exclusively use Melaleuca EcoSense® and Sal Suds — professional-grade, non-toxic, and biodegradable. Safe for your family, your pets, and every surface we clean. Zero harsh chemicals. Full results.
                   <span className="mt-5 flex flex-wrap gap-2">
                     {["Non-Toxic", "Biodegradable", "Kid & Pet Safe", "No Harsh Chemicals", "Professional Grade"].map((tag) => (
-                      <span key={tag} className="text-[11px] font-medium border border-emerald-600/30 dark:border-emerald-700/40 bg-emerald-500/10 dark:bg-emerald-900/30 text-emerald-700 dark:text-emerald-300 rounded-full px-2.5 py-0.5">{tag}</span>
+                      <span key={tag} className="text-[11px] font-medium border border-brand-pine/30 bg-brand-pine/10 text-brand-pine rounded-full px-2.5 py-0.5">{tag}</span>
                     ))}
                   </span>
                 </>

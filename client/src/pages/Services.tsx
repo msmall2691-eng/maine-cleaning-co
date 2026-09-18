@@ -131,18 +131,18 @@ export default function Services() {
             />
           </figure>
 
-          <div className="bg-emerald-500/10 border border-emerald-500/30 rounded-2xl p-6 sm:p-8 flex flex-col sm:flex-row gap-5 items-start">
-            <div className="w-12 h-12 rounded-xl bg-card flex items-center justify-center flex-shrink-0 shadow-sm text-emerald-600 dark:text-emerald-400">
+          <div className="bg-brand-pine/10 border border-brand-pine/30 rounded-2xl p-6 sm:p-8 flex flex-col sm:flex-row gap-5 items-start">
+            <div className="w-12 h-12 rounded-xl bg-card flex items-center justify-center flex-shrink-0 shadow-sm text-brand-pine">
               <Leaf className="w-6 h-6" />
             </div>
             <div className="min-w-0">
-              <h2 className="font-bold text-emerald-700 dark:text-emerald-300 text-base mb-2">Our Cleaning Approach</h2>
-              <p className="text-sm text-emerald-600/80 dark:text-emerald-400/80 leading-relaxed mb-3">
+              <h2 className="font-bold text-brand-pine text-base mb-2">Our Cleaning Approach</h2>
+              <p className="text-sm text-brand-pine/90 leading-relaxed mb-3">
                 We exclusively use Melaleuca EcoSense & Sal Suds — eco-friendly products that deliver a thorough clean without harsh chemicals.
               </p>
               <div className="flex flex-wrap gap-2">
                 {["Melaleuca EcoSense", "Sal Suds", "Safe for kids & pets", "No harsh chemicals"].map((tag) => (
-                  <span key={tag} className="text-xs font-medium text-emerald-700 dark:text-emerald-300 bg-card/80 border border-emerald-600/30 dark:border-emerald-700/40 rounded-full px-3 py-1">
+                  <span key={tag} className="text-xs font-medium text-brand-pine bg-card/80 border border-brand-pine/30 rounded-full px-3 py-1">
                     <CheckCircle2 className="w-3 h-3 inline mr-1 -mt-0.5" />{tag}
                   </span>
                 ))}
