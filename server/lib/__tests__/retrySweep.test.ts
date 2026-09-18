@@ -84,4 +84,44 @@ describe("retryFailedForwards", () => {
     expect(fetchSpy).not.toHaveBeenCalled();
     expect(summary).toMatchObject({ scanned: 1, delivered: 0, skipped: 1 });
   });
+
+  it("retires a row for a destination we no longer forward to, instead of replaying it forever", async () => {
+    // The sweep replays whatever targetUrl the row stored, so a leftover
+    // crm_* row from the retired connecteam proxy was being POSTed to a dead
+    // host on every sweep — never succeeding, permanently inflating
+    // stillFailing. It has a payload, a URL and a retryable 502, so every
+    // other guard in the loop waves it through; only the destination check
+    // stops it.
+    store.failedRows = [{
+      id: 9, sourceType: "intake", sourceId: 31, destination: "crm_intake",
+      status: "failed", attempts: 3, lastStatusCode: 502,
+      payload: { name: "Meg" }, targetUrl: "https://connecteam-proxy.vercel.app/api/intake",
+    }];
+    const fetchSpy = vi.spyOn(globalThis, "fetch" as any).mockImplementation(okFetch as any);
+
+    const summary = await retryFailedForwards();
+
+    expect(fetchSpy).not.toHaveBeenCalled();
+    expect(summary).toMatchObject({ scanned: 1, delivered: 0, stillFailing: 0, skipped: 1 });
+    // Marked, not just passed over — so it leaves the failed set for good and
+    // the next sweep doesn't scan it again.
+    expect(store.updates.at(-1)?.patch).toMatchObject({ status: "skipped" });
+    expect(store.updates.at(-1)?.patch.lastError).toMatch(/crm_intake.*retired/);
+  });
+
+  it("still retries a live destination that looks otherwise identical", async () => {
+    // Guard against the check being too broad: same shape as the row above,
+    // only the destination differs.
+    store.failedRows = [{
+      id: 10, sourceType: "intake", sourceId: 32, destination: "brightbase",
+      status: "failed", attempts: 3, lastStatusCode: 502,
+      payload: { name: "Meg" }, targetUrl: "https://brightbase.example/api/booking/submit",
+    }];
+    const fetchSpy = vi.spyOn(globalThis, "fetch" as any).mockImplementation(okFetch as any);
+
+    const summary = await retryFailedForwards();
+
+    expect(fetchSpy).toHaveBeenCalledTimes(1);
+    expect(summary).toMatchObject({ scanned: 1, delivered: 1, skipped: 0 });
+  });
 });
