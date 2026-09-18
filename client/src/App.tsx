@@ -40,7 +40,14 @@ function ScrollToTop() {
         if (el) el.scrollIntoView({ behavior: "smooth" });
       }, 100);
     } else {
-      window.scrollTo(0, 0);
+      // Explicitly instant. `html { scroll-behavior: smooth }` in index.css
+      // applies to any scroll that does not state its own behaviour, so this
+      // call was ANIMATING — every page change smooth-scrolled the whole way
+      // back to the top from wherever you happened to be. On a long page that
+      // is a slow glide you cannot skip, and it is why navigation felt
+      // delayed on every page rather than on one of them. In-page anchors
+      // still ask for smooth explicitly and still get it.
+      window.scrollTo({ top: 0, left: 0, behavior: "instant" });
     }
   }, [location]);
   return null;

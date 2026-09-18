@@ -8,7 +8,7 @@ import { CleaningQuiz } from "@/components/ui/CleaningQuiz";
 import { EstimateCTA } from "@/components/ui/EstimateCTA";
 import { Section, SectionHeading } from "@/components/layout/Section";
 import { LogoWatermark } from "@/components/brand/Logo";
-import { photos } from "@/lib/photos";
+import { photos, srcSetFor, SIZES } from "@/lib/photos";
 
 export default function Services() {
   useSEO({ title: "Residential, Commercial & Airbnb Cleaning Services", description: "Residential, deep cleaning, Airbnb turnovers, commercial janitorial, and move-in/move-out cleaning across Southern Maine. Eco-friendly products, transparent pricing." });
@@ -60,6 +60,8 @@ export default function Services() {
             >
               <img
                 src={photos.vacuumFleet.src}
+                srcSet={srcSetFor(photos.vacuumFleet)}
+                sizes={SIZES.half}
                 alt={photos.vacuumFleet.alt}
                 fetchPriority="high"
                 decoding="async"
@@ -125,6 +127,8 @@ export default function Services() {
           <figure className="photo-frame aspect-[4/3] max-w-md mx-auto lg:max-w-none w-full order-last lg:order-first">
             <img
               src={photos.ecoProducts.src}
+              srcSet={srcSetFor(photos.ecoProducts)}
+              sizes={SIZES.half}
               alt={photos.ecoProducts.alt}
               loading="lazy"
               decoding="async"

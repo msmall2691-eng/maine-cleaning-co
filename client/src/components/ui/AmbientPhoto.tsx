@@ -1,5 +1,5 @@
 import { useParallax } from "@/lib/parallax";
-import type { Photo } from "@/lib/photos";
+import { srcSetFor, SIZES, type Photo } from "@/lib/photos";
 
 /**
  * One of our photos used as the texture behind a band, drifting slightly
@@ -41,7 +41,15 @@ export function AmbientPhoto({
 
   return (
     <div ref={ref} className={`photo-ambient parallax-layer ${className}`}>
-      <img src={photo.src} alt="" aria-hidden="true" loading="lazy" decoding="async" />
+      <img
+        src={photo.src}
+        srcSet={srcSetFor(photo)}
+        sizes={SIZES.ambient}
+        alt=""
+        aria-hidden="true"
+        loading="lazy"
+        decoding="async"
+      />
     </div>
   );
 }

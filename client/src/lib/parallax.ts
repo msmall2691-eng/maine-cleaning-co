@@ -73,6 +73,13 @@ export function useParallax<T extends HTMLElement>(strength = 0.12) {
     if (!el) return;
     if (typeof window === "undefined") return;
     if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) return;
+    // Phones don't get parallax. Each subscriber writes a custom property per
+    // frame, which invalidates style on that subtree and repaints an
+    // oversized photo — affordable on a desktop, and on a phone it is spent
+    // on a few pixels of drift nobody is looking for while they scroll.
+    // Matches Tailwind's `lg`, i.e. the same breakpoint where the layouts
+    // these sit in stop being single-column.
+    if (!window.matchMedia("(min-width: 1024px)").matches) return;
 
     let top = 0;
     let height = 0;

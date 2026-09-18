@@ -16,7 +16,7 @@ import { SocialFollow } from "@/components/ui/SocialFollow";
 import { Section, SectionHeading } from "@/components/layout/Section";
 import { ClosingCTA } from "@/components/layout/ClosingCTA";
 import { LogoWatermark, LogoBadge } from "@/components/brand/Logo";
-import { photos } from "@/lib/photos";
+import { photos, srcSetFor, srcSetForSrc, SIZES } from "@/lib/photos";
 
 const fadeUp = {
   hidden: { opacity: 0, y: 20 },
@@ -105,6 +105,8 @@ export default function About() {
             >
               <img
                 src={photos.vacuumFleet.src}
+              srcSet={srcSetFor(photos.vacuumFleet)}
+              sizes={SIZES.half}
                 alt={photos.vacuumFleet.alt}
                 fetchPriority="high"
                 decoding="async"
@@ -215,6 +217,8 @@ export default function About() {
           >
             <img
               src="/images/ecosense-products.jpeg"
+              srcSet={srcSetForSrc("/images/ecosense-products.jpeg")}
+              sizes={SIZES.half}
               alt="Melaleuca EcoSense cleaning products — The Maine Cleaning Co."
               loading="lazy"
               decoding="async"

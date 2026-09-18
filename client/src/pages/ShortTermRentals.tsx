@@ -28,7 +28,7 @@ import { companyInfo } from "@/lib/company-info";
 import { EstimateCTA } from "@/components/ui/EstimateCTA";
 import { Section, SectionHeading } from "@/components/layout/Section";
 import { LogoWatermark } from "@/components/brand/Logo";
-import { photos } from "@/lib/photos";
+import { photos, srcSetFor, SIZES } from "@/lib/photos";
 
 const fadeUp = {
   hidden: { opacity: 0, y: 20 },
@@ -182,6 +182,8 @@ export default function ShortTermRentals() {
             >
               <img
                 src={photos.rentalBathroom.src}
+                srcSet={srcSetFor(photos.rentalBathroom)}
+                sizes={SIZES.half}
                 alt={photos.rentalBathroom.alt}
                 fetchPriority="high"
                 decoding="async"
@@ -354,6 +356,8 @@ export default function ShortTermRentals() {
           <figure className="photo-frame aspect-[4/3] lg:aspect-square max-w-md mx-auto lg:max-w-none w-full">
             <img
               src={photos.fridgeInterior.src}
+              srcSet={srcSetFor(photos.fridgeInterior)}
+              sizes={SIZES.half}
               alt={photos.fridgeInterior.alt}
               loading="lazy"
               decoding="async"
@@ -497,6 +501,8 @@ export default function ShortTermRentals() {
         <div className="absolute inset-0 -z-10 overflow-hidden" aria-hidden="true">
           <img
             src={photos.vacuumFleet.src}
+            srcSet={srcSetFor(photos.vacuumFleet)}
+            sizes={SIZES.ambient}
             alt=""
             aria-hidden="true"
             loading="lazy"

@@ -736,11 +736,17 @@
 
 /* ── Navbar glass ── */
 .navbar-glass {
+  /* Opaque below sm, frosted above it.
+     A backdrop-filter on a fixed, full-width bar is the most expensive thing
+     on this page during a scroll: the compositor has to re-read the content
+     passing under the bar and re-blur that strip on every frame, and unlike a
+     card it spans the whole viewport width. It had already been walked down
+     from blur(28px) to blur(14px) for this reason, which treated the symptom.
+     On a phone it is simply not worth paying for — the bar is 88% opaque, so
+     what shows through the blur is a hint of colour, and the same bar with no
+     filter at all is indistinguishable in a side-by-side. Desktops have the
+     GPU budget and a larger bar to show it off in, so they keep it below. */
   background: hsl(var(--navbar-glass-bg));
-  /* Reduced from blur(28px) — that was a very expensive per-frame
-     paint on mobile scroll. 14px still reads as frosted glass. */
-  backdrop-filter: blur(14px) saturate(1.4) brightness(1.02);
-  -webkit-backdrop-filter: blur(14px) saturate(1.4) brightness(1.02);
   border-bottom: 1px solid hsl(var(--navbar-glass-border));
   box-shadow: 0 1px 20px rgba(0,0,0,calc(var(--card-shadow-strength) * 0.9)), inset 0 -1px 0 rgba(255,255,255,0.04);
   transition: background 0.35s ease, border-color 0.35s ease;
@@ -1031,5 +1037,26 @@
   .lighthouse-beam,
   .storm-flash {
     display: none;
+  }
+}
+
+/* ── Phones: flat surfaces instead of frosted ones ───────────────────────
+   `.card-glass` (blur 24px) and `.kpi-card` (blur 16px) each force their own
+   backdrop sample, and a page carries several. Desktop has the GPU budget for
+   it; a phone spends it on scrolling instead.
+
+   The alpha has to come up with the blur going away: at 0.72 the blur was
+   what stopped page content reading through the card. Without it, 0.72 is
+   just a translucent card with text showing through, so both go opaque here.
+
+   Placed at the end of the file deliberately. Both classes are defined
+   earlier at the same specificity (0,1,0), so whichever is declared last
+   wins — putting this block above them would have made it dead CSS. */
+@media (max-width: 639px) {
+  .card-glass,
+  .kpi-card {
+    background: hsl(var(--card));
+    backdrop-filter: none;
+    -webkit-backdrop-filter: none;
   }
 }

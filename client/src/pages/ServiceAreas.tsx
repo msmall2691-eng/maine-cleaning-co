@@ -10,7 +10,7 @@ import { COMMUNITIES_SERVED, RECURRING_CLIENT_RATE } from "@/lib/company-stats";
 import { Section, SectionHeading } from "@/components/layout/Section";
 import { ClosingCTA } from "@/components/layout/ClosingCTA";
 import { LogoWatermark } from "@/components/brand/Logo";
-import { photos } from "@/lib/photos";
+import { photos, srcSetFor, SIZES } from "@/lib/photos";
 import { AmbientPhoto } from "@/components/ui/AmbientPhoto";
 
 const fadeUp = {
@@ -118,6 +118,8 @@ export default function ServiceAreas() {
             >
               <img
                 src={photos.kitchenLakeWindow.src}
+                srcSet={srcSetFor(photos.kitchenLakeWindow)}
+                sizes={SIZES.half}
                 alt={photos.kitchenLakeWindow.alt}
                 fetchPriority="high"
                 decoding="async"

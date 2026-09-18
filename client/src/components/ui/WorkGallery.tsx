@@ -1,6 +1,7 @@
 import { ArrowUpRight, Instagram } from "lucide-react";
 import { galleryItems } from "@/lib/gallery-data";
 import { companyInfo } from "@/lib/company-info";
+import { srcSetForSrc, SIZES } from "@/lib/photos";
 import { SectionHeading } from "@/components/layout/Section";
 
 /**
@@ -54,8 +55,13 @@ export function WorkGallery({ compact = false }: { compact?: boolean }) {
               data-testid={`work-gallery-${item.id}`}
               title={item.caption}
             >
+              {/* Eleven tiles paint at once here. At full resolution that is
+                  most of the library decoded in one go, which is what made
+                  this grid the slowest thing on a phone. */}
               <img
                 src={item.image}
+                srcSet={srcSetForSrc(item.image)}
+                sizes={isLead ? SIZES.half : SIZES.tile}
                 alt={item.alt}
                 className="w-full h-full object-cover"
                 loading="lazy"

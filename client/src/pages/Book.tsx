@@ -7,7 +7,7 @@ import { companyInfo } from "@/lib/company-info";
 import { RESPONSE_WINDOW } from "@/lib/response-time";
 import { Section } from "@/components/layout/Section";
 import { LogoWatermark } from "@/components/brand/Logo";
-import { photos } from "@/lib/photos";
+import { photos, srcSetFor, SIZES } from "@/lib/photos";
 import { AmbientPhoto } from "@/components/ui/AmbientPhoto";
 
 /**
@@ -112,6 +112,8 @@ export default function Book() {
             <figure className="photo-frame aspect-[3/4]">
               <img
                 src={photos.kitchenIsland.src}
+                srcSet={srcSetFor(photos.kitchenIsland)}
+                sizes={SIZES.half}
                 alt={photos.kitchenIsland.alt}
                 loading="lazy"
                 decoding="async"
@@ -120,6 +122,8 @@ export default function Book() {
             <figure className="photo-frame aspect-[3/4]">
               <img
                 src={photos.toolkit.src}
+                srcSet={srcSetFor(photos.toolkit)}
+                sizes={SIZES.tile}
                 alt={photos.toolkit.alt}
                 loading="lazy"
                 decoding="async"

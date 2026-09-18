@@ -4,6 +4,7 @@ import { Button } from "@/components/ui/button";
 import { FacebookFeed } from "@/components/ui/FacebookFeed";
 import { SectionHeading } from "@/components/layout/Section";
 import { companyInfo } from "@/lib/company-info";
+import { srcSetForSrc, SIZES } from "@/lib/photos";
 import { galleryItems } from "@/lib/gallery-data";
 
 /**
@@ -48,7 +49,17 @@ export function SocialFollow() {
           <div className="grid grid-cols-3 gap-3">
             {recent.map((item) => (
               <figure key={item.id} className="photo-frame aspect-square">
-                <img src={item.image} alt={item.alt} loading="lazy" decoding="async" />
+                {/* Three thumbnails, about 110px wide each. They were pulling
+                    the full-size originals — the lake-window kitchen alone is
+                    2000px and 330KB — to fill a square the size of a stamp. */}
+                <img
+                  src={item.image}
+                  srcSet={srcSetForSrc(item.image)}
+                  sizes={SIZES.tile}
+                  alt={item.alt}
+                  loading="lazy"
+                  decoding="async"
+                />
               </figure>
             ))}
           </div>
