@@ -48,25 +48,65 @@ A full-stack, production-grade cleaning company website with an integrated insta
 
 ### Color Palette (CSS variables in `client/src/index.css`)
 
+The site ships **light and dark themes**; every token below is declared twice,
+under `:root` and under `.dark`. The values here are the light theme — read
+`index.css` for the dark pair. Light is the default.
+
 ```css
---background:   222 22% 10%   /* deep dark navy — page background */
---foreground:   210 20% 90%   /* near-white text */
---card:         222 20% 13%   /* card surface — slightly lighter than bg */
---card-foreground: 210 20% 90%
---primary:      210 58% 46%   /* Atlantic blue — CTAs, accents, icons */
+--background:   60 6% 98%     /* warm off-white — page background */
+--foreground:   30 6% 20%     /* near-black warm grey — text */
+--card:         0 0% 100%     /* pure white card surface */
+--primary:      214 55% 36%   /* Atlantic navy — CTAs, links, accents */
 --primary-foreground: 0 0% 100%
---muted:        222 16% 18%   /* muted backgrounds */
---muted-foreground: 215 14% 55%
---border:       222 16% 21%   /* subtle dark borders */
+--muted-foreground: 30 4% 42%
+--border:       30 6% 88%
 --radius:       0.875rem      /* default card / button border radius */
 ```
 
+#### Brand family — derived from the logo
+
+`--primary` and the four `--brand-*` steps are sampled from the actual logo
+artwork (`client/public/images/logo.webp`): the navy of the lettering and
+lighthouse measures `hsl(232 39% 15%)`, the spruce `hsl(163 49% 17%)`. That
+ink is far too dark to be a UI colour, so the family keeps the hues and lifts
+them to usable lightness.
+
+```css
+--brand-navy:   214 55% 36%   /* = --primary */
+--brand-harbor: 196 52% 34%
+--brand-pine:   166 48% 27%   /* the logo's spruce */
+--brand-stone:  212 14% 38%
+```
+
+Registered as Tailwind colours, so `text-brand-pine`, `bg-brand-navy/10` and
+`border-brand-harbor/30` all work. **Each token carries its own light and dark
+value, so they never need a `dark:` variant** — adding one overrides the token
+and breaks the dark theme.
+
+**Use them for CATEGORICAL colour only** — service icons, feature tiles, stat
+tiles, quick actions: places where the hue is arbitrary decoration telling one
+card from its neighbour. Before this family existed those surfaces reached for
+whichever Tailwind hue was nearest (`blue-500` beside `emerald-500` beside
+`orange-500` beside `slate-500`, four unrelated families on one row), which is
+what stopped the site reading as one thing.
+
+**Never use them for SEMANTIC colour.** An error stays red, a rating star stays
+gold, the availability dot stays green, and another company's mark keeps its
+own colour (Instagram `#C13584`, Facebook `#1877F2`). The test: *would a
+colourblind user lose information if this were grey?* If yes, the hue is
+carrying meaning and must not be flattened into the palette.
+
+Lowest contrast ratio in the family is 5.65:1 against `--background`, against
+the 4.5:1 AA needs for body text. Re-check with the ratio script in the commit
+for #61 if you retune any of them.
+
 ### Typography
 
-- **Headings**: `font-serif` — Playfair Display (Google Fonts), extrabold, tight tracking (-0.03em to -0.04em)
+- **Headings**: `font-serif` — **Space Grotesk** (Google Fonts), bold/extrabold, tight tracking (-0.02em to -0.04em). (An earlier version of this file said Playfair Display; `--font-serif` in `index.css` has been Space Grotesk.)
 - **Body**: `font-sans` — Inter (system stack fallback)
-- **Hero h1**: `text-[2.75rem] sm:text-[3.5rem] md:text-[4.25rem] lg:text-[5.5rem]` with `tracking-[-0.04em]`
-- **Section h2**: `text-[1.75rem] sm:text-4xl` with `tracking-[-0.01em]`
+- **Headings are set by `<SectionHeading>`** (`client/src/components/layout/Section.tsx`), not written out per page. Hand-rolling one is how the site ended up with nine distinct h1 scales and six h2 scales.
+- **Hero h1**: `text-[2.25rem] sm:text-5xl md:text-[3.5rem]`, `tracking-[-0.02em]`
+- **Section h2**: `text-[1.75rem] sm:text-4xl md:text-[2.5rem]`, `tracking-[-0.02em]`
 - **Gradient accent**: `.hero-gradient-text` — CSS linear-gradient from primary through cyan, animated shimmer
 - **Section heading accent**: `.section-heading-accent` — pseudo-element underline in primary color
 

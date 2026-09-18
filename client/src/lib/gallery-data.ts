@@ -28,6 +28,30 @@ export type GalleryItem = {
 
 export const galleryItems: GalleryItem[] = [
   {
+    id: 9,
+    image: "/images/kitchen-island-white-shaker.jpeg",
+    alt: "Bright white shaker kitchen with a large island, pendant lighting and stainless appliances",
+    caption: "Full kitchen reset — island, appliances and every surface",
+  },
+  {
+    id: 10,
+    image: "/images/kitchen-sink-lake-window.jpeg",
+    alt: "Kitchen corner sink beneath a window looking out over the lake",
+    caption: "Lakeside kitchen — sink run, counters and glass",
+  },
+  {
+    id: 11,
+    image: "/images/kitchen-island-cooktop.jpeg",
+    alt: "Kitchen island with a flush cooktop, looking through to the hallway",
+    caption: "Cooktop and island, wiped down and streak-free",
+  },
+  {
+    id: 12,
+    image: "/images/kitchen-butcher-block-granite.jpeg",
+    alt: "Kitchen with butcher-block counter and granite sink run, door opening onto the woods",
+    caption: "Butcher block and granite — oiled, sealed, ready to use",
+  },
+  {
     id: 1,
     image: "/images/vacation-rental-bathroom-clean.jpeg",
     alt: "Guest-ready vacation rental bathroom with rolled towels and hex tile floor",

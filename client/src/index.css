@@ -28,6 +28,12 @@
   --color-input: hsl(var(--input));
   --color-ring: hsl(var(--ring));
 
+  /* Brand family — see the --brand-* declarations in @layer base. */
+  --color-brand-navy: hsl(var(--brand-navy));
+  --color-brand-harbor: hsl(var(--brand-harbor));
+  --color-brand-pine: hsl(var(--brand-pine));
+  --color-brand-stone: hsl(var(--brand-stone));
+
   --radius-lg: var(--radius);
   --radius-md: calc(var(--radius) - 2px);
   --radius-sm: calc(var(--radius) - 4px);
@@ -45,9 +51,27 @@
     --popover: 0 0% 100%;
     --popover-foreground: 30 6% 20%;
 
-    --primary: 210 58% 42%;               /* Atlantic blue, darkened from 46% so
-                                             text-primary clears AA on its own tint */
+    /* Pulled to the hue of the navy ink in the logo (sampled: hsl(232 39% 15%)
+       for the lettering and lighthouse, hsl(163 49% 17%) for the spruce).
+       The ink itself is far too dark to be a UI colour, so the family below
+       keeps its hues and lifts them to usable lightness. Every value is
+       contrast-checked against --background and --card: the lowest is 5.65,
+       against the 4.5 AA needs for body text. */
+    --primary: 214 55% 36%;
     --primary-foreground: 0 0% 100%;
+
+    /* Brand family. Four steps across one coastal range — navy, harbour, pine,
+       stone — for anything CATEGORICAL: service icons, feature tiles, quick
+       actions. Before these existed those surfaces reached for whichever
+       Tailwind hue was nearest to hand (blue-500 beside emerald-500 beside
+       orange-500 beside slate-500, four unrelated families on one row), which
+       is what stopped the site reading as one thing.
+       These are NOT for semantic colour — an error stays red, a rating star
+       stays gold, the availability dot stays green. Meaning outranks palette. */
+    --brand-navy: 214 55% 36%;
+    --brand-harbor: 196 52% 34%;
+    --brand-pine: 166 48% 27%;
+    --brand-stone: 212 14% 38%;
 
     --secondary: 30 8% 95%;               /* subtle warm grey */
     --secondary-foreground: 30 6% 20%;
@@ -56,14 +80,14 @@
     --muted-foreground: 30 4% 42%;
 
     --accent: 30 8% 94%;
-    --accent-foreground: 210 58% 42%;
+    --accent-foreground: 214 55% 36%;
 
     --destructive: 0 72% 51%;
     --destructive-foreground: 0 0% 100%;
 
     --border: 30 6% 88%;                  /* soft warm border */
     --input: 30 6% 88%;
-    --ring: 210 58% 46%;
+    --ring: 214 55% 40%;
     --radius: 0.875rem;
 
     /* Section stripes for the alternating rhythm */
@@ -106,8 +130,15 @@
     --popover: 222 20% 13%;
     --popover-foreground: 210 22% 93%;
 
-    --primary: 210 58% 52%;
+    --primary: 212 58% 62%;
     --primary-foreground: 0 0% 100%;
+
+    /* Same family, re-lit for the dark surface — a tint tuned for off-white is
+       mud on navy, so these are not the light values with opacity. */
+    --brand-navy: 212 58% 62%;
+    --brand-harbor: 194 55% 58%;
+    --brand-pine: 164 45% 52%;
+    --brand-stone: 210 12% 62%;
 
     --secondary: 222 18% 17%;
     --secondary-foreground: 210 20% 85%;
@@ -116,14 +147,14 @@
     --muted-foreground: 215 14% 57%;
 
     --accent: 222 18% 16%;
-    --accent-foreground: 210 58% 60%;
+    --accent-foreground: 212 58% 62%;
 
     --destructive: 0 72% 55%;
     --destructive-foreground: 0 0% 100%;
 
     --border: 222 16% 21%;
     --input: 222 16% 21%;
-    --ring: 210 58% 52%;
+    --ring: 212 58% 62%;
 
     --section-cream: 222 20% 12%;
     --section-warm: 222 18% 14%;
@@ -422,8 +453,19 @@
 
 /* The moving layer. The image is 140% of the band and offset -20%, so a
    parallax of up to ±0.18 of the image's own height (±25% of the band) stays
-   inside the overhang. transform only — it stays on the compositor. */
-.parallax-layer img {
+   inside the overhang. transform only — it stays on the compositor.
+
+   BOTH selectors, deliberately. `.parallax-layer img` alone is (0,1,1), the
+   same specificity as `.photo-frame img` and `.photo-ambient img`, so which
+   one won came down to source order — and `.photo-frame img` is declared
+   below this block, so its `height: 100%` was quietly beating the 140% here.
+   The image still got `top: -20%` (nothing competes for that), so it sat
+   shifted up with ~20% of every framed photo's bottom edge left bare. That
+   shipped: the home hero's photos each had a ~109px strip of empty card under
+   them. Naming both parents takes this to (0,2,1) and makes it independent of
+   where anyone moves these rules later. */
+.photo-frame.parallax-layer img,
+.photo-ambient.parallax-layer img {
   height: 140%;
   top: -20%;
   position: absolute;
@@ -432,7 +474,8 @@
   will-change: transform;
 }
 @media (prefers-reduced-motion: reduce) {
-  .parallax-layer img {
+  .photo-frame.parallax-layer img,
+  .photo-ambient.parallax-layer img {
     height: 100%;
     top: 0;
     transform: none;
@@ -550,29 +593,41 @@
   }
 }
 
+/* ── Per-service background wash ─────────────────────────────────────────
+   A barely-there radial tint behind each service detail page. These used to
+   be hardcoded hues picked per service — including an orange at hsl(28 90%
+   55%) for vacation rentals and a purple at hsl(270 60% 55%) for move-in/out,
+   neither of which appears anywhere else on the site. At 3-5% alpha it is
+   subtle, but it is the same incoherence in miniature, sitting underneath the
+   pages that sell the services.
+
+   Now driven by the --brand-* tokens, so each wash matches the icon, border
+   and gradient its own service already uses, and both themes are handled
+   without a second set of rules. One class per service; the names stay as
+   they were so nothing that consumes patternClass has to change. */
 .service-pattern-residential {
-  background-image: radial-gradient(circle at 90% 10%, hsl(210 58% 46% / 0.05) 0%, transparent 50%),
-                     radial-gradient(circle at 10% 80%, hsl(210 58% 46% / 0.03) 0%, transparent 40%);
+  background-image: radial-gradient(circle at 90% 10%, hsl(var(--brand-navy) / 0.06) 0%, transparent 50%),
+                     radial-gradient(circle at 10% 80%, hsl(var(--brand-navy) / 0.035) 0%, transparent 40%);
 }
 
 .service-pattern-deep {
-  background-image: radial-gradient(circle at 85% 15%, hsl(160 60% 40% / 0.05) 0%, transparent 50%),
-                     radial-gradient(circle at 15% 75%, hsl(160 60% 40% / 0.03) 0%, transparent 40%);
+  background-image: radial-gradient(circle at 85% 15%, hsl(var(--brand-harbor) / 0.06) 0%, transparent 50%),
+                     radial-gradient(circle at 15% 75%, hsl(var(--brand-harbor) / 0.035) 0%, transparent 40%);
 }
 
 .service-pattern-commercial {
-  background-image: radial-gradient(circle at 80% 20%, hsl(220 15% 45% / 0.05) 0%, transparent 50%),
-                     radial-gradient(circle at 20% 70%, hsl(220 15% 45% / 0.03) 0%, transparent 40%);
+  background-image: radial-gradient(circle at 80% 20%, hsl(var(--brand-stone) / 0.07) 0%, transparent 50%),
+                     radial-gradient(circle at 20% 70%, hsl(var(--brand-stone) / 0.04) 0%, transparent 40%);
 }
 
 .service-pattern-vacation {
-  background-image: radial-gradient(circle at 90% 10%, hsl(28 90% 55% / 0.05) 0%, transparent 50%),
-                     radial-gradient(circle at 10% 85%, hsl(28 90% 55% / 0.03) 0%, transparent 40%);
+  background-image: radial-gradient(circle at 90% 10%, hsl(var(--brand-pine) / 0.06) 0%, transparent 50%),
+                     radial-gradient(circle at 10% 85%, hsl(var(--brand-pine) / 0.035) 0%, transparent 40%);
 }
 
 .service-pattern-moveinout {
-  background-image: radial-gradient(circle at 85% 15%, hsl(270 60% 55% / 0.05) 0%, transparent 50%),
-                     radial-gradient(circle at 15% 80%, hsl(270 60% 55% / 0.03) 0%, transparent 40%);
+  background-image: radial-gradient(circle at 85% 15%, hsl(var(--brand-navy) / 0.06) 0%, transparent 50%),
+                     radial-gradient(circle at 15% 80%, hsl(var(--brand-navy) / 0.035) 0%, transparent 40%);
 }
 
 @keyframes aurora-shift {

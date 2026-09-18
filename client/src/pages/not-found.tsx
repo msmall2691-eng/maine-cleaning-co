@@ -62,8 +62,8 @@ export default function NotFound() {
             href="/service-areas"
             className="group flex items-center gap-3 p-3 sm:p-3.5 rounded-xl hover:bg-secondary/60 active:bg-secondary/80 transition-all border border-transparent hover:border-border/60"
           >
-            <div className="w-9 h-9 rounded-lg bg-blue-500/10 flex items-center justify-center flex-shrink-0 group-hover:bg-blue-500/20 transition-colors">
-              <MapPin className="w-4 h-4 text-blue-600 dark:text-blue-400" />
+            <div className="w-9 h-9 rounded-lg bg-brand-navy/10 flex items-center justify-center flex-shrink-0 group-hover:bg-brand-navy/20 transition-colors">
+              <MapPin className="w-4 h-4 text-brand-navy" />
             </div>
             <div className="min-w-0">
               <div className="text-[13px] font-semibold text-foreground truncate">Service Areas</div>
@@ -75,8 +75,8 @@ export default function NotFound() {
             href="/book"
             className="group flex items-center gap-3 p-3 sm:p-3.5 rounded-xl hover:bg-secondary/60 active:bg-secondary/80 transition-all border border-transparent hover:border-border/60"
           >
-            <div className="w-9 h-9 rounded-lg bg-emerald-500/10 flex items-center justify-center flex-shrink-0 group-hover:bg-emerald-500/20 transition-colors">
-              <Calendar className="w-4 h-4 text-emerald-600 dark:text-emerald-400" />
+            <div className="w-9 h-9 rounded-lg bg-brand-pine/10 flex items-center justify-center flex-shrink-0 group-hover:bg-brand-pine/20 transition-colors">
+              <Calendar className="w-4 h-4 text-brand-pine" />
             </div>
             <div className="min-w-0">
               <div className="text-[13px] font-semibold text-foreground truncate">Book a Cleaning</div>
@@ -88,8 +88,8 @@ export default function NotFound() {
             href={companyInfo.contact.phoneHref}
             className="group flex items-center gap-3 p-3 sm:p-3.5 rounded-xl hover:bg-secondary/60 active:bg-secondary/80 transition-all border border-transparent hover:border-border/60"
           >
-            <div className="w-9 h-9 rounded-lg bg-amber-500/10 flex items-center justify-center flex-shrink-0 group-hover:bg-amber-500/20 transition-colors">
-              <Phone className="w-4 h-4 text-amber-600 dark:text-amber-400" />
+            <div className="w-9 h-9 rounded-lg bg-brand-harbor/10 flex items-center justify-center flex-shrink-0 group-hover:bg-brand-harbor/20 transition-colors">
+              <Phone className="w-4 h-4 text-brand-harbor" />
             </div>
             <div className="min-w-0">
               <div className="text-[13px] font-semibold text-foreground truncate">Call us</div>

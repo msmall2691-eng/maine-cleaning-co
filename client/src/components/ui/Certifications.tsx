@@ -3,7 +3,7 @@ import { Shield, HardHat, Leaf } from "lucide-react";
 
 const fadeUp = {
   hidden: { opacity: 0, y: 20 },
-  visible: (i: number) => ({ opacity: 1, y: 0, transition: { delay: i * 0.08, duration: 0.6, ease: [0.22, 1, 0.36, 1] } }),
+  visible: (i: number) => ({ opacity: 1, y: 0, transition: { delay: i * 0.08, duration: 0.6, ease: [0.22, 1, 0.36, 1] as const } }),
 };
 
 type CertItem = {
@@ -28,41 +28,41 @@ const certifications: CertItem[] = [
     icon: Shield,
     name: "ISSA CIMS",
     description: "Cleaning Industry Management Standard — the gold standard for quality and operational excellence.",
-    accent: "from-blue-500/10 to-blue-600/5",
-    iconBg: "bg-blue-500/10",
-    iconColor: "text-blue-600 dark:text-blue-400",
+    accent: "from-brand-navy/10 to-brand-navy/5",
+    iconBg: "bg-brand-navy/10",
+    iconColor: "text-brand-navy",
   },
   {
     type: "icon",
     icon: HardHat,
     name: "OSHA Certified",
     description: "Occupational safety and health training for workplace safety compliance.",
-    accent: "from-amber-500/10 to-amber-600/5",
-    iconBg: "bg-amber-500/10",
-    iconColor: "text-amber-600",
+    accent: "from-brand-stone/10 to-brand-stone/5",
+    iconBg: "bg-brand-stone/10",
+    iconColor: "text-brand-stone",
   },
   {
     type: "icon",
     icon: Leaf,
     name: "Green Seal",
     description: "Certified commitment to environmentally responsible cleaning practices and products.",
-    accent: "from-green-500/10 to-green-600/5",
-    iconBg: "bg-emerald-500/10",
-    iconColor: "text-green-600",
+    accent: "from-brand-pine/10 to-brand-pine/5",
+    iconBg: "bg-brand-pine/10",
+    iconColor: "text-brand-pine",
   },
   {
     type: "image",
     image: "/images/ahca-covid-badge.png",
     name: "AHCA COVID-19",
     description: "Certified in COVID-19 cleaning and infectious disease prevention protocols.",
-    accent: "from-sky-500/10 to-sky-600/5",
+    accent: "from-brand-harbor/10 to-brand-harbor/5",
   },
   {
     type: "image",
     image: "/images/ahca-professional-badge.png",
     name: "AHCA Professional",
     description: "American House Cleaners Association certified professional house cleaner.",
-    accent: "from-indigo-500/10 to-indigo-600/5",
+    accent: "from-brand-navy/10 to-brand-navy/5",
   },
 ];
 

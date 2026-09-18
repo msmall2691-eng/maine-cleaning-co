@@ -13,14 +13,20 @@
  * card size and turns to mud at 24px, which is where this mark actually has
  * to work — so it keeps the silhouette and drops the detail.
  *
- * If you want the painted badge itself used instead of the vector (for the
- * og:image, a print header, anywhere it renders large), drop the file at
- * client/public/images/logo.png and set BRAND_PHOTO_LOGO below to its path.
- * `LogoLockup` will use it automatically; nothing else needs to change.
+ * The painted badge now lives at /images/logo.png and is rendered by
+ * <LogoBadge> below, at the sizes where its detail actually survives.
+ * `LogoLockup` still draws the vector, on purpose: the badge's hatching,
+ * spruce line and "EST. 2018" banner turn to mud at the 28px the navbar
+ * gives it, which is the whole reason the vector exists.
  */
 
-/** Set to "/images/logo.png" once the painted badge file is committed. */
-export const BRAND_PHOTO_LOGO: string | null = null;
+/**
+ * The painted badge is ink on transparency, and that ink is near-black navy —
+ * it reads beautifully on off-white and all but disappears on the dark theme.
+ * So <LogoBadge> always sits it on a light plate. That is not a workaround:
+ * the artwork is a painted sign, and a sign on a board is what it is.
+ */
+export const BRAND_PHOTO_LOGO = "/images/logo.webp";
 
 type MarkProps = {
   className?: string;
@@ -46,8 +52,10 @@ export function LighthouseMark({ className = "w-8 h-8", minimal = false, title }
     >
       {title && <title>{title}</title>}
 
+      {/* Spruce in the brand pine, sampled from the painted badge's own trees —
+          not a stock emerald. The token carries both light and dark. */}
       {!minimal && (
-        <g className="text-emerald-800 dark:text-emerald-600" fill="currentColor" opacity="0.9">
+        <g className="text-brand-pine" fill="currentColor" opacity="0.9">
           {/* Spruce line behind the ledge — left pair, right trio. */}
           <path d="M9.4 34.6 5.9 34.6 9.4 25.2 12.9 34.6Z" />
           <path d="M15.1 34.6 12.1 34.6 15.1 27.4 18.1 34.6Z" opacity="0.75" />
@@ -113,20 +121,10 @@ export function LogoLockup({ size = "md", showTagline = true, className = "" }: 
   const s = SIZES[size];
   return (
     <span className={`inline-flex items-center gap-2.5 ${className}`}>
-      {BRAND_PHOTO_LOGO ? (
-        <img
-          src={BRAND_PHOTO_LOGO}
-          alt=""
-          className={`${s.mark} object-contain flex-shrink-0`}
-          width={44}
-          height={44}
-        />
-      ) : (
-        <LighthouseMark
-          minimal={size === "sm"}
-          className={`${s.mark} flex-shrink-0 text-foreground transition-colors duration-200 group-hover:text-primary`}
-        />
-      )}
+      <LighthouseMark
+        minimal={size === "sm"}
+        className={`${s.mark} flex-shrink-0 text-foreground transition-colors duration-200 group-hover:text-primary`}
+      />
       <span className="flex flex-col leading-none min-w-0">
         <span
           className={`font-serif font-bold ${s.name} tracking-[-0.01em] text-foreground transition-colors duration-200 group-hover:text-primary whitespace-nowrap`}
@@ -165,5 +163,48 @@ export function LogoWatermark({
     >
       <LighthouseMark className="w-64 h-64 lg:w-80 lg:h-80 text-foreground opacity-[0.035] dark:opacity-[0.05]" />
     </div>
+  );
+}
+
+
+/**
+ * The real painted badge, at a size where its detail is legible.
+ *
+ * Always on a light plate — see the note on BRAND_PHOTO_LOGO. In light mode
+ * the plate is nearly invisible against the page; in dark mode it reads as a
+ * cream sign board, which is what the artwork is drawn as.
+ *
+ * Decorative by default: the company name is written beside it in every place
+ * this is used, so repeating it to a screen reader is noise. Pass a `title`
+ * where the badge stands alone and IS the naming.
+ */
+export function LogoBadge({
+  className = "w-44",
+  title,
+}: {
+  className?: string;
+  title?: string;
+}) {
+  return (
+    <span
+      className={`inline-flex items-center justify-center rounded-2xl bg-[#fbfbfa] p-3 shadow-[0_2px_10px_rgba(0,0,0,0.10)] ring-1 ring-black/5 ${className}`}
+    >
+      {/* Served at the size it renders, with a 2x for retina, because the
+          hatching is what makes this file expensive and none of it is visible
+          below about 400px. The full-resolution original is 846KB; this is
+          109KB and indistinguishable at the sizes used. */}
+      <img
+        src={BRAND_PHOTO_LOGO}
+        srcSet="/images/logo.webp 440w, /images/logo@2x.webp 880w"
+        sizes="(max-width: 640px) 60vw, 22rem"
+        alt={title ?? ""}
+        aria-hidden={title ? undefined : true}
+        className="w-full h-auto"
+        width={440}
+        height={400}
+        loading="lazy"
+        decoding="async"
+      />
+    </span>
   );
 }

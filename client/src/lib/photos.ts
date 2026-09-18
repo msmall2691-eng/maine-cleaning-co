@@ -11,11 +11,12 @@
  * and what renders if the file 404s, so it describes the photo rather than
  * repeating the marketing line next to it.
  *
- * NOTE ON THE LIBRARY ITSELF: this is the whole set — six usable photographs
- * (four of them equipment, products or fixtures rather than finished rooms).
- * Several files are near-duplicates saved under different names. The layout
- * work here gets as much out of them as it can; more photographs of finished
- * spaces would do more for the site than any further code change.
+ * NOTE ON THE LIBRARY: it used to be six usable frames, four of them
+ * equipment or product shots rather than finished rooms, which is why one
+ * bathroom photo had ended up carrying nine files. Four real kitchens have
+ * since been added and they are the strongest images here — finished,
+ * daylit, recognisably the work. Lead with those; the equipment shots are
+ * supporting detail, not heroes.
  */
 
 export type Photo = {
@@ -26,6 +27,31 @@ export type Photo = {
 };
 
 export const photos = {
+  /** Bright white shaker kitchen with island and pendants. The best frame in
+      the set: finished, daylit, and instantly legible as the work. */
+  kitchenIsland: {
+    src: "/images/kitchen-island-white-shaker.jpeg",
+    alt: "Bright white shaker kitchen with a large island, pendant lighting and stainless appliances",
+    orientation: "landscape",
+  },
+  /** Kitchen island with cooktop, looking through to the rest of the house. */
+  kitchenCooktop: {
+    src: "/images/kitchen-island-cooktop.jpeg",
+    alt: "Kitchen island with a flush cooktop, looking through to the hallway",
+    orientation: "landscape",
+  },
+  /** Corner sink under a window onto the lake. Lots of daylight. */
+  kitchenLakeWindow: {
+    src: "/images/kitchen-sink-lake-window.jpeg",
+    alt: "Kitchen corner sink beneath a window looking out over the lake",
+    orientation: "landscape",
+  },
+  /** Butcher block and granite, door out to the woods. Warmer, more lived-in. */
+  kitchenButcherBlock: {
+    src: "/images/kitchen-butcher-block-granite.jpeg",
+    alt: "Kitchen with butcher-block counter and granite sink run, door opening onto the woods",
+    orientation: "portrait",
+  },
   /** The strongest image in the set: bright, finished, aspirational. */
   rentalBathroom: {
     src: "/images/vacation-rental-bathroom-clean.jpeg",
@@ -86,7 +112,8 @@ export type PhotoKey = keyof typeof photos;
  * subject in the middle, nothing that turns into a smudge when desaturated.
  */
 export const ambientPhotos = [
-  photos.rentalBathroom,
+  photos.kitchenIsland,
+  photos.kitchenCooktop,
   photos.restroomTrailer,
   photos.commercialAisle,
 ] as const;
