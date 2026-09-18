@@ -12,7 +12,7 @@ import { COMMUNITIES_SERVED } from "@/lib/company-stats";
 import { Section, SectionHeading } from "@/components/layout/Section";
 import { ClosingCTA } from "@/components/layout/ClosingCTA";
 import { LogoWatermark } from "@/components/brand/Logo";
-import { photos } from "@/lib/photos";
+import { photos, srcSetFor, SIZES } from "@/lib/photos";
 import { AmbientPhoto } from "@/components/ui/AmbientPhoto";
 
 const fadeUp = {
@@ -137,6 +137,8 @@ export default function HowItWorks() {
             >
               <img
                 src={photos.toolkit.src}
+                srcSet={srcSetFor(photos.toolkit)}
+                sizes={SIZES.half}
                 alt={photos.toolkit.alt}
                 fetchPriority="high"
                 decoding="async"

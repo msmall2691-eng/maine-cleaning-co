@@ -7,13 +7,36 @@ export function StickyMobileBar() {
   const [visible, setVisible] = useState(false);
   const [location] = useLocation();
 
+  // This bar is mobile-only, so everything it does on scroll is paid for by
+  // the device least able to afford it. Two things were wrong:
+  //
+  //  - setVisible ran on every scroll event, not once per frame. React bails
+  //    out of the re-render when the boolean is unchanged, but the dispatch
+  //    still runs on every one of those events, at 60-120Hz, for the whole
+  //    length of every page.
+  //  - The threshold is crossed twice per visit. All the rest is noise, so
+  //    it is now read behind a rAF and only written when it actually flips.
   useEffect(() => {
+    let raf = 0;
+    let last = false;
+    const check = () => {
+      raf = 0;
+      const next = window.scrollY > 400;
+      if (next !== last) {
+        last = next;
+        setVisible(next);
+      }
+    };
     const onScroll = () => {
-      setVisible(window.scrollY > 400);
+      if (raf) return;
+      raf = requestAnimationFrame(check);
     };
     window.addEventListener("scroll", onScroll, { passive: true });
-    onScroll();
-    return () => window.removeEventListener("scroll", onScroll);
+    check();
+    return () => {
+      window.removeEventListener("scroll", onScroll);
+      if (raf) cancelAnimationFrame(raf);
+    };
   }, []);
 
   // On the /book page the estimator IS the whole page — the sticky bar's
@@ -23,7 +46,13 @@ export function StickyMobileBar() {
 
   return (
     <div
-      className="fixed bottom-0 left-0 right-0 z-50 lg:hidden bg-card/95 backdrop-blur-md border-t border-border shadow-[0_-2px_12px_rgba(0,0,0,0.06)] safe-area-bottom"
+      // Opaque, not frosted. A backdrop-filter on a fixed bar means the
+      // compositor re-samples and re-blurs the content scrolling beneath it
+      // on every single frame — on a phone that is one of the most expensive
+      // things a page can ask for, and it was pinned to the bottom of the
+      // viewport on every page. At 95% opacity the blur was very nearly
+      // invisible anyway, so bg-card loses nothing and costs nothing.
+      className="fixed bottom-0 left-0 right-0 z-50 lg:hidden bg-card border-t border-border shadow-[0_-2px_12px_rgba(0,0,0,0.06)] safe-area-bottom"
       data-testid="sticky-mobile-bar"
     >
       <div className="flex items-center gap-2 px-3 py-2.5">

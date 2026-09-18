@@ -34,7 +34,7 @@ import { ResponseNote } from "@/components/ui/ResponseNote";
 import { COMMUNITIES_SERVED, CLEANS_SINCE_2018 } from "@/lib/company-stats";
 import { Section, SectionHeading } from "@/components/layout/Section";
 import { LogoWatermark } from "@/components/brand/Logo";
-import { photos } from "@/lib/photos";
+import { photos, srcSetFor, SIZES } from "@/lib/photos";
 import { AmbientPhoto } from "@/components/ui/AmbientPhoto";
 import { useParallax } from "@/lib/parallax";
 
@@ -98,18 +98,25 @@ function HeroCollage() {
           because this is the LCP element; deferring it only moves the empty
           space from "always" to "for the first second". */}
       <figure className="photo-frame lg:hidden aspect-[4/3] max-w-md mx-auto">
-        <img src={lead.src} alt={lead.alt} fetchPriority="high" decoding="async" />
+        <img
+          src={lead.src}
+          srcSet={srcSetFor(lead)}
+          sizes={SIZES.full}
+          alt={lead.alt}
+          fetchPriority="high"
+          decoding="async"
+        />
       </figure>
 
       <div className="hidden lg:grid grid-cols-5 grid-rows-6 gap-3 h-[30rem] xl:h-[34rem]">
         <figure ref={leadRef} className="photo-frame parallax-layer col-span-3 row-span-6">
-          <img src={lead.src} alt={lead.alt} fetchPriority="high" decoding="async" />
+          <img src={lead.src} srcSet={srcSetFor(lead)} sizes={SIZES.half} alt={lead.alt} fetchPriority="high" decoding="async" />
         </figure>
         <figure ref={upperRef} className="photo-frame parallax-layer col-start-4 col-span-2 row-span-3">
-          <img src={upper.src} alt={upper.alt} loading="lazy" decoding="async" />
+          <img src={upper.src} srcSet={srcSetFor(upper)} sizes={SIZES.tile} alt={upper.alt} loading="lazy" decoding="async" />
         </figure>
         <figure ref={lowerRef} className="photo-frame parallax-layer col-start-4 col-span-2 row-span-3">
-          <img src={lower.src} alt={lower.alt} loading="lazy" decoding="async" />
+          <img src={lower.src} srcSet={srcSetFor(lower)} sizes={SIZES.tile} alt={lower.alt} loading="lazy" decoding="async" />
         </figure>
       </div>
 
@@ -301,9 +308,18 @@ export default function Home() {
   useEffect(() => {
     let raf = 0;
     let lastPast = false;
+    // scrollHeight used to be read here, inside the frame. Reading it forces
+    // the browser to flush pending style and layout work before it can answer
+    // — a synchronous reflow, once per frame, for the entire length of every
+    // scroll. Measuring it once and again on resize costs nothing and leaves
+    // the frame doing only arithmetic.
+    let maxScroll = 0;
+    const measure = () => {
+      maxScroll = document.documentElement.scrollHeight - window.innerHeight;
+    };
     const update = () => {
       raf = 0;
-      const h = document.documentElement.scrollHeight - window.innerHeight;
+      const h = maxScroll;
       const y = window.scrollY;
       const p = h > 0 ? Math.min(y / h, 1) : 0;
       document.documentElement.style.setProperty("--scroll-progress", String(p));
@@ -317,10 +333,22 @@ export default function Home() {
       if (raf) return;
       raf = requestAnimationFrame(update);
     };
+    measure();
     update();
+    // The page grows as lazy images and revealed sections land, so re-measure
+    // whenever the document actually changes size rather than assuming the
+    // first measurement holds.
+    const ro = new ResizeObserver(() => {
+      measure();
+      update();
+    });
+    ro.observe(document.documentElement);
     window.addEventListener("scroll", onScroll, { passive: true });
+    window.addEventListener("resize", measure, { passive: true });
     return () => {
       window.removeEventListener("scroll", onScroll);
+      window.removeEventListener("resize", measure);
+      ro.disconnect();
       if (raf) cancelAnimationFrame(raf);
     };
   }, []);

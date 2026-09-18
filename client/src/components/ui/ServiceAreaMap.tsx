@@ -827,6 +827,35 @@ function ObsidianGraph({ animate }: { animate: boolean }) {
     }
   }, []);
 
+  /**
+   * The browser fires pointercancel when it decides a gesture belongs to it
+   * rather than to us — which, with `touch-action: pan-y` inline, is exactly
+   * what happens every time a thumb drag turns into a page scroll.
+   *
+   * Without this the few pixels of movement before the browser took over
+   * would be left applied, so the map crept sideways a little every time you
+   * scrolled past it. Put the view and the node back where they were at
+   * pointerdown and the map simply sits still while the page moves.
+   */
+  const handlePointerCancel = useCallback((e: React.PointerEvent<HTMLCanvasElement>) => {
+    if (isPanningRef.current && panStartRef.current) {
+      viewRef.current.x = panStartRef.current.viewX;
+      viewRef.current.y = panStartRef.current.viewY;
+    }
+    if (draggingIdxRef.current >= 0) {
+      graphRef.current!.nodes[draggingIdxRef.current].pinned = false;
+      draggingIdxRef.current = -1;
+    }
+    isPanningRef.current = false;
+    pointerDownRef.current = null;
+    dragMovedRef.current = false;
+    try {
+      canvasRef.current?.releasePointerCapture(e.pointerId);
+    } catch {
+      /* noop */
+    }
+  }, []);
+
   const handlePointerLeave = useCallback(() => {
     mouseRef.current = { x: -9999, y: -9999, inCanvas: false };
     setHoveredIdx(-1);
@@ -863,11 +892,32 @@ function ObsidianGraph({ animate }: { animate: boolean }) {
     ? "graph-canvas fixed inset-0 z-[80] w-full h-full overflow-hidden border-0 shadow-none rounded-none"
     : "graph-canvas relative w-full h-80 sm:h-[26rem] md:h-[30rem] rounded-2xl overflow-hidden border border-border/60 shadow-[0_4px_28px_rgba(0,0,0,0.22)]";
 
+  /**
+   * `touch-action` decides who owns a thumb drag that starts on the map: us,
+   * or the browser's page scrolling. It used to be `none` unconditionally,
+   * which means "the map handles every gesture" — so inline, where the map is
+   * 320px tall on a 844px phone, it made 38% of the viewport a strip you
+   * physically could not scroll past. Your thumb landed on it and the page
+   * just did not move.
+   *
+   * Inline it is now `pan-y`: the browser keeps vertical panning (the page
+   * scrolls, always), and the map still gets taps, horizontal drags and
+   * pinch. Node dragging is the thing that gives way on a phone, and that is
+   * the right trade — reading the page is not optional, dragging a node is.
+   * Fullscreen there is no page behind to scroll, so it stays `none` and the
+   * map gets everything.
+   *
+   * When the browser takes over the gesture it fires pointercancel, which is
+   * already wired to handlePointerUp, so a drag that turns into a page scroll
+   * cleans up after itself rather than leaving a node stuck to the finger.
+   */
+  const touchAction = isFullscreen ? "none" : "pan-y";
+
   return (
     <div
       ref={containerRef}
       className={wrapperClasses}
-      style={{ touchAction: "none", overscrollBehavior: "contain" }}
+      style={{ touchAction, overscrollBehavior: "contain" }}
       data-testid="obsidian-graph"
     >
       <div className="graph-glow" aria-hidden="true" />
@@ -876,7 +926,7 @@ function ObsidianGraph({ animate }: { animate: boolean }) {
         className="absolute inset-0 select-none"
         style={{
           cursor: draggingIdxRef.current >= 0 ? "grabbing" : hoveredIdx >= 0 ? "grab" : "default",
-          touchAction: "none",
+          touchAction,
           WebkitUserSelect: "none",
           WebkitTouchCallout: "none",
           overscrollBehavior: "contain",
@@ -884,7 +934,7 @@ function ObsidianGraph({ animate }: { animate: boolean }) {
         onPointerDown={handlePointerDown}
         onPointerMove={handlePointerMove}
         onPointerUp={handlePointerUp}
-        onPointerCancel={handlePointerUp}
+        onPointerCancel={handlePointerCancel}
         onPointerLeave={handlePointerLeave}
         onWheel={handleWheel}
         onContextMenu={(e) => e.preventDefault()}

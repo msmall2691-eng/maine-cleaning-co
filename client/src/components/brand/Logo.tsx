@@ -189,14 +189,21 @@ export function LogoBadge({
     <span
       className={`inline-flex items-center justify-center rounded-2xl bg-[#fbfbfa] p-3 shadow-[0_2px_10px_rgba(0,0,0,0.10)] ring-1 ring-black/5 ${className}`}
     >
-      {/* Served at the size it renders, with a 2x for retina, because the
+      {/* Served at the size it renders, with retina steps, because the
           hatching is what makes this file expensive and none of it is visible
-          below about 400px. The full-resolution original is 846KB; this is
-          109KB and indistinguishable at the sizes used. */}
+          below about 400px. The full-resolution original is 846KB; the base
+          file is 109KB and indistinguishable at the sizes used.
+
+          The middle 660w step exists for phones specifically. The badge
+          renders at 11rem there, so a 3x screen asks for ~528px — with only
+          440 and 880 to choose from the browser had to take the 880, and
+          320KB of painted hatching was the single largest download on the
+          page for a badge the width of two thumbs. `sizes` used to claim
+          60vw, which overstated it further; 11rem is what the element is. */}
       <img
         src={BRAND_PHOTO_LOGO}
-        srcSet="/images/logo.webp 440w, /images/logo@2x.webp 880w"
-        sizes="(max-width: 640px) 60vw, 22rem"
+        srcSet="/images/logo.webp 440w, /images/logo@1.5x.webp 660w, /images/logo@2x.webp 880w"
+        sizes="(max-width: 640px) 11rem, 22rem"
         alt={title ?? ""}
         aria-hidden={title ? undefined : true}
         className="w-full h-auto"

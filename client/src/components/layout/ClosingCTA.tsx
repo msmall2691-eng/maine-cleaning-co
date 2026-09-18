@@ -4,7 +4,7 @@ import { Phone } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Section } from "@/components/layout/Section";
 import { companyInfo } from "@/lib/company-info";
-import { photos, type Photo } from "@/lib/photos";
+import { photos, srcSetFor, SIZES, type Photo } from "@/lib/photos";
 
 /**
  * The band that closes a page.
@@ -56,6 +56,8 @@ export function ClosingCTA({
       <div aria-hidden="true" className="pointer-events-none absolute inset-0 overflow-hidden">
         <img
           src={photo.src}
+          srcSet={srcSetFor(photo)}
+          sizes={SIZES.full}
           alt=""
           loading="lazy"
           decoding="async"

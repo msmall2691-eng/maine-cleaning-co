@@ -10,7 +10,7 @@ import { companyInfo } from "@/lib/company-info";
 import { useSEO } from "@/hooks/use-seo";
 import { Section, SectionHeading } from "@/components/layout/Section";
 import { LogoWatermark } from "@/components/brand/Logo";
-import { photos, type Photo } from "@/lib/photos";
+import { photos, srcSetFor, SIZES, type Photo } from "@/lib/photos";
 import { AmbientPhoto } from "@/components/ui/AmbientPhoto";
 
 /**
@@ -151,6 +151,8 @@ export default function ServiceDetail() {
               <figure className="photo-frame aspect-[4/3] lg:aspect-[5/4] max-w-md mx-auto lg:max-w-none w-full">
                 <img
                   src={heroPhoto.src}
+                  srcSet={srcSetFor(heroPhoto)}
+                  sizes={SIZES.half}
                   alt={heroPhoto.alt}
                   fetchPriority="high"
                   decoding="async"

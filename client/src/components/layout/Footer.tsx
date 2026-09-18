@@ -3,7 +3,7 @@ import { Phone, MessageSquare, Mail, MapPin, ArrowRight } from "lucide-react";
 import { companyInfo } from "@/lib/company-info";
 import { Button } from "@/components/ui/button";
 import { LogoLockup, LogoWatermark, LogoBadge } from "@/components/brand/Logo";
-import { photos } from "@/lib/photos";
+import { photos, srcSetFor, SIZES } from "@/lib/photos";
 
 export default function Footer() {
   const [location] = useLocation();
@@ -31,6 +31,8 @@ export default function Footer() {
           <div className="absolute inset-0">
             <img
               src={photos.restroomTrailer.src}
+              srcSet={srcSetFor(photos.restroomTrailer)}
+              sizes={SIZES.ambient}
               alt=""
               aria-hidden="true"
               loading="lazy"
