@@ -27,10 +27,23 @@ import { eq } from "drizzle-orm";
 import { sendForwardFailureAlert } from "../email";
 
 export type ForwardSourceType = "booking" | "intake" | "quote";
-// Only BrightBase destinations remain. The DB column is plain text, so legacy
-// "crm_intake" / "crm_booking" ledger rows from the retired CRM webhook stay
-// readable in the admin view without a migration.
-export type ForwardDestination = "brightbase" | "brightbase-update";
+
+/**
+ * Destinations we still forward to. A VALUE, not just a type, because the
+ * retry sweep has to make this decision at runtime against whatever string is
+ * in the database — and the DB column is plain text, so it can hold names we
+ * retired (the old "crm_intake" / "crm_booking" rows from the connecteam
+ * proxy). The type is derived from the array so the two can never drift.
+ *
+ * Retiring a destination means deleting it from here, and the sweep then
+ * stops replaying its rows on its own — see retryFailedForwards.
+ */
+export const LIVE_DESTINATIONS = ["brightbase", "brightbase-update"] as const;
+export type ForwardDestination = (typeof LIVE_DESTINATIONS)[number];
+
+function isLiveDestination(destination: string): destination is ForwardDestination {
+  return (LIVE_DESTINATIONS as readonly string[]).includes(destination);
+}
 
 export interface ForwardAttemptResult {
   ok: boolean;
@@ -204,6 +217,9 @@ type RetryDeliveredHook = (row: typeof leadForwards.$inferSelect, result: Forwar
  * BrightBase rejected the body, so re-sending it is pointless). Only the most
  * recent failed attempt per (source, destination) is retried, so a row that
  * already succeeded on a later attempt isn't re-sent.
+ *
+ * Rows for a retired destination are marked skipped instead of retried, so
+ * the ledger cleans itself up rather than replaying dead URLs forever.
  */
 export async function retryFailedForwards(
   opts: { limit?: number; onDelivered?: RetryDeliveredHook } = {},
@@ -234,6 +250,30 @@ export async function retryFailedForwards(
 
   for (const row of Array.from(latest.values())) {
     summary.scanned += 1;
+
+    // A destination we no longer forward to. The sweep replays whatever
+    // targetUrl the row stored, so a leftover "crm_intake" / "crm_booking"
+    // row would be POSTed to the retired connecteam proxy on every sweep,
+    // forever — it can never succeed, so it sat in `failed` inflating
+    // stillFailing and burning a request each time.
+    //
+    // Mark it skipped rather than leaving it: that's the same one-off UPDATE
+    // someone would otherwise run by hand, applied lazily and exactly once
+    // per row. Costs no network call, so a sweep full of these is cheap, and
+    // they drain permanently instead of crowding out real failures.
+    if (!isLiveDestination(row.destination)) {
+      await updateRow(row.id, {
+        status: "skipped",
+        lastError: `destination "${row.destination}" is retired — not retried`,
+        lastAttemptedAt: new Date(),
+      });
+      summary.skipped += 1;
+      console.log(
+        `[leadForward] retired destination ${row.destination} for ${row.sourceType}#${row.sourceId} — marked skipped, will not retry`,
+      );
+      continue;
+    }
+
     // Not retryable: no body to replay, or a 4xx the peer already rejected.
     if (!row.payload || !row.targetUrl || (row.lastStatusCode != null && row.lastStatusCode >= 400 && row.lastStatusCode < 500)) {
       summary.skipped += 1;
