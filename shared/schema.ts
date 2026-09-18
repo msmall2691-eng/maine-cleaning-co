@@ -227,7 +227,7 @@ export type InsertBookingRequest = z.infer<typeof insertBookingRequestSchema>;
 export type BookingRequest = typeof bookingRequests.$inferSelect;
 
 // Per-destination delivery ledger for the fire-and-forget lead forwards
-// (BrightBase Ops, legacy CRM webhook). Every website lead spawns one row
+// (BrightBase Ops). Every website lead spawns one row
 // per destination; retries update the same row so an admin can spot silent
 // failures. Keeps intake / booking / quote as the source of truth and the
 // forward status as separate observable state.
@@ -235,7 +235,7 @@ export const leadForwards = pgTable("lead_forwards", {
   id: serial("id").primaryKey(),
   sourceType: text("source_type").notNull(),  // 'booking' | 'intake' | 'quote'
   sourceId: integer("source_id").notNull(),   // FK-ish to booking_requests.id / intake_submissions.id / quote_leads.id
-  destination: text("destination").notNull(), // 'brightbase' | 'brightbase-update' | 'crm_intake' | 'crm_booking'
+  destination: text("destination").notNull(), // 'brightbase' | 'brightbase-update' (legacy rows may still hold 'crm_intake' | 'crm_booking')
   status: text("status").notNull().default("pending"),  // 'pending' | 'delivered' | 'failed' | 'skipped'
   attempts: integer("attempts").notNull().default(0),
   lastError: text("last_error"),
