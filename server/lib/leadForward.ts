@@ -2,7 +2,7 @@
  * Lead-forward outbox
  *
  * A tiny per-destination ledger that gives every fire-and-forget forward
- * (BrightBase Ops + the legacy CRM webhook) three things it was missing:
+ * (BrightBase Ops — the sole lead destination) three things it was missing:
  *
  *   1. persisted delivery status per destination — so a silent failure
  *      shows up in a query instead of only in a log line;
@@ -27,7 +27,10 @@ import { eq } from "drizzle-orm";
 import { sendForwardFailureAlert } from "../email";
 
 export type ForwardSourceType = "booking" | "intake" | "quote";
-export type ForwardDestination = "brightbase" | "brightbase-update" | "crm_intake" | "crm_booking";
+// Only BrightBase destinations remain. The DB column is plain text, so legacy
+// "crm_intake" / "crm_booking" ledger rows from the retired CRM webhook stay
+// readable in the admin view without a migration.
+export type ForwardDestination = "brightbase" | "brightbase-update";
 
 export interface ForwardAttemptResult {
   ok: boolean;
@@ -51,7 +54,7 @@ interface RunForwardOpts {
   payload?: Record<string, any>;
   targetUrl?: string;
   /** Called once when the forward is delivered (initial run OR a later retry),
-   *  with the successful attempt result — used to capture the returned CRM id.
+   *  with the successful attempt result — used to capture the returned BrightBase id.
    *  Best-effort: throwing here is logged, never surfaced. */
   onSuccess?: (result: ForwardAttemptResult) => Promise<void>;
 }
@@ -186,7 +189,7 @@ export interface RetrySweepResult {
 }
 
 /** Called when a retried forward finally lands, so late deliveries still
- *  capture the CRM id / any post-delivery side effect. Keyed by destination. */
+ *  capture the BrightBase id / any post-delivery side effect. Keyed by destination. */
 type RetryDeliveredHook = (row: typeof leadForwards.$inferSelect, result: ForwardAttemptResult) => Promise<void>;
 
 /**

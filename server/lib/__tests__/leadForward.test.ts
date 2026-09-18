@@ -58,7 +58,7 @@ describe("runForward", () => {
     const id = await runForward({
       sourceType: "booking",
       sourceId: 11,
-      destination: "crm_booking",
+      destination: "brightbase-update",
       attempt,
       retries: 3,
     });
@@ -67,7 +67,7 @@ describe("runForward", () => {
     expect(attempt).toHaveBeenCalledTimes(3);   // 3 attempts total (initial + 2 retries)
     expect(sentAlerts).toHaveLength(1);
     expect(sentAlerts[0]).toMatchObject({
-      destination: "crm_booking",
+      destination: "brightbase-update",
       sourceType: "booking",
       sourceId: 11,
       attempts: 3,
@@ -84,7 +84,7 @@ describe("runForward", () => {
     await runForward({
       sourceType: "intake",
       sourceId: 3,
-      destination: "crm_intake",
+      destination: "brightbase",
       attempt,
       retries: 3,
     });

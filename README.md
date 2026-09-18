@@ -773,9 +773,8 @@ ADMIN_PASSWORD=...               # Admin user password (auto-seeded on startup)
 # AI (optional)
 OPENAI_API_KEY=...               # GPT-4o-mini for chat widget + cleaning tips
 
-# Webhook (optional)
-WEBHOOK_URL=...                  # Fire-and-forget webhook on new leads
-WEBHOOK_SECRET=...               # Bearer token for webhook auth
+# BrightBase Ops — the only lead destination (see server/lib/brightbase.ts)
+BRIGHTBASE_API_URL=https://brightbase-production.up.railway.app  # unset = forwards recorded as "skipped"
 
 # Failed-forward retry sweep (all optional — sensible defaults)
 RETRY_SWEEP_INTERVAL_MINUTES=10  # Cadence. Floored at 1 min; bad values fall back to 10

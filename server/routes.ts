@@ -11,7 +11,7 @@ import { calculateQuote, estimatesDiverge } from "./lib/quoteEngine";
 import { RATE, MIN_JOB, RANGE_BAND } from "@shared/pricing";
 import { getConditions } from "./lib/weather";
 import { CLEANS_SINCE_2018 } from "@/lib/company-stats";
-import { runForward, retryFailedForwards, recordSkipped } from "./lib/leadForward";
+import { retryFailedForwards, recordSkipped } from "./lib/leadForward";
 import { sweepFailedForwards } from "./lib/retrySweep";
 import { leadForwards } from "@shared/schema";
 import { db } from "./db";
@@ -19,110 +19,6 @@ import { desc, eq } from "drizzle-orm";
 import crypto from "crypto";
 import { setupAuth, hashPassword, comparePassword, requireAuth, requireAdmin } from "./auth";
 import OpenAI from "openai";
-
-const CRM_WEBHOOK_URL = process.env.CRM_WEBHOOK_URL || "https://connecteam-proxy.vercel.app/api/leads";
-
-/** Service keys as the CRM wants to read them. */
-const TWENTY_SERVICE_LABELS: Record<string, string> = {
-  standard: "Standard Clean",
-  deep: "Deep Clean",
-  str: "Vacation Rental Turnover",
-  "vacation-rental": "Vacation Rental Turnover",
-  commercial: "Commercial Cleaning",
-  "move-in-out": "Move-In/Move-Out Clean",
-};
-
-type TwentyLead = {
-  name?: string | null;
-  email?: string | null;
-  phone?: string | null;
-  address?: string | null;
-  zip?: string | null;
-  serviceType?: string | null;
-  frequency?: string | null;
-  sqft?: number | null;
-  bathrooms?: number | null;
-  petHair?: string | null;
-  condition?: string | null;
-  estimateMin?: number | null;
-  estimateMax?: number | null;
-  notes?: string | null;
-};
-
-/**
- * Fire-and-forget forward to the Twenty CRM.
- *
- * A THIRD destination, independent of CRM_WEBHOOK_URL (BrightBase intake) and
- * BRIGHTBASE_API_URL (BrightBase Ops). It never throws and never blocks the
- * response, so a slow or dead CRM cannot cost us a customer's submission — the
- * lead is already committed to our own database before this runs.
- *
- * Inert unless both WEBHOOK_URL and WEBHOOK_SECRET are set.
- */
-function forwardLeadToTwenty(lead: TwentyLead, context: { source: string; id: number | string }) {
-  const webhookUrl = process.env.WEBHOOK_URL;
-  const webhookSecret = process.env.WEBHOOK_SECRET;
-
-  if (!webhookUrl || !webhookSecret) return;
-
-  // Each part is dropped when absent rather than interpolated blind. The
-  // contact form carries no sqft/bathrooms/pets/condition at all, and the old
-  // inline version would have sent the operator "null sqft, null bath".
-  const details = [
-    lead.sqft != null ? `${lead.sqft} sqft` : null,
-    lead.bathrooms != null ? `${lead.bathrooms} bath` : null,
-    lead.petHair ? `${lead.petHair} pets` : null,
-    lead.condition ? `${lead.condition} condition` : null,
-  ]
-    .filter(Boolean)
-    .join(", ");
-
-  const payload = {
-    source: "website",
-    customerName: lead.name || "",
-    customerEmail: lead.email || "",
-    customerPhone: lead.phone || "",
-    propertyAddress: lead.address || lead.zip || "",
-    serviceType: TWENTY_SERVICE_LABELS[lead.serviceType ?? ""] || lead.serviceType,
-    frequency: lead.frequency,
-    preferredDate: "",
-    notes: [details ? `${details}.` : "", lead.notes || ""].filter(Boolean).join(" ").trim(),
-    // Custom-quote services have no numeric estimate; sending the raw
-    // interpolation put the literal "$undefined-$undefined" in the CRM.
-    estimateRange:
-      lead.estimateMin != null && lead.estimateMax != null
-        ? `$${lead.estimateMin}-$${lead.estimateMax}`
-        : "Custom quote",
-  };
-
-  const controller = new AbortController();
-  const timeout = setTimeout(() => controller.abort(), 10000);
-
-  fetch(webhookUrl, {
-    method: "POST",
-    headers: {
-      "Content-Type": "application/json",
-      // The CRM reads this header specifically — not a bearer token.
-      "x-webhook-secret": webhookSecret,
-    },
-    body: JSON.stringify(payload),
-    signal: controller.signal,
-  })
-    .then(async (r) => {
-      clearTimeout(timeout);
-      if (r.ok) {
-        log("INFO", "webhook", "Lead forwarded to Twenty CRM", { status: r.status, ...context });
-      } else {
-        const body = await r.text().catch(() => "");
-        log("WARN", "webhook", "Twenty CRM rejected lead", { status: r.status, ...context, body: body.slice(0, 200) });
-      }
-    })
-    .catch((err) => {
-      clearTimeout(timeout);
-      log("ERROR", "webhook", "Failed to forward lead to Twenty CRM", { error: String(err), ...context });
-    });
-}
-
 
 function log(level: "INFO" | "WARN" | "ERROR", context: string, message: string, data?: Record<string, any>) {
   const ts = new Date().toISOString();
@@ -154,8 +50,8 @@ function checkResetRateLimit(ip: string): boolean {
 setInterval(() => {
   const now = Date.now();
   const maxWindow = 15 * 60_000;
-  for (const [key, hits] of rateLimitMap) {
-    const recent = hits.filter((t) => now - t < maxWindow);
+  for (const [key, hits] of Array.from(rateLimitMap.entries())) {
+    const recent = hits.filter((t: number) => now - t < maxWindow);
     if (recent.length === 0) rateLimitMap.delete(key);
     else rateLimitMap.set(key, recent);
   }
@@ -374,7 +270,7 @@ export async function registerRoutes(
 
   app.post("/api/portal/quotes/:id/approve", requireAuth, async (req, res) => {
     try {
-      const id = parseInt(req.params.id);
+      const id = parseInt(String(req.params.id));
       const lead = await storage.getQuoteLead(id);
       if (!lead || lead.clientId !== req.session.userId) {
         res.status(404).json({ message: "Quote not found" });
@@ -389,7 +285,7 @@ export async function registerRoutes(
 
   app.get("/api/portal/onboarding/:quoteId", requireAuth, async (req, res) => {
     try {
-      const quoteId = parseInt(req.params.quoteId);
+      const quoteId = parseInt(String(req.params.quoteId));
       const checklist = await storage.getOnboardingChecklist(req.session.userId!, quoteId);
       res.json(checklist || { formResponses: {} });
     } catch (error) {
@@ -399,7 +295,7 @@ export async function registerRoutes(
 
   app.put("/api/portal/onboarding/:quoteId", requireAuth, async (req, res) => {
     try {
-      const quoteId = parseInt(req.params.quoteId);
+      const quoteId = parseInt(String(req.params.quoteId));
       const lead = await storage.getQuoteLead(quoteId);
       if (!lead || lead.clientId !== req.session.userId) {
         res.status(404).json({ message: "Quote not found" });
@@ -435,7 +331,7 @@ export async function registerRoutes(
 
   app.post("/api/portal/contracts/:id/sign", requireAuth, async (req, res) => {
     try {
-      const id = parseInt(req.params.id);
+      const id = parseInt(String(req.params.id));
       const { signedName } = req.body;
       if (!signedName) {
         res.status(400).json({ message: "Signature name is required" });
@@ -491,7 +387,7 @@ export async function registerRoutes(
 
   app.patch("/api/portal/schedule/:id", requireAuth, async (req, res) => {
     try {
-      const id = parseInt(req.params.id);
+      const id = parseInt(String(req.params.id));
       const { scheduledDate, notes, status, preferredTime } = req.body;
       const updateData: any = {};
       if (scheduledDate) {
@@ -518,7 +414,7 @@ export async function registerRoutes(
 
   app.delete("/api/portal/schedule/:id", requireAuth, async (req, res) => {
     try {
-      const id = parseInt(req.params.id);
+      const id = parseInt(String(req.params.id));
       const deleted = await storage.deleteScheduledCleaning(id, req.session.userId!);
       if (!deleted) {
         res.status(404).json({ message: "Cleaning not found" });
@@ -620,7 +516,7 @@ export async function registerRoutes(
         });
 
       // The homepage ContactForm posts here with no serviceType — a general
-      // question, not a job. Without this flag the downstream forwards would
+      // question, not a job. Without this flag the BrightBase forward would
       // dress it up as a "residential" booking, so mark the notes clearly and
       // (in forwardLeadToBrightBase) skip the requestedDate entirely rather
       // than inventing "today".
@@ -628,77 +524,6 @@ export async function registerRoutes(
       const forwardNotes = isContactForm
         ? `General inquiry (contact form): ${normalized.notes || ""}`.trim()
         : normalized.notes;
-
-      // Forward to CRM
-      const freqMap: Record<string, string> = { weekly: "Weekly", biweekly: "Biweekly", monthly: "Monthly", "one-time": "One-Time" };
-      const crmPayload = {
-        name: normalized.name || "",
-        email: normalized.email || "",
-        phone: normalized.phone || "",
-        address: normalized.address || normalized.zip || "",
-        service: normalized.serviceType || "custom",
-        // When there are no notes AND no numeric estimate (custom-quote
-        // services), fall back to a clean label — never the literal
-        // "Estimate: $?–$?" the old interpolation produced and baked into
-        // the stored message the operator sees on the CRM card.
-        message: forwardNotes || (
-          normalized.estimateMin != null && normalized.estimateMax != null
-            ? `Estimate: $${normalized.estimateMin}–$${normalized.estimateMax}`
-            : "Custom quote request"
-        ),
-        propertyType: normalized.serviceType === "str" ? "vacation-rental" : normalized.serviceType === "commercial" ? "commercial" : "residential",
-        frequency: freqMap[normalized.frequency] || normalized.frequency || "",
-        estimateMin: normalized.estimateMin || null,
-        estimateMax: normalized.estimateMax || null,
-        squareFeet: normalized.sqft || null,
-        bathrooms: normalized.bathrooms || null,
-        petHair: normalized.petHair || null,
-        condition: normalized.condition || null,
-        source: "Website",
-      };
-      // PII-safe log — don't dump name/email/phone/address into logs.
-      log("INFO", "crm", "Forwarding intake to CRM", {
-        intakeId: submission.id,
-        service: crmPayload.service,
-        frequency: crmPayload.frequency,
-        estimateMin: crmPayload.estimateMin,
-        estimateMax: crmPayload.estimateMax,
-        squareFeet: crmPayload.squareFeet,
-        hasEmail: Boolean(crmPayload.email),
-        hasPhone: Boolean(crmPayload.phone),
-        hasAddress: Boolean(crmPayload.address),
-      });
-      runForward({
-        sourceType: "intake",
-        sourceId: submission.id,
-        destination: "crm_intake",
-        attempt: async () => {
-          try {
-            const controller = new AbortController();
-            const timer = setTimeout(() => controller.abort(), 15_000);
-            let r: Response;
-            try {
-              r = await fetch(CRM_WEBHOOK_URL, {
-                method: "POST",
-                headers: { "Content-Type": "application/json" },
-                body: JSON.stringify(crmPayload),
-                signal: controller.signal,
-              });
-            } finally {
-              clearTimeout(timer);
-            }
-            const body = await r.text().catch(() => "");
-            log("INFO", "crm", `CRM response`, { status: r.status, body: body.slice(0, 300), intakeId: submission.id });
-            if (!r.ok) {
-              const fatal = r.status >= 400 && r.status < 500;
-              return { ok: false, statusCode: r.status, error: `HTTP ${r.status}: ${body.slice(0, 200)}`, fatal };
-            }
-            return { ok: true, statusCode: r.status };
-          } catch (err) {
-            return { ok: false, error: err instanceof Error ? err.message : String(err) };
-          }
-        },
-      }).catch(() => {});  // runForward never rejects, guard defensively
 
       // Forward to BrightBase Ops (non-blocking) — lands in Requests page
       forwardLeadToBrightBase({
@@ -736,29 +561,6 @@ export async function registerRoutes(
         // pattern) collapses into ONE Lead via Bright-Space's unique index.
         idempotencyKey: (req.body as any)?.idempotencyKey || null,
       }, { sourceType: "intake", sourceId: submission.id });
-
-      // Forward to the Twenty CRM (non-blocking) — lands in the Inbox as a
-      // new conversation. Independent of both BrightBase forwards above.
-      forwardLeadToTwenty(
-        {
-          name: normalized.name,
-          email: normalized.email,
-          phone: normalized.phone,
-          address: normalized.address,
-          zip: normalized.zip,
-          serviceType: normalized.serviceType,
-          frequency: normalized.frequency,
-          sqft: normalized.sqft,
-          bathrooms: normalized.bathrooms,
-          petHair: normalized.petHair,
-          condition: normalized.condition,
-          estimateMin: normalized.estimateMin,
-          estimateMax: normalized.estimateMax,
-          // Already carries the "General inquiry (contact form)" prefix.
-          notes: forwardNotes,
-        },
-        { source: "intake", id: submission.id },
-      );
 
       return res.status(201).json({
         success: true,
@@ -832,107 +634,6 @@ export async function registerRoutes(
         emailSent: emailConfigured,
       });
 
-      // Forward to CRM
-      const crmFreqMap: Record<string, string> = { weekly: "Weekly", biweekly: "Biweekly", monthly: "Monthly", "one-time": "One-Time" };
-      const crmServiceLabels: Record<string, string> = {
-        standard: "Standard Clean", deep: "Deep Clean", str: "Vacation Rental Turnover",
-        "vacation-rental": "Vacation Rental Turnover", commercial: "Commercial Cleaning",
-        "move-in-out": "Move-In/Move-Out Clean",
-      };
-      const crmPropertyTypes: Record<string, string> = {
-        standard: "residential", deep: "residential", str: "vacation-rental",
-        "vacation-rental": "vacation-rental", commercial: "commercial", "move-in-out": "residential",
-      };
-      const quoteCrmPayload = {
-        name: lead.name || "",
-        email: lead.email || "",
-        phone: lead.phone || "",
-        address: lead.address || (lead as any).zip || "",
-        service: crmServiceLabels[lead.serviceType] || lead.serviceType,
-        message: `${lead.sqft ? lead.sqft + " sqft" : ""}${lead.bathrooms ? ", " + lead.bathrooms + " bath" : ""}${lead.estimateMin ? ". Estimate: $" + lead.estimateMin + "–$" + lead.estimateMax : ""}${lead.notes ? ". " + lead.notes : ""}`.replace(/^, /, "").trim() || "Custom quote request",
-        propertyType: crmPropertyTypes[lead.serviceType] || "residential",
-        frequency: crmFreqMap[lead.frequency] || lead.frequency || "",
-        estimateMin: lead.estimateMin,
-        estimateMax: lead.estimateMax,
-        squareFeet: lead.sqft,
-        bathrooms: lead.bathrooms,
-        petHair: lead.petHair,
-        condition: lead.condition,
-        source: "Website",
-      };
-      log("INFO", "crm", "Forwarding quote to CRM", { payload: quoteCrmPayload, leadId: lead.id });
-      fetch(CRM_WEBHOOK_URL, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(quoteCrmPayload),
-      })
-        .then(async r => {
-          const body = await r.text().catch(() => "");
-          log("INFO", "crm", `CRM response`, { status: r.status, body: body.slice(0, 300), leadId: lead.id });
-        })
-        .catch(err => log("ERROR", "crm", `CRM forward failed`, { error: String(err), leadId: lead.id }));
-
-      forwardLeadToTwenty(lead, { source: "quote", id: lead.id });
-
-      const railwayUrl = "https://maine-cleaning-admin-production.up.railway.app/api/intake";
-      {
-        const serviceTypeMap: Record<string, string> = {
-          standard: "Standard Clean",
-          deep: "Deep Clean",
-          str: "Vacation Rental Turnover",
-          "vacation-rental": "Vacation Rental Turnover",
-          commercial: "Commercial Cleaning",
-          "move-in-out": "Move-In/Move-Out Clean",
-        };
-        const nameParts = (lead.name || "").trim().split(/\s+/);
-        const railwayPayload = {
-          firstName: nameParts[0] || lead.name || "",
-          lastName: nameParts.slice(1).join(" "),
-          email: lead.email || "",
-          phone: lead.phone || "",
-          address: lead.address || (lead as any).zip || "",
-          serviceType: serviceTypeMap[lead.serviceType] || lead.serviceType,
-          frequency: lead.frequency,
-          bedrooms: null,
-          bathrooms: lead.bathrooms,
-          sqft: lead.sqft,
-          notes: [
-            `${lead.sqft} sqft`,
-            `${lead.bathrooms} bath`,
-            `Condition: ${lead.condition}`,
-            `Pets: ${lead.petHair}`,
-            lead.notes || "",
-          ].filter(Boolean).join(" · "),
-          source: "instant_estimate",
-          // Same "$undefined–$undefined" guard as the Asset Manager forward.
-          estimateRange: lead.estimateMin != null && lead.estimateMax != null
-            ? `$${lead.estimateMin}–$${lead.estimateMax}`
-            : "Custom quote",
-          submissionId: `QT-${lead.id}`,
-        };
-        const railwayController = new AbortController();
-        const railwayTimeout = setTimeout(() => railwayController.abort(), 15000);
-        fetch(railwayUrl, {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify(railwayPayload),
-          signal: railwayController.signal,
-        })
-          .then(async (r) => {
-            clearTimeout(railwayTimeout);
-            if (r.ok) {
-              log("INFO", "webhook", "Lead forwarded to Railway", { status: r.status, leadId: lead.id });
-            } else {
-              const body = await r.text().catch(() => "");
-              log("WARN", "webhook", "Railway rejected lead", { status: r.status, leadId: lead.id, body: body.slice(0, 200) });
-            }
-          })
-          .catch((err) => {
-            clearTimeout(railwayTimeout);
-            log("ERROR", "webhook", "Failed to forward lead to Railway", { error: String(err), leadId: lead.id });
-          });
-      }
-
       res.status(201).json({
         ...lead,
         portalAccountCreated,
@@ -969,7 +670,7 @@ export async function registerRoutes(
 
   app.get("/api/quotes/:id", requireAdmin, async (req, res) => {
     try {
-      const id = parseInt(req.params.id);
+      const id = parseInt(String(req.params.id));
       if (isNaN(id)) {
         res.status(400).json({ message: "Invalid ID" });
         return;
@@ -988,7 +689,7 @@ export async function registerRoutes(
 
   app.patch("/api/quotes/:id/status", requireAdmin, async (req, res) => {
     try {
-      const id = parseInt(req.params.id);
+      const id = parseInt(String(req.params.id));
       if (isNaN(id)) {
         res.status(400).json({ message: "Invalid ID" });
         return;
@@ -1018,7 +719,7 @@ export async function registerRoutes(
 
   app.delete("/api/quotes/:id", requireAdmin, async (req, res) => {
     try {
-      const id = parseInt(req.params.id);
+      const id = parseInt(String(req.params.id));
       if (isNaN(id)) {
         res.status(400).json({ message: "Invalid ID" });
         return;
@@ -1453,70 +1154,6 @@ Rules:
       sendBookingNotification(emailDetails, "new").catch(() => {});
       sendBookingCustomerEmail(emailDetails).catch(() => {});
 
-      // Forward to CRM for approval workflow (uses leads endpoint with booking- prefix)
-      const CRM_BOOKING_URL = process.env.CRM_WEBHOOK_URL || "https://connecteam-proxy.vercel.app/api/leads";
-
-      const crmBookingPayload = {
-        websiteBookingId: booking.id,
-        name: data.name,
-        email: data.email,
-        phone: data.phone,
-        address: data.address,
-        zip: data.zip,
-        serviceType: data.serviceType,
-        frequency: data.frequency,
-        sqft: data.sqft,
-        // True (possibly half-) bath count — both sinks accept non-integers
-        // (the intake path has always forwarded 2.5-style values).
-        bathrooms: data.bathrooms,
-        petHair: data.petHair,
-        condition: data.condition,
-        // Forward the trusted, server-computed range (falls back to the
-        // client's when the service is custom-quoted).
-        estimateMin,
-        estimateMax,
-        requestedDate: data.requestedDate,
-        distanceMiles: distanceMiles,
-        source: "Website",
-      };
-      runForward({
-        sourceType: "booking",
-        sourceId: booking.id,
-        destination: "crm_booking",
-        attempt: async () => {
-          try {
-            const controller = new AbortController();
-            const timer = setTimeout(() => controller.abort(), 15_000);
-            let r: Response;
-            try {
-              r = await fetch(CRM_BOOKING_URL + "?action=booking-create", {
-                method: "POST",
-                headers: { "Content-Type": "application/json" },
-                body: JSON.stringify(crmBookingPayload),
-                signal: controller.signal,
-              });
-            } finally {
-              clearTimeout(timer);
-            }
-            const body = await r.text().catch(() => "");
-            log("INFO", "booking", "CRM booking forward response", { status: r.status, body: body.slice(0, 300) });
-            if (!r.ok) {
-              const fatal = r.status >= 400 && r.status < 500;
-              return { ok: false, statusCode: r.status, error: `HTTP ${r.status}: ${body.slice(0, 200)}`, fatal };
-            }
-            try {
-              const json = JSON.parse(body);
-              if (json.bookingId) {
-                storage.updateBookingRequestExternalIds(booking.id, { crmBookingId: String(json.bookingId) }).catch(() => {});
-              }
-            } catch {}
-            return { ok: true, statusCode: r.status };
-          } catch (err) {
-            return { ok: false, error: err instanceof Error ? err.message : String(err) };
-          }
-        },
-      }).catch(() => {});
-
       // Forward to BrightBase Ops (non-blocking) — lands in Requests page
       forwardLeadToBrightBase({
         name: data.name,
@@ -1773,7 +1410,7 @@ Rules:
 
   // Admin: list lead-forward delivery ledger — visibility for the fire-and-forget
   // downstream syncs. Filter by ?status=failed to surface anything that never
-  // reached BrightBase or the legacy CRM webhook after retries.
+  // reached BrightBase after retries.
   app.get("/api/admin/lead-forwards", requireAdmin, async (req, res) => {
     try {
       if (!db) {
@@ -1846,7 +1483,7 @@ Rules:
   // Admin: approve/reject booking
   app.patch("/api/admin/bookings/:id/status", requireAdmin, async (req, res) => {
     try {
-      const id = parseInt(req.params.id);
+      const id = parseInt(String(req.params.id));
       const { status, adminNotes } = req.body;
       if (!["approved", "rejected", "pending"].includes(status)) {
         return res.status(400).json({ message: "Invalid status" });
