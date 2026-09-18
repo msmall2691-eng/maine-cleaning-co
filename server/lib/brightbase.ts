@@ -25,7 +25,11 @@
 
 import { runForward, recordSkipped, type ForwardSourceType, type ForwardAttemptResult } from "./leadForward";
 
-const BRIGHTBASE_API_URL = process.env.BRIGHTBASE_API_URL;
+// Read at call time (not module load) so a config change takes effect
+// without depending on env/import ordering at startup.
+function getBaseUrl(): string {
+  return (process.env.BRIGHTBASE_API_URL || "").replace(/\/+$/, "");
+}
 
 interface BrightBaseLead {
   name?: string | null;
@@ -82,8 +86,21 @@ interface ForwardContext {
   sourceId: number | null;
 }
 
+/**
+ * BrightBase has a single free-text address column. If the form only
+ * collected a zip, send that so the operator at least knows the area; if
+ * both are present, append the zip unless the address already contains it.
+ */
+function buildAddress(address?: string | null, zip?: string | null): string {
+  const a = (address || "").trim();
+  const z = (zip || "").trim();
+  if (!a) return z;
+  if (!z || a.includes(z)) return a;
+  return `${a} ${z}`;
+}
+
 function isConfigured(): boolean {
-  return Boolean(BRIGHTBASE_API_URL);
+  return Boolean(getBaseUrl());
 }
 
 /**
@@ -123,7 +140,7 @@ export async function forwardLeadToBrightBase(
     name: body.name || "Unknown",
     email: body.email || "",
     phone: body.phone || "",
-    address: body.address || "",
+    address: buildAddress(body.address, body.zip),
     // Last-resort label only — BrightBase wants some serviceType string;
     // general inquiries keep their real nature via the notes prefix the
     // intake handler adds for contact_form submissions.
@@ -163,7 +180,7 @@ export async function forwardLeadToBrightBase(
   if (body.manageUrl) payload.manageUrl = body.manageUrl;
   payload.source = body.source || "Website";
 
-  const base = (BRIGHTBASE_API_URL || "").replace(/\/+$/, "");
+  const base = getBaseUrl();
   const url = `${base}/api/booking/submit`;
   // Log a PII-safe summary — never the customer's name/email/phone/address.
   // Enough to trace a forward without spilling contact details into logs.
@@ -297,7 +314,7 @@ export async function forwardBookingUpdateToBrightBase(
   if (update.arrivalWindow != null) payload.arrivalWindow = update.arrivalWindow;
   if (update.cancel) payload.cancel = true;
 
-  const base = (BRIGHTBASE_API_URL || "").replace(/\/+$/, "");
+  const base = getBaseUrl();
   const url = `${base}/api/booking/update`;
   // PII-safe: the change-set carries no name/email/phone/address anyway,
   // but log only the field NAMES being changed, not their values.

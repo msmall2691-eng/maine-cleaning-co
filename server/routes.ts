@@ -50,8 +50,8 @@ function checkResetRateLimit(ip: string): boolean {
 setInterval(() => {
   const now = Date.now();
   const maxWindow = 15 * 60_000;
-  for (const [key, hits] of rateLimitMap) {
-    const recent = hits.filter((t) => now - t < maxWindow);
+  for (const [key, hits] of Array.from(rateLimitMap.entries())) {
+    const recent = hits.filter((t: number) => now - t < maxWindow);
     if (recent.length === 0) rateLimitMap.delete(key);
     else rateLimitMap.set(key, recent);
   }
@@ -270,7 +270,7 @@ export async function registerRoutes(
 
   app.post("/api/portal/quotes/:id/approve", requireAuth, async (req, res) => {
     try {
-      const id = parseInt(req.params.id);
+      const id = parseInt(String(req.params.id));
       const lead = await storage.getQuoteLead(id);
       if (!lead || lead.clientId !== req.session.userId) {
         res.status(404).json({ message: "Quote not found" });
@@ -285,7 +285,7 @@ export async function registerRoutes(
 
   app.get("/api/portal/onboarding/:quoteId", requireAuth, async (req, res) => {
     try {
-      const quoteId = parseInt(req.params.quoteId);
+      const quoteId = parseInt(String(req.params.quoteId));
       const checklist = await storage.getOnboardingChecklist(req.session.userId!, quoteId);
       res.json(checklist || { formResponses: {} });
     } catch (error) {
@@ -295,7 +295,7 @@ export async function registerRoutes(
 
   app.put("/api/portal/onboarding/:quoteId", requireAuth, async (req, res) => {
     try {
-      const quoteId = parseInt(req.params.quoteId);
+      const quoteId = parseInt(String(req.params.quoteId));
       const lead = await storage.getQuoteLead(quoteId);
       if (!lead || lead.clientId !== req.session.userId) {
         res.status(404).json({ message: "Quote not found" });
@@ -331,7 +331,7 @@ export async function registerRoutes(
 
   app.post("/api/portal/contracts/:id/sign", requireAuth, async (req, res) => {
     try {
-      const id = parseInt(req.params.id);
+      const id = parseInt(String(req.params.id));
       const { signedName } = req.body;
       if (!signedName) {
         res.status(400).json({ message: "Signature name is required" });
@@ -387,7 +387,7 @@ export async function registerRoutes(
 
   app.patch("/api/portal/schedule/:id", requireAuth, async (req, res) => {
     try {
-      const id = parseInt(req.params.id);
+      const id = parseInt(String(req.params.id));
       const { scheduledDate, notes, status, preferredTime } = req.body;
       const updateData: any = {};
       if (scheduledDate) {
@@ -414,7 +414,7 @@ export async function registerRoutes(
 
   app.delete("/api/portal/schedule/:id", requireAuth, async (req, res) => {
     try {
-      const id = parseInt(req.params.id);
+      const id = parseInt(String(req.params.id));
       const deleted = await storage.deleteScheduledCleaning(id, req.session.userId!);
       if (!deleted) {
         res.status(404).json({ message: "Cleaning not found" });
@@ -634,65 +634,6 @@ export async function registerRoutes(
         emailSent: emailConfigured,
       });
 
-      const railwayUrl = "https://maine-cleaning-admin-production.up.railway.app/api/intake";
-      {
-        const serviceTypeMap: Record<string, string> = {
-          standard: "Standard Clean",
-          deep: "Deep Clean",
-          str: "Vacation Rental Turnover",
-          "vacation-rental": "Vacation Rental Turnover",
-          commercial: "Commercial Cleaning",
-          "move-in-out": "Move-In/Move-Out Clean",
-        };
-        const nameParts = (lead.name || "").trim().split(/\s+/);
-        const railwayPayload = {
-          firstName: nameParts[0] || lead.name || "",
-          lastName: nameParts.slice(1).join(" "),
-          email: lead.email || "",
-          phone: lead.phone || "",
-          address: lead.address || (lead as any).zip || "",
-          serviceType: serviceTypeMap[lead.serviceType] || lead.serviceType,
-          frequency: lead.frequency,
-          bedrooms: null,
-          bathrooms: lead.bathrooms,
-          sqft: lead.sqft,
-          notes: [
-            `${lead.sqft} sqft`,
-            `${lead.bathrooms} bath`,
-            `Condition: ${lead.condition}`,
-            `Pets: ${lead.petHair}`,
-            lead.notes || "",
-          ].filter(Boolean).join(" · "),
-          source: "instant_estimate",
-          // Same "$undefined–$undefined" guard as the Asset Manager forward.
-          estimateRange: lead.estimateMin != null && lead.estimateMax != null
-            ? `$${lead.estimateMin}–$${lead.estimateMax}`
-            : "Custom quote",
-          submissionId: `QT-${lead.id}`,
-        };
-        const railwayController = new AbortController();
-        const railwayTimeout = setTimeout(() => railwayController.abort(), 15000);
-        fetch(railwayUrl, {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify(railwayPayload),
-          signal: railwayController.signal,
-        })
-          .then(async (r) => {
-            clearTimeout(railwayTimeout);
-            if (r.ok) {
-              log("INFO", "webhook", "Lead forwarded to Railway", { status: r.status, leadId: lead.id });
-            } else {
-              const body = await r.text().catch(() => "");
-              log("WARN", "webhook", "Railway rejected lead", { status: r.status, leadId: lead.id, body: body.slice(0, 200) });
-            }
-          })
-          .catch((err) => {
-            clearTimeout(railwayTimeout);
-            log("ERROR", "webhook", "Failed to forward lead to Railway", { error: String(err), leadId: lead.id });
-          });
-      }
-
       res.status(201).json({
         ...lead,
         portalAccountCreated,
@@ -729,7 +670,7 @@ export async function registerRoutes(
 
   app.get("/api/quotes/:id", requireAdmin, async (req, res) => {
     try {
-      const id = parseInt(req.params.id);
+      const id = parseInt(String(req.params.id));
       if (isNaN(id)) {
         res.status(400).json({ message: "Invalid ID" });
         return;
@@ -748,7 +689,7 @@ export async function registerRoutes(
 
   app.patch("/api/quotes/:id/status", requireAdmin, async (req, res) => {
     try {
-      const id = parseInt(req.params.id);
+      const id = parseInt(String(req.params.id));
       if (isNaN(id)) {
         res.status(400).json({ message: "Invalid ID" });
         return;
@@ -778,7 +719,7 @@ export async function registerRoutes(
 
   app.delete("/api/quotes/:id", requireAdmin, async (req, res) => {
     try {
-      const id = parseInt(req.params.id);
+      const id = parseInt(String(req.params.id));
       if (isNaN(id)) {
         res.status(400).json({ message: "Invalid ID" });
         return;
@@ -1542,7 +1483,7 @@ Rules:
   // Admin: approve/reject booking
   app.patch("/api/admin/bookings/:id/status", requireAdmin, async (req, res) => {
     try {
-      const id = parseInt(req.params.id);
+      const id = parseInt(String(req.params.id));
       const { status, adminNotes } = req.body;
       if (!["approved", "rejected", "pending"].includes(status)) {
         return res.status(400).json({ message: "Invalid status" });

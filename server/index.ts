@@ -4,6 +4,15 @@ import { serveStatic } from "./static";
 import { createServer } from "http";
 import { startRetrySweepScheduler } from "./lib/retryScheduler";
 
+// BrightBase is the only lead destination. In production an unset
+// BRIGHTBASE_API_URL means every website lead is silently marked "skipped"
+// in the lead_forwards ledger and never reaches the operator — shout about it.
+if (process.env.NODE_ENV === "production" && !process.env.BRIGHTBASE_API_URL) {
+  console.error(
+    "[startup] BRIGHTBASE_API_URL is not set — website leads will NOT be forwarded to BrightBase (recorded as skipped in lead_forwards). Set it in the environment.",
+  );
+}
+
 const app = express();
 app.set("trust proxy", true);
 const httpServer = createServer(app);
