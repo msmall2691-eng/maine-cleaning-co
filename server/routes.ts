@@ -585,7 +585,38 @@ export async function registerRoutes(
       }
 
       const parsed = insertQuoteLeadSchema.parse(req.body);
-      const lead = await storage.createQuoteLead(parsed);
+
+      // Recompute the estimate server-side before it's stored or forwarded —
+      // the same anti-tamper guarantee /api/intake/submit and the booking
+      // handler already have. This route persisted whatever estimateMin /
+      // estimateMax the client POSTed, and now that it forwards to BrightBase
+      // that number would reach the operator's Requests page unchecked.
+      // calculateQuote returns nulls for custom-quoted services (STR,
+      // commercial, move-in/out) and for incomplete inputs — only then do we
+      // keep the client's figure, since quote_leads.estimate_min is NOT NULL
+      // and there is nothing better to store.
+      const quotesServerQuote = calculateQuote({
+        serviceType: parsed.serviceType,
+        sqft: parsed.sqft,
+        bathrooms: parsed.bathrooms,
+        frequency: parsed.frequency,
+        petHair: parsed.petHair,
+        condition: parsed.condition,
+      });
+      if (estimatesDiverge(parsed.estimateMin, parsed.estimateMax, quotesServerQuote.estimateMin, quotesServerQuote.estimateMax)) {
+        log("WARN", "quotes", "Client-supplied estimate diverged from server recompute", {
+          clientMin: parsed.estimateMin,
+          clientMax: parsed.estimateMax,
+          serverMin: quotesServerQuote.estimateMin,
+          serverMax: quotesServerQuote.estimateMax,
+          serviceType: parsed.serviceType,
+        });
+      }
+      const lead = await storage.createQuoteLead({
+        ...parsed,
+        estimateMin: quotesServerQuote.estimateMin ?? parsed.estimateMin,
+        estimateMax: quotesServerQuote.estimateMax ?? parsed.estimateMax,
+      });
       log("INFO", "quotes", "New quote lead created", { id: lead.id, email: lead.email, serviceType: lead.serviceType });
 
       let tempPassword: string | undefined;
@@ -633,6 +664,39 @@ export async function registerRoutes(
         leadId: lead.id,
         emailSent: emailConfigured,
       });
+
+      // Forward to BrightBase Ops (non-blocking) — the same destination
+      // /api/intake uses. This route used to fire at the retired
+      // maine-cleaning-admin Railway intake, which #63 removed, leaving it
+      // writing to the database and nowhere else. Nothing on the site posts
+      // here any more (the calculator posts to /api/intake), but the
+      // endpoint is public and still creates a real lead, a portal account
+      // and customer email — so whatever DOES reach it has to land in
+      // BrightBase rather than stopping at quote_leads.
+      forwardLeadToBrightBase({
+        name: lead.name,
+        email: lead.email,
+        phone: lead.phone,
+        address: lead.address,
+        zip: lead.zip,
+        serviceType: lead.serviceType,
+        frequency: lead.frequency,
+        sqft: lead.sqft,
+        bathrooms: lead.bathrooms,
+        petHair: lead.petHair,
+        condition: lead.condition,
+        estimateMin: lead.estimateMin,
+        estimateMax: lead.estimateMax,
+        // Provenance rides the notes, not `source`: notes is free text that
+        // no schema on the far side can reject, and it tells the operator at
+        // a glance which form produced the request.
+        notes: `Quote form submission: ${lead.notes || ""}`.trim(),
+        source: "Website",
+        photos: lead.photos ?? null,
+        // Same per-submission UUID contract as the intake/booking forwards —
+        // a double-click or a retry collapses to ONE Lead on the far side.
+        idempotencyKey: (req.body as any)?.idempotencyKey || null,
+      }, { sourceType: "quote", sourceId: lead.id });
 
       res.status(201).json({
         ...lead,
