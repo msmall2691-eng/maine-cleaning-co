@@ -17,7 +17,7 @@ export default function Privacy() {
         className="pt-28 sm:pt-36 lg:pt-40 pb-[clamp(1.75rem,3vw,2.75rem)]"
       >
         <h1 className="text-[2.25rem] sm:text-5xl md:text-[3.5rem] leading-[1.05] font-serif font-bold tracking-[-0.02em] text-foreground heading-rule-left">Privacy Policy</h1>
-        <p className="mt-7 text-sm text-muted-foreground">Last updated: March 2026</p>
+        <p className="mt-7 text-sm text-muted-foreground">Last updated: September 2026</p>
       </Section>
 
       <Section measure="prose" rhythm="tight" className="overflow-hidden pb-[clamp(3.25rem,6vw,5.5rem)]">
@@ -45,6 +45,12 @@ export default function Privacy() {
               <li>Improve our website and services</li>
               <li>Respond to your inquiries and support requests</li>
             </ul>
+          </section>
+
+          <section>
+            <h2 className="text-[1.25rem] sm:text-[1.375rem] font-serif font-bold text-foreground mb-3">Text Messages (SMS)</h2>
+            <p>If you give us your mobile number when you request an estimate or book a cleaning, you agree that The Maine Cleaning Co. may text you about that request and your service — booking confirmations, scheduling, reminders, and updates. Message frequency varies. Message and data rates may apply. Reply <strong>STOP</strong> at any time to opt out, or <strong>HELP</strong> for help.</p>
+            <p className="mt-2">We do not sell or share your mobile number, and we never use it for third-party marketing. Consenting to text messages is not a condition of any purchase.</p>
           </section>
 
           <section>
