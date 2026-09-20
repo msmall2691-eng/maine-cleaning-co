@@ -89,7 +89,7 @@ export default function Portal() {
   const [selectedQuoteId, setSelectedQuoteId] = useState<number | null>(null);
   const queryClient = useQueryClient();
   const [saveStatus, setSaveStatus] = useState<"idle" | "saving" | "saved">("idle");
-  const saveTimerRef = useRef<ReturnType<typeof setTimeout>>();
+  const saveTimerRef = useRef<ReturnType<typeof setTimeout> | undefined>(undefined);
   const [localFormData, setLocalFormData] = useState<Record<string, string>>({});
   const activeQuoteRef = useRef<number | null>(null);
 
