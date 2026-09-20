@@ -34,6 +34,7 @@ import {
 import { companyInfo } from "@/lib/company-info";
 import { RESPONSE_REPLY, RESPONSE_CONFIRM } from "@/lib/response-time";
 import { ResponseNote } from "@/components/ui/ResponseNote";
+import { SmsConsentNote } from "@/components/ui/SmsConsentNote";
 import { VoiceInput, type ParsedEstimate } from "@/components/ui/VoiceInput";
 import { computeEstimate } from "@shared/pricing";
 
@@ -1162,6 +1163,7 @@ export function InstantEstimate({ defaultCategory, bookingIntent = false }: Inst
               >
                 {submit.isPending ? <><Loader2 className="w-4 h-4 animate-spin mr-2" /> Submitting…</> : <><Send className="w-4 h-4 mr-2" /> Send Quote Request</>}
               </Button>
+              <SmsConsentNote className="mt-2" />
               {!hasContactMethod && (
                 <p className="text-[11px] text-amber-600 dark:text-amber-400 text-center leading-relaxed flex items-center justify-center gap-1">
                   <AlertCircle className="w-3 h-3 flex-shrink-0" />
@@ -1527,6 +1529,7 @@ export function InstantEstimate({ defaultCategory, bookingIntent = false }: Inst
                           : <><Calendar className="w-4 h-4 mr-2" /> Book This Cleaning</>
                         }
                       </Button>
+                      <SmsConsentNote className="mt-2" />
                       {!bookingDate && !bookingMutation.isPending && (
                         <p className="text-[11px] text-amber-600 dark:text-amber-400 text-center leading-relaxed flex items-center justify-center gap-1">
                           <AlertCircle className="w-3 h-3 flex-shrink-0" />
