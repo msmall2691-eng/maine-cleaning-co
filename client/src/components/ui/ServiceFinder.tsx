@@ -11,6 +11,7 @@ import {
   CalendarCheck,
   Sparkles,
   RotateCcw,
+  type LucideIcon,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 
@@ -22,7 +23,7 @@ interface Choice<T extends string> {
   id: T;
   label: string;
   desc: string;
-  icon: React.ElementType;
+  icon: LucideIcon;
 }
 
 const spaceChoices: Choice<NonNullable<SpaceType>>[] = [
