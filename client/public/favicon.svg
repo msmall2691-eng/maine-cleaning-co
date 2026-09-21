@@ -1,29 +1,56 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 48 48" width="48" height="48">
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 120 120" width="120" height="120">
   <title>The Maine Cleaning Co.</title>
-  <!-- Matches components/brand/Logo.tsx LighthouseMark. Keep the two in step.
-       A rounded tile rather than a bare glyph: browser tabs, bookmark bars and
-       the iOS home screen all composite the icon onto an unknown background,
-       and the navy tile is what keeps the white tower readable on any of them. -->
-  <rect width="48" height="48" rx="11" fill="#17304F"/>
-  <g transform="translate(24 25.5) scale(0.82) translate(-24 -24)">
-    <g fill="#246656">
-      <path d="M9.4 34.6 5.9 34.6 9.4 25.2 12.9 34.6Z"/>
-      <path d="M15.1 34.6 12.1 34.6 15.1 27.4 18.1 34.6Z" opacity="0.75"/>
-      <path d="M33.2 34.6 30.2 34.6 33.2 27 36.2 34.6Z" opacity="0.75"/>
-      <path d="M39.1 34.6 35.4 34.6 39.1 24.6 42.8 34.6Z"/>
-    </g>
-    <g fill="#FFFFFF">
-      <path fill-rule="evenodd" clip-rule="evenodd" d="M21.3 16.6h5.4l2.3 18.4H19L21.3 16.6Zm-0.05 4.9-.44 3.5h6.38l-.44-3.5h-5.5Zm-1.06 8.4-.42 3.4h8.46l-.42-3.4h-7.62Z"/>
-      <rect x="18.9" y="14.2" width="10.2" height="2.4" rx="0.7"/>
-      <rect x="21.4" y="9.1" width="5.2" height="5.1" rx="0.6"/>
-      <path d="M24 4.9 27.9 9.1h-7.8L24 4.9Z"/>
-      <rect x="23.4" y="2.3" width="1.2" height="2.9" rx="0.6"/>
-    </g>
-    <g fill="#FFFFFF" opacity="0.5">
-      <path d="M13.6 34.6h20.8c1.5 0 2.6.8 3.4 1.7H10.2c.8-.9 1.9-1.7 3.4-1.7Z"/>
-      <rect x="3" y="39.1" width="13" height="1.3" rx="0.65" opacity="0.65"/>
-      <rect x="32" y="39.1" width="13" height="1.3" rx="0.65" opacity="0.65"/>
-      <rect x="18.5" y="42.4" width="11" height="1.3" rx="0.65" opacity="0.45"/>
+  <!-- Matches components/brand/Logo.tsx <LighthouseBeacon>. Keep the two in step.
+       This is the `minimal` cut of it: the spruce treeline, keeper's house,
+       gallery railing, glazing bars and water all come out, because at the 16px
+       a browser tab actually renders they are sub-pixel and only muddy the
+       silhouette. What survives is the read that matters — a white tower under
+       a lit lantern, standing on granite.
+
+       A plate rather than a bare glyph: tabs, bookmark bars and the iOS home
+       screen composite the icon onto an unknown background, and the navy is
+       what keeps the white tower readable on any of them. -->
+  <defs>
+    <linearGradient id="plate" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" stop-color="#1b2b4a"/>
+      <stop offset="100%" stop-color="#0c1424"/>
+    </linearGradient>
+    <radialGradient id="glow" cx="50%" cy="50%" r="50%">
+      <stop offset="0%" stop-color="#fff0c9" stop-opacity="0.95"/>
+      <stop offset="32%" stop-color="#ffd98a" stop-opacity="0.5"/>
+      <stop offset="100%" stop-color="#f6c667" stop-opacity="0"/>
+    </radialGradient>
+    <linearGradient id="tower" x1="10%" y1="0%" x2="100%" y2="60%">
+      <stop offset="0%" stop-color="#fbf8f0"/>
+      <stop offset="52%" stop-color="#ddd7c8"/>
+      <stop offset="100%" stop-color="#8d94a3"/>
+    </linearGradient>
+    <clipPath id="clip">
+      <rect x="0" y="0" width="120" height="120" rx="27"/>
+    </clipPath>
+  </defs>
+
+  <g clip-path="url(#clip)">
+    <rect width="120" height="120" fill="url(#plate)"/>
+    <g transform="translate(11 13) scale(0.82)">
+      <circle cx="60" cy="31" r="31" fill="url(#glow)"/>
+
+      <!-- tower -->
+      <path d="M46 90 L53 44 L67 44 L74 90 Z" fill="url(#tower)"/>
+      <!-- gallery deck -->
+      <path d="M49 44 L71 44 L73 39 L47 39 Z" fill="#0a1120"/>
+      <!-- lantern room, lit -->
+      <rect x="52" y="20" width="16" height="14" fill="#ffe9b4"/>
+      <!-- domed cap and finial -->
+      <path d="M50 20 Q60 8 70 20 Z" fill="#0a1120"/>
+      <circle cx="60" cy="8" r="2.4" fill="#0a1120"/>
+      <rect x="59.2" y="4" width="1.6" height="4" fill="#0a1120"/>
+
+      <!-- granite, lit on the top faces -->
+      <path d="M30 90 L40 84 L54 88 L58 96 L28 96 Z" fill="#4e5a6b"/>
+      <path d="M30 90 L40 84 L54 88 L48 90 L36 88 Z" fill="#949cab"/>
+      <path d="M58 88 L70 83 L86 88 L92 96 L56 96 Z" fill="#46525f"/>
+      <path d="M58 88 L70 83 L86 88 L76 90 L64 89 Z" fill="#878f9d"/>
     </g>
   </g>
 </svg>
