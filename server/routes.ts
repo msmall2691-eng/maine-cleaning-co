@@ -18,6 +18,7 @@ import { db } from "./db";
 import { desc, eq } from "drizzle-orm";
 import crypto from "crypto";
 import { setupAuth, hashPassword, comparePassword, requireAuth, requireAdmin } from "./auth";
+import { buildRobotsTxt, buildSitemap } from "./lib/sitemap";
 import OpenAI from "openai";
 
 function log(level: "INFO" | "WARN" | "ERROR", context: string, message: string, data?: Record<string, any>) {
@@ -95,6 +96,26 @@ export async function registerRoutes(
       log("ERROR", "init", "Failed to seed admin user", { error: String(err) });
     }
   })();
+
+  /**
+   * Crawler files.
+   *
+   * Registered here rather than dropped into client/public because the
+   * sitemap is generated from blog-data.ts — see server/lib/sitemap.ts.
+   * registerRoutes runs before serveStatic in server/index.ts, so these win
+   * over the SPA catch-all that was previously answering both paths with
+   * index.html at HTTP 200.
+   */
+  app.get("/robots.txt", (_req, res) => {
+    res.type("text/plain").set("Cache-Control", "public, max-age=3600").send(buildRobotsTxt());
+  });
+
+  app.get("/sitemap.xml", (_req, res) => {
+    res
+      .type("application/xml")
+      .set("Cache-Control", "public, max-age=3600")
+      .send(buildSitemap());
+  });
 
   app.post("/api/auth/register", async (req, res) => {
     try {
