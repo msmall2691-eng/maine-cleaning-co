@@ -75,6 +75,9 @@ const STATIC_PAGES: SitemapEntry[] = [
   { path: "/blog", changefreq: "weekly", priority: "0.6" },
   { path: "/privacy", changefreq: "yearly", priority: "0.2" },
   { path: "/terms", changefreq: "yearly", priority: "0.2" },
+  // The SMS disclosure a carrier's A2P 10DLC reviewer is pointed at. Low
+  // priority to a searcher, but it has to be discoverable and indexable.
+  { path: "/sms", changefreq: "yearly", priority: "0.2" },
 ];
 
 /**
