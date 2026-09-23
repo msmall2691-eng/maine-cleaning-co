@@ -13,9 +13,18 @@
  */
 import { createServer } from "vite";
 import { readFile, writeFile } from "fs/promises";
+import { fileURLToPath } from "url";
 import path from "path";
 
-const root = path.resolve(import.meta.dirname, "..");
+// Derived from import.meta.url rather than import.meta.dirname, which does
+// not exist before Node 20.11. This file is the only one in the repo that
+// runs as real ESM under tsx — vite.config.ts and server/vite.ts use
+// import.meta.dirname too, but esbuild bundles those and rewrites it to
+// __dirname, so they work anywhere. Here it was `undefined`, and
+// path.resolve(undefined, "..") threw ERR_INVALID_ARG_TYPE on Railway's
+// Node 18 builder while CI (Node 20) built it happily.
+const thisFile = fileURLToPath(import.meta.url);
+const root = path.resolve(path.dirname(thisFile), "..");
 const distPublic = path.join(root, "dist", "public");
 const SITE = "https://www.maineclean.co";
 const BASE_TITLE = "The Maine Cleaning Co.";
@@ -78,7 +87,7 @@ export async function prerender() {
   }
 }
 
-if (process.argv[1] && path.resolve(process.argv[1]) === path.resolve(import.meta.filename)) {
+if (process.argv[1] && path.resolve(process.argv[1]) === thisFile) {
   prerender().catch((err) => {
     console.error(err);
     process.exit(1);
