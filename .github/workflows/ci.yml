@@ -17,7 +17,10 @@ jobs:
 
       - uses: actions/setup-node@v4
         with:
-          node-version: "20"
+          # Read from .nvmrc, which Railway's builder reads too. Pinning the
+          # version here instead let CI and production drift onto different
+          # majors — see .nvmrc.
+          node-version-file: ".nvmrc"
           cache: "npm"
 
       - name: Install dependencies
