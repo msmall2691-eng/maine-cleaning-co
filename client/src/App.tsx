@@ -22,6 +22,7 @@ import BlogPost from "@/pages/BlogPost";
 import ShortTermRentals from "@/pages/ShortTermRentals";
 import Privacy from "@/pages/Privacy";
 import Terms from "@/pages/Terms";
+import Sms from "@/pages/Sms";
 import NotFound from "@/pages/not-found";
 import { StickyMobileBar } from "@/components/ui/StickyMobileBar";
 import { AIChatWidget } from "@/components/ui/AIChatWidget";
@@ -81,6 +82,11 @@ function Router() {
       <Route path="/blog/:slug" component={BlogPost} />
       <Route path="/privacy" component={Privacy} />
       <Route path="/terms" component={Terms} />
+      {/* SMS program disclosure for the A2P 10DLC campaign. /privacy,
+          /terms and /sms are also pre-rendered to static HTML at build
+          time (script/prerender.ts) — keep server/static.ts in sync when
+          adding routes here. */}
+      <Route path="/sms" component={Sms} />
       <Route component={NotFound} />
     </Switch>
     </>

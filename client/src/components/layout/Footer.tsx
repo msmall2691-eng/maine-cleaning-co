@@ -121,6 +121,7 @@ export default function Footer() {
           <div className="flex items-center gap-5">
             <Link href="/privacy" className="hover:text-foreground transition-colors">Privacy Policy</Link>
             <Link href="/terms" className="hover:text-foreground transition-colors">Terms of Service</Link>
+            <Link href="/sms" className="hover:text-foreground transition-colors">SMS Terms</Link>
             <span className="text-muted-foreground/40">·</span>
             <a href="https://msmall.org" target="_blank" rel="noopener noreferrer" className="text-muted-foreground/40 hover:text-muted-foreground transition-colors" data-testid="link-msmall-credit">Built by msmall.org</a>
           </div>
