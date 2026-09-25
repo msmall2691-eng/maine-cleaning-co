@@ -13,6 +13,7 @@
     "test:watch": "vitest",
     "test:coverage": "vitest run --coverage",
     "db:push": "drizzle-kit push",
+    "db:migrate": "tsx script/migrate.ts",
     "gen:pricing-vectors": "tsx scripts/gen-pricing-vectors.ts"
   },
   "dependencies": {

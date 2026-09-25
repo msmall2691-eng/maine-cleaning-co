@@ -6,7 +6,7 @@
   },
   "deploy": {
     "preDeployCommand": [
-      "npx drizzle-kit push"
+      "npm run db:migrate"
     ],
     "startCommand": "npm run start",
     "healthcheckPath": "/api/health",
