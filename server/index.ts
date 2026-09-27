@@ -3,6 +3,7 @@ import { registerRoutes } from "./routes";
 import { serveStatic } from "./static";
 import { createServer } from "http";
 import { startRetrySweepScheduler } from "./lib/retryScheduler";
+import { BUILD_INFO } from "./lib/buildInfo";
 
 // BrightBase is the only lead destination. In production an unset
 // BRIGHTBASE_API_URL means every website lead is silently marked "skipped"
@@ -35,7 +36,9 @@ app.use(
 app.use(express.urlencoded({ extended: false }));
 
 app.get("/api/health", (_req, res) => {
-  res.json({ status: "ok" });
+  // `status` stays first and unchanged: railway.json points its healthcheck
+  // at this path, and the extra fields are additive.
+  res.json({ status: "ok", ...BUILD_INFO });
 });
 
 app.get("/api/config/features", (_req, res) => {
