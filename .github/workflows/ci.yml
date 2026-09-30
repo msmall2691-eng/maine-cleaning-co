@@ -17,9 +17,12 @@ jobs:
 
       - uses: actions/setup-node@v4
         with:
-          # Read from .nvmrc, which Railway's builder reads too. Pinning the
-          # version here instead let CI and production drift onto different
-          # majors — see .nvmrc.
+          # setup-node honours the full x.y.z in .nvmrc, so this is CI's exact
+          # Node. Production's exact Node is the Dockerfile's base image, and
+          # server/__tests__/esmNodeCompat.test.ts fails if the two disagree.
+          # They are separate files because nothing reads both: Railway's old
+          # nixpacks builder read .nvmrc but rounded it to the major, which is
+          # how CI ended up on 20.19.5 while production ran 20.18.1.
           node-version-file: ".nvmrc"
           cache: "npm"
 
