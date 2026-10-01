@@ -1,0 +1,26 @@
+# Keep the build context small and the image reproducible.
+#
+# node_modules and dist matter most: without them a local `docker build` would
+# copy the host's installed packages and previous build output over the ones
+# `npm ci` and `npm run build` just produced inside the image, which is how a
+# container ends up running something that never actually built there.
+node_modules
+dist
+server/public
+
+# .git is excluded on purpose. script/build.ts only shells out to git when no
+# commit is in the environment, and on Railway there is one — the Dockerfile
+# declares `ARG RAILWAY_GIT_COMMIT_SHA` for exactly that. A local build with no
+# build-arg therefore reports commit "unknown", which is correct: that image
+# was not built from a known commit.
+.git
+.github
+
+.env
+.env.*
+.DS_Store
+*.tar.gz
+
+# Test and tooling files that the server bundle never reaches.
+**/__tests__
+coverage
