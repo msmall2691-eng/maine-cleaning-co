@@ -175,6 +175,24 @@ describe("serviceSeo", () => {
     ]);
   });
 
+  /**
+   * The generated title is `${title} in Southern Maine`, which is right for
+   * four of the six services and wrong for the camp one: "Camp Opening &
+   * Closing" is the heading the page wants and not a phrase anyone searches,
+   * because nobody looks for a camp opening without the word "cleaning".
+   */
+  it("defaults the page title to the service name plus the region", () => {
+    expect(serviceSeo(service).title).toBe("Residential Cleaning in Southern Maine");
+  });
+
+  it("lets a service override that title when the generated one misses the search", () => {
+    const camp = servicesData["camp-opening-closing"];
+    expect(camp.seoTitle).toBeDefined();
+    expect(serviceSeo(camp).title).toBe(camp.seoTitle);
+    // The point of the override: the words someone would actually type.
+    expect(serviceSeo(camp).title).toMatch(/cleaning/i);
+  });
+
   it("carries the service's own FAQs, so the markup matches the page", () => {
     const schema = serviceSeo(service).jsonLd as Array<Record<string, any>>;
     const faq = schema.find((n) => n["@type"] === "FAQPage")!;
