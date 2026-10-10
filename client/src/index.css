@@ -274,6 +274,33 @@
   display: none;
 }
 
+/* Clip horizontal overflow WITHOUT turning the element into a scroll container.
+   Use this on a page wrapper; never `overflow-x-hidden`.
+
+   Why: when one axis of `overflow` is not `visible`, CSS computes the other
+   axis from `visible` to `auto`. So `overflow-x: hidden` on a page wrapper
+   silently gives it `overflow-y: auto` as well, and that box becomes a
+   scroller nested inside the document's own.
+
+   It measured as ~20px of internal scroll travel on every public page. The
+   effect for a visitor is that the first part of every scroll gesture moves
+   that inner box instead of the page, the page only starts moving once the
+   box bottoms out, and the same happens in reverse scrolling back up — which
+   reads exactly as the scroll "sticking" or "getting stuck".
+
+   `overflow-x: clip` clips identically but leaves the other axis `visible`,
+   so no scroll container is created. Both declarations are kept on purpose:
+   `clip` landed in Safari 16 (2022), and a browser that does not understand
+   the value discards that declaration and keeps the `hidden` above it, so
+   older iOS still clips rather than suddenly scrolling sideways.
+
+   `scrollRegressions.test.ts` fails if a page wrapper goes back to
+   `overflow-x-hidden`. */
+.clip-x {
+  overflow-x: hidden;
+  overflow-x: clip;
+}
+
 .section-fade {
   opacity: 0;
   transform: translateY(20px);

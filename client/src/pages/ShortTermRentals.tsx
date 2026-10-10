@@ -91,7 +91,7 @@ export default function ShortTermRentals() {
   }, []);
 
   return (
-    <div className="w-full overflow-x-hidden">
+    <div className="w-full clip-x">
 
       {/* ── Hero ──
           Copy left, work right — the same shape as the homepage. The page

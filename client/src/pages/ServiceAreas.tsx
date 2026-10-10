@@ -58,7 +58,7 @@ const kpiStats = [
 export default function ServiceAreas() {
   useSEO(STATIC_PAGE_SEO["/service-areas"]);
   return (
-    <div className="w-full overflow-x-hidden">
+    <div className="w-full clip-x">
       {/* ── Page Hero ──
           A page about the places we serve had no photograph on it at all.
           Copy left, one of our own vacation-rental turnovers right — the work

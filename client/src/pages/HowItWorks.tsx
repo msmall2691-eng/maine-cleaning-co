@@ -52,7 +52,7 @@ export default function HowItWorks() {
   useSEO({ ...STATIC_PAGE_SEO["/how-it-works"], jsonLd: faqPageJsonLd(faqs) });
 
   return (
-    <div className="w-full overflow-x-hidden">
+    <div className="w-full clip-x">
       {/* ── Page Hero ──
           Copy left, one photo right from lg; centred copy over a single wide
           photo below that. The text-only version of this hero was an almost

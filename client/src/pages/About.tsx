@@ -42,7 +42,7 @@ const testimonials = [
 export default function About() {
   useSEO(STATIC_PAGE_SEO["/about"]);
   return (
-    <div className="w-full overflow-x-hidden">
+    <div className="w-full clip-x">
       {/* ── Page Hero ──
           Was a centred column of text on an otherwise blank band — roughly
           90% empty on a laptop. Same shape as the homepage now: copy left,

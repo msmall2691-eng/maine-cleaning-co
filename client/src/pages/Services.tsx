@@ -20,7 +20,7 @@ export default function Services() {
   }, []);
 
   return (
-    <div className="w-full overflow-x-hidden">
+    <div className="w-full clip-x">
       {/* ── Hero ──
           Same shape as the homepage: copy left, one of our own photos right,
           collapsing to centred copy over a single wide photo on a phone. The
