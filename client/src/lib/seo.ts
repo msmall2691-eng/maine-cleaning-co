@@ -178,7 +178,11 @@ export const STATIC_PAGE_SEO: Record<string, SeoMeta> = {
   "/service-areas": {
     title: "Service Areas in York & Cumberland County",
     description:
-      `Cleaning homes, rentals and businesses in ${COMMUNITIES_SERVED} Southern Maine communities — Portland, Kennebunkport, Old Orchard Beach, Scarborough, Wells and more.`,
+      // Towns named in rough order of how much work we actually do there
+      // (the visit counts in ServiceAreaMap.tsx), not by which names sound
+      // most like Maine. Windham and Naples each see an order of magnitude
+      // more visits than Kennebunkport, which used to be named ahead of both.
+      `Cleaning homes, camps and rentals in ${COMMUNITIES_SERVED} Southern Maine communities — Portland, Scarborough, Windham, Naples, Old Orchard Beach and Kennebunkport.`,
     canonicalPath: "/service-areas",
   },
   "/how-it-works": {
