@@ -92,9 +92,13 @@ export default function ManageBooking() {
   const token = params.token;
   const { toast } = useToast();
 
+  // robots.txt disallows /booking/manage/, and this is the second lock: the
+  // token in the path is the customer's only credential, so an indexed one
+  // would publish their booking.
   useSEO({
-    title: "Manage Your Booking · The Maine Cleaning Co.",
+    title: "Manage Your Booking",
     description: "Reschedule, update details, or cancel your cleaning booking.",
+    noindex: true,
   });
 
   const {

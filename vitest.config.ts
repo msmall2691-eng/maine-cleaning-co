@@ -23,4 +23,12 @@ export default defineConfig({
       "@": path.resolve(__dirname, "client", "src"),
     },
   },
+  esbuild: {
+    // prerenderRender.test.ts imports the real page components, so .tsx has
+    // to compile here. The app build gets the automatic JSX runtime from
+    // @vitejs/plugin-react (vite.config.ts); this config loads no plugins, so
+    // without this esbuild emits classic React.createElement calls and every
+    // such test fails with "React is not defined".
+    jsx: "automatic",
+  },
 });

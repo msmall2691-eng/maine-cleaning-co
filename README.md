@@ -722,7 +722,66 @@ messages { id, conversationId, role, content, createdAt }
 | `client/src/components/ui/StickyMobileBar.tsx` | Mobile bottom action bar |
 | `client/src/components/ui/Certifications.tsx` | Certification badges row |
 | `client/src/components/ui/ServiceAreaMap.tsx` | Force-directed network graph |
-| `client/index.html` | SEO meta, Open Graph, JSON-LD LocalBusiness structured data |
+| `client/index.html` | Site-wide head defaults, JSON-LD LocalBusiness structured data |
+| `client/src/lib/seo.ts` | Per-page title/description/canonical registry + schema.org helpers |
+| `client/src/lib/seo-routes.ts` | Every pre-renderable route, build/test only (imports page data) |
+| `client/src/lib/faq-data.ts` | /how-it-works FAQ pairs, shared by the page and its FAQPage schema |
+| `client/src/hooks/use-seo.ts` | Writes the head tags at runtime from that registry |
+| `client/src/prerender-entry.tsx` | Build-time SSR entry — renders every public page |
+| `script/prerender.ts` | Writes `dist/prerendered/*.html` after the Vite build |
+| `script/html-head.ts` | Pure head-rewriting transform, unit-tested against the real shell |
+| `server/lib/canonicalHost.ts` | 301s the apex to www, and http to https |
+| `server/lib/sitemap.ts` | Generated `/robots.txt` and `/sitemap.xml` |
+
+---
+
+## Search & Crawlers
+
+Every public page has its **own** title, description, canonical URL, Open
+Graph tags and structured data, and ships them in two places:
+
+1. **At runtime** — `useSEO` writes them into the head on navigation. This is
+   what Google and Bing see after executing the app's JavaScript.
+2. **At build time** — `script/prerender.ts` renders all 22 public routes to
+   `dist/prerendered/*.html` with the same tags baked in, plus the page's text
+   and the Footer's internal links.
+
+Both read one registry (`client/src/lib/seo.ts`), so they cannot disagree.
+
+The build-time copy is not redundant. Facebook, LinkedIn, iMessage and Slack
+never run JavaScript — they read `og:*` from the HTML as served. Bing does not
+run it reliably, and DuckDuckGo, Ecosia and Brave lean on Bing's index. The AI
+crawlers now sending referral traffic (OAI-SearchBot, PerplexityBot, ClaudeBot)
+mostly read static HTML. Before this existed, all of them got an empty
+`<div id="root">` and the homepage's metadata on every URL.
+
+**Adding a page** means touching four places, each guarded by a test:
+
+| Place | What breaks without it |
+|---|---|
+| `STATIC_PAGE_SEO` in `client/src/lib/seo.ts` | No metadata; `seo.test.ts` fails |
+| The `Switch` in `client/src/prerender-entry.tsx` | Renders blank; `prerenderRender.test.ts` fails |
+| `App.tsx` router | 404 in the browser |
+| `SPA_ROUTES` in `server/static.ts` | Served with HTTP 404 |
+| `STATIC_PAGES` in `server/lib/sitemap.ts` | Not advertised; `seo.test.ts` fails |
+
+Things deliberately **not** done, with reasons, since each looks like an
+oversight:
+
+- **No `aggregateRating` in the JSON-LD.** The reviews are real and live on the
+  Google Business Profile, which is exactly why: Google builds the star snippet
+  from the profile itself, and its policy disallows self-serving review markup
+  on a `LocalBusiness`. Hardcoding one earns no snippet and risks a manual
+  action.
+- **No `meta keywords`.** Ignored by Google since 2009; a stuffed one is a
+  negative signal to Bing.
+- **FAQPage markup is still emitted** even though Google restricted FAQ rich
+  results to government and health sites in 2023 — Bing uses it, and so do the
+  assistants people ask for recommendations.
+- **`dist/prerendered/` sits outside `dist/public/`.** `express.static` serves
+  everything under `public`, so a file there would publish `/services.html` as a
+  second crawlable URL for the same page. The legacy `/<name>.html` paths 301 to
+  their clean equivalents.
 
 ---
 

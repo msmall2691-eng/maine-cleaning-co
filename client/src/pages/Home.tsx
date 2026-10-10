@@ -1,5 +1,6 @@
 import { useRef, useEffect, useState, useCallback } from "react";
 import { useSEO } from "@/hooks/use-seo";
+import { STATIC_PAGE_SEO } from "@/lib/seo";
 import { motion } from "framer-motion";
 import { Link } from "wouter";
 import {
@@ -280,7 +281,7 @@ function ContactForm() {
 }
 
 export default function Home() {
-  useSEO({ title: "Airbnb Cleaning & STR Management — Southern Maine", description: "Southern Maine's premier cleaning & short-term rental management. Same-day Airbnb turnovers, residential cleaning, and commercial janitorial across York & Cumberland County." });
+  useSEO(STATIC_PAGE_SEO["/"]);
   const carouselRef = useRef<HTMLDivElement>(null);
   const [pastThreshold, setPastThreshold] = useState(false);
   const [activeReviewIndex, setActiveReviewIndex] = useState(0);

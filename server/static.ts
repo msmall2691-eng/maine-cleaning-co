@@ -3,19 +3,6 @@ import fs from "fs";
 import path from "path";
 
 /**
- * Paths that are pre-rendered to static HTML at build time
- * (script/prerender.ts). Served as-is so the policy text is in the response
- * body without JavaScript — that is how a carrier's A2P 10DLC reviewer reads
- * the privacy-policy URL declared on the campaign. Keep in sync with
- * client/src/prerender-entry.tsx.
- */
-const PRERENDERED: Record<string, string> = {
-  "/privacy": "privacy.html",
-  "/terms": "terms.html",
-  "/sms": "sms.html",
-};
-
-/**
  * Every route the SPA router (client/src/App.tsx) knows how to render.
  * Anything else still gets the shell so the client-side NotFound page
  * renders, but with HTTP 404 — the old catch-all answered 200 for every
@@ -47,26 +34,71 @@ export function isSpaRoute(pathname: string): boolean {
   return SPA_ROUTES.some((re) => re.test(p));
 }
 
+/**
+ * The file script/prerender.ts writes for a path, relative to
+ * dist/prerendered. Mirrors `outputFileFor` in that script — the build
+ * decides the name, this resolves it back at request time, and
+ * `prerenderServing.test.ts` checks the two agree for every route.
+ *
+ * Returns null for a path that could not be a pre-rendered page, so a
+ * crafted request cannot reach outside the directory: anything with a dot,
+ * a backslash or a traversal segment is refused rather than normalised.
+ */
+export function prerenderedFileFor(pathname: string): string | null {
+  const p = pathname.length > 1 ? pathname.replace(/\/+$/, "") : pathname;
+  if (!isSpaRoute(p)) return null;
+  if (p === "/") return "index.html";
+  if (!/^(\/[A-Za-z0-9_-]+){1,2}$/.test(p)) return null;
+  return `${p.replace(/^\//, "")}.html`;
+}
+
+/**
+ * Pre-rendered pages live OUTSIDE the static root on purpose.
+ *
+ * They used to be written into dist/public, where express.static serves
+ * everything — so /privacy.html was a second crawlable URL for the same page
+ * as /privacy. Duplicate URLs split ranking signals and waste crawl budget.
+ * Serving them from dist/prerendered keeps one URL per page, and the legacy
+ * .html paths are 301'd below in case any were linked or indexed.
+ */
 export function serveStatic(app: Express) {
   const distPath = path.resolve(__dirname, "public");
+  const prerenderedPath = path.resolve(__dirname, "prerendered");
   if (!fs.existsSync(distPath)) {
     throw new Error(
       `Could not find the build directory: ${distPath}, make sure to build the client first`,
     );
   }
 
-  // Pre-rendered policy pages. Registered before express.static so the
-  // route (not the .html filename) is what serves them.
-  for (const [route, file] of Object.entries(PRERENDERED)) {
-    const abs = path.resolve(distPath, file);
-    if (!fs.existsSync(abs)) {
-      console.warn(`[static] ${route} is not pre-rendered (${file} missing) — falling back to the SPA shell`);
-      continue;
-    }
-    app.get(route, (_req, res) => {
-      res.sendFile(abs);
-    });
-  }
+  // The previous location of these files. A 301 rather than a 404 so any
+  // link or index entry pointing at /privacy.html lands on /privacy and
+  // passes its value along instead of dead-ending.
+  app.get(/^\/([A-Za-z0-9_-]+)\.html$/, (req, res, next) => {
+    const name = req.params[0];
+    if (name === "index") return next();
+    if (!isSpaRoute(`/${name}`)) return next();
+    res.redirect(301, `/${name}`);
+  });
+
+  /**
+   * Pre-rendered HTML, before express.static and before the SPA fallback, so
+   * the clean path (not a filename) is what serves each page. A page with no
+   * pre-rendered file falls through to the shell rather than failing — a
+   * missing file should cost us the crawler-readable copy, not the site.
+   */
+  app.get(/.*/, (req, res, next) => {
+    if (req.method !== "GET" && req.method !== "HEAD") return next();
+    const pathname = new URL(req.originalUrl, "http://localhost").pathname;
+    const file = prerenderedFileFor(pathname);
+    if (!file) return next();
+
+    const abs = path.resolve(prerenderedPath, file);
+    // Belt to the braces of the pattern in prerenderedFileFor: refuse
+    // anything that resolved outside the directory.
+    if (!abs.startsWith(prerenderedPath + path.sep) || !fs.existsSync(abs)) return next();
+
+    res.sendFile(abs);
+  });
 
   app.use(express.static(distPath));
 

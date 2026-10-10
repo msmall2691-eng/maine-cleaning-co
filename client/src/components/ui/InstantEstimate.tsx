@@ -254,6 +254,13 @@ export function InstantEstimate({ defaultCategory, bookingIntent = false }: Inst
   // Determine initial category: prop > URL param > default "residential"
   const initialCategory = (): ServiceCategory => {
     if (defaultCategory) return defaultCategory;
+    // A useState initialiser runs during server rendering too, where there is
+    // no window. script/prerender.ts renders this page for crawlers at build
+    // time, and the paths it renders carry no query string, so the default is
+    // the right server answer. main.tsx mounts with createRoot().render()
+    // rather than hydrateRoot(), so the browser re-renders from scratch and
+    // picks up ?service= on its own — there is no hydration to mismatch.
+    if (typeof window === "undefined") return "residential";
     const params = new URLSearchParams(window.location.search);
     const svc = params.get("service");
     const valid: ServiceCategory[] = ["residential", "deep-clean", "str", "commercial"];

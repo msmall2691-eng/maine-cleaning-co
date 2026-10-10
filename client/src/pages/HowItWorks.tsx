@@ -1,14 +1,14 @@
-import { useEffect } from "react";
 import { motion } from "framer-motion";
 import { Link } from "wouter";
 import { useSEO } from "@/hooks/use-seo";
+import { STATIC_PAGE_SEO, faqPageJsonLd } from "@/lib/seo";
 import {
   ArrowRight, Zap, CheckCircle2, ClipboardList, CalendarCheck,
   Sparkles, MessageSquare,
 } from "lucide-react";
 import { Accordion, AccordionItem, AccordionTrigger, AccordionContent } from "@/components/ui/accordion";
 import { Button } from "@/components/ui/button";
-import { COMMUNITIES_SERVED } from "@/lib/company-stats";
+import { howItWorksFaqs as faqs } from "@/lib/faq-data";
 import { Section, SectionHeading } from "@/components/layout/Section";
 import { ClosingCTA } from "@/components/layout/ClosingCTA";
 import { LogoWatermark } from "@/components/brand/Logo";
@@ -48,35 +48,8 @@ const steps = [
   },
 ];
 
-const faqs = [
-  { q: "Are your cleaners background-checked and insured?", a: "Yes to both. Every cleaner is vetted and trained, and we're fully bonded and insured with comprehensive liability coverage." },
-  { q: "How is pricing determined?", a: "Square footage, number of bathrooms, service type, frequency, and the condition of the home. Our instant estimate tool gives you a range in about a minute — no commitment, and no phone call required to see a number." },
-  { q: "Do I need to be home during the cleaning?", a: "No. Many clients leave a spare key or an entry code. We always make sure your home is secure when we leave." },
-  { q: "What's the difference between a standard and a deep clean?", a: "A deep clean covers baseboards, interior windows, detailed grout scrubbing and behind furniture — the things routine maintenance cleans don't include. You can book either as a one-time clean with no commitment." },
-  { q: "How soon will I hear from you?", a: "Within 48 hours, always. We're a small local team and we only take on what we can do properly, so in our busiest stretches the schedule does fill up. Either way you'll hear from us within two days — your quote if we can fit you in, or a friendly note if we can't, so you're never left wondering and can keep looking if you need to. If it's time-sensitive, give us a call or a text and you'll reach us quicker." },
-  { q: "What if I'm not satisfied with a clean?", a: "We come back and fix it. No questions asked — that's the satisfaction guarantee." },
-  { q: "What areas do you serve?", a: `York County and Cumberland County in Southern Maine — ${COMMUNITIES_SERVED} communities in all, including Portland, South Portland, Scarborough, Cape Elizabeth, Falmouth, Yarmouth, Old Orchard Beach and Kennebunkport.` },
-];
-
 export default function HowItWorks() {
-  useSEO({ title: "How It Works", description: "Get a cleaning estimate in under 2 minutes. See our simple 5-step process from instant quote to sparkling clean — serving Southern Maine homes, rentals, and businesses." });
-
-  useEffect(() => {
-    const schema = {
-      "@context": "https://schema.org",
-      "@type": "FAQPage",
-      "mainEntity": faqs.map(faq => ({
-        "@type": "Question",
-        "name": faq.q,
-        "acceptedAnswer": { "@type": "Answer", "text": faq.a },
-      })),
-    };
-    const script = document.createElement("script");
-    script.type = "application/ld+json";
-    script.text = JSON.stringify(schema);
-    document.head.appendChild(script);
-    return () => { document.head.removeChild(script); };
-  }, []);
+  useSEO({ ...STATIC_PAGE_SEO["/how-it-works"], jsonLd: faqPageJsonLd(faqs) });
 
   return (
     <div className="w-full overflow-x-hidden">

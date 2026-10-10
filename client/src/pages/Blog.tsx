@@ -1,13 +1,14 @@
 import { getBlogPosts } from "@/lib/blog-data";
 import { Link } from "wouter";
 import { useSEO } from "@/hooks/use-seo";
+import { STATIC_PAGE_SEO } from "@/lib/seo";
 import { motion } from "framer-motion";
 import { Calendar, Clock, ArrowRight } from "lucide-react";
 import { Section } from "@/components/layout/Section";
 import { photos } from "@/lib/photos";
 
 export default function Blog() {
-  useSEO({ title: "Journal & Insights", description: "Cleaning tips, home maintenance advice, and short-term rental insights from The Maine Cleaning Co. — Southern Maine's trusted cleaning experts." });
+  useSEO(STATIC_PAGE_SEO["/blog"]);
   const posts = getBlogPosts();
 
   return (

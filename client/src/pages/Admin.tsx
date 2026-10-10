@@ -28,7 +28,7 @@ const statusFilters = ["All", "New", "Reviewed", "Booked", "Transferred"] as con
 const PAGE_SIZE = 50;
 
 export default function Admin() {
-  useSEO({ title: "Admin Dashboard", description: "Admin management dashboard for The Maine Cleaning Co." });
+  useSEO({ title: "Admin Dashboard", description: "Admin management dashboard for The Maine Cleaning Co.", noindex: true });
   const [auth, setAuth] = useState(false);
   const [password, setPassword] = useState("");
   const [search, setSearch] = useState("");

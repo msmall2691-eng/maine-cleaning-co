@@ -3,6 +3,7 @@ import { registerRoutes } from "./routes";
 import { serveStatic } from "./static";
 import { createServer } from "http";
 import { startRetrySweepScheduler } from "./lib/retryScheduler";
+import { canonicalHostRedirect, canonicalHostFromEnv } from "./lib/canonicalHost";
 import { BUILD_INFO } from "./lib/buildInfo";
 
 // BrightBase is the only lead destination. In production an unset
@@ -16,6 +17,19 @@ if (process.env.NODE_ENV === "production" && !process.env.BRIGHTBASE_API_URL) {
 
 const app = express();
 app.set("trust proxy", true);
+
+// One host, one copy of the site — before anything else answers. See
+// server/lib/canonicalHost.ts for why a canonical tag alone was not enough.
+// Disabled in development, where requests arrive on localhost and there is no
+// TLS to upgrade to.
+if (process.env.NODE_ENV === "production") {
+  app.use(
+    canonicalHostRedirect({
+      canonicalHost: canonicalHostFromEnv(),
+      forceHttps: true,
+    }),
+  );
+}
 const httpServer = createServer(app);
 
 declare module "http" {
