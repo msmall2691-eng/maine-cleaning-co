@@ -62,7 +62,7 @@ export default function ServiceAreaDetail() {
   const busiest = townRows.filter((t) => t.visits !== undefined);
 
   return (
-    <div className="w-full overflow-x-hidden service-pattern-camp">
+    <div className="w-full clip-x service-pattern-camp">
       {/* ── Hero: copy left, lake photo right ── */}
       <section className="relative pt-28 sm:pt-36 lg:pt-40 pb-14 sm:pb-20 overflow-hidden">
         <div className="hero-aurora" aria-hidden="true" />

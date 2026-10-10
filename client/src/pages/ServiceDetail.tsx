@@ -95,7 +95,7 @@ export default function ServiceDetail() {
   };
 
   return (
-    <div className={`w-full overflow-x-hidden ${service.patternClass}`}>
+    <div className={`w-full clip-x ${service.patternClass}`}>
       {/* ── Hero ──
           Two columns from lg, matching the homepage: the service's own copy
           on the left and a photograph of the work on the right. The hard

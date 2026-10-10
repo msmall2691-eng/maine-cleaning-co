@@ -364,7 +364,7 @@ export default function Home() {
   };
 
   return (
-    <div className="w-full overflow-x-hidden">
+    <div className="w-full clip-x">
       {/* Scroll progress bar — driven by CSS var (compositor-only transform) */}
       <div className="fixed top-0 left-0 right-0 z-[60] h-[2px] bg-transparent pointer-events-none">
         {/* Tinted by the weather (--weather-accent falls back to --primary,
