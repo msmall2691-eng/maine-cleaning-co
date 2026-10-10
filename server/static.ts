@@ -19,6 +19,7 @@ export const SPA_ROUTES: RegExp[] = [
   /^\/about$/,
   /^\/how-it-works$/,
   /^\/service-areas$/,
+  /^\/service-areas\/[^/]+$/,
   /^\/services$/,
   /^\/services\/[^/]+$/,
   /^\/short-term-rentals$/,
