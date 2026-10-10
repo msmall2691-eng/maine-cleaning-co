@@ -1,6 +1,33 @@
 import express, { type Express } from "express";
 import fs from "fs";
 import path from "path";
+import { AREA_SLUGS, BLOG_SLUGS, SERVICE_SLUGS } from "./lib/sitemap";
+
+/** Regex-escape a slug so a `.` in one can never act as a wildcard. */
+function escapeRegExp(s: string): string {
+  return s.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+}
+
+/**
+ * `/services/(residential|deep-cleaning|…)` — the slugs we actually have,
+ * not "any slug".
+ *
+ * `/^\/services\/[^/]+$/` matched anything, so /services/not-a-service got
+ * HTTP 200 and the empty SPA shell. That is a soft 404: the page a human sees
+ * says "Service Not Found", while the status line tells every crawler the
+ * page exists. Google reports these in Search Console and spends crawl budget
+ * re-fetching them, and a mistyped link in the wild never surfaces as a
+ * broken one. The three families below are closed sets we can check against.
+ *
+ * An empty set would make `(?:)` match the bare prefix, so it is refused
+ * outright rather than quietly turned into a wildcard.
+ */
+function familyPattern(prefix: string, slugs: readonly string[]): RegExp {
+  if (slugs.length === 0) {
+    throw new Error(`static: no slugs for ${prefix} — refusing to build a pattern that matches nothing or everything`);
+  }
+  return new RegExp(`^${prefix}/(?:${slugs.map(escapeRegExp).join("|")})$`);
+}
 
 /**
  * Every route the SPA router (client/src/App.tsx) knows how to render.
@@ -12,6 +39,9 @@ import path from "path";
 export const SPA_ROUTES: RegExp[] = [
   /^\/$/,
   /^\/book$/,
+  // The token IS the customer's credential and can be any string, so this
+  // one stays open: the server cannot tell a wrong token from a right one
+  // without a database round trip, and the page itself handles a bad one.
   /^\/booking\/manage\/[^/]+$/,
   /^\/portal$/,
   /^\/portal\/login$/,
@@ -19,12 +49,12 @@ export const SPA_ROUTES: RegExp[] = [
   /^\/about$/,
   /^\/how-it-works$/,
   /^\/service-areas$/,
-  /^\/service-areas\/[^/]+$/,
+  familyPattern("/service-areas", AREA_SLUGS),
   /^\/services$/,
-  /^\/services\/[^/]+$/,
+  familyPattern("/services", SERVICE_SLUGS),
   /^\/short-term-rentals$/,
   /^\/blog$/,
-  /^\/blog\/[^/]+$/,
+  familyPattern("/blog", BLOG_SLUGS),
   /^\/privacy$/,
   /^\/terms$/,
   /^\/sms$/,
