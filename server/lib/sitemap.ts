@@ -62,6 +62,16 @@ export const SERVICE_SLUGS = [
  */
 export const DISALLOWED = ["/api/", "/portal", "/booking/manage/"] as const;
 
+/**
+ * Area landing-page slugs, mirroring the keys of `areaPages`.
+ *
+ * Listed by hand for the same reason as SERVICE_SLUGS above: area-pages.ts
+ * imports service-visits.ts for its real per-town counts, and this module is
+ * a Node bundle that has no business pulling client data in for the sake of
+ * one string. `seo.test.ts` asserts this equals Object.keys(areaPages).
+ */
+export const AREA_SLUGS = ["sebago-lake"] as const;
+
 type SitemapEntry = { path: string; lastmod?: string; changefreq?: string; priority?: string };
 
 /** The pages that aren't data-driven, in rough order of how much they matter. */
@@ -111,6 +121,11 @@ export function sitemapEntries(): SitemapEntry[] {
     ...STATIC_PAGES,
     ...SERVICE_SLUGS.map((slug) => ({
       path: `/services/${slug}`,
+      changefreq: "monthly",
+      priority: "0.7",
+    })),
+    ...AREA_SLUGS.map((slug) => ({
+      path: `/service-areas/${slug}`,
       changefreq: "monthly",
       priority: "0.7",
     })),

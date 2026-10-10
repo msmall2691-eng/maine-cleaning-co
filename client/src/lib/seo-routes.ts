@@ -14,11 +14,13 @@
  *     sitemap advertise exactly the same URLs
  */
 
+import { areaPages } from "./area-pages";
 import { blogPosts } from "./blog-data";
 import { servicesData } from "./services-data";
 import { howItWorksFaqs } from "./faq-data";
 import {
   STATIC_PAGE_SEO,
+  areaPageSeo,
   blogPostSeo,
   faqPageJsonLd,
   serviceSeo,
@@ -38,6 +40,10 @@ export const PRERENDER_ROUTES: Record<string, SeoMeta> = {
 
   ...Object.fromEntries(
     Object.values(servicesData).map((service) => [`/services/${service.id}`, serviceSeo(service)]),
+  ),
+
+  ...Object.fromEntries(
+    Object.values(areaPages).map((area) => [`/service-areas/${area.slug}`, areaPageSeo(area)]),
   ),
 
   ...Object.fromEntries(blogPosts.map((post) => [`/blog/${post.id}`, blogPostSeo(post)])),

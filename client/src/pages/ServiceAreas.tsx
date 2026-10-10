@@ -7,6 +7,7 @@ import { Button } from "@/components/ui/button";
 import { ServiceAreaMap } from "@/components/ui/ServiceAreaMap";
 import { companyInfo } from "@/lib/company-info";
 import { serviceRegions } from "@/lib/service-areas";
+import { areaPages } from "@/lib/area-pages";
 import { COMMUNITIES_SERVED, RECURRING_CLIENT_RATE } from "@/lib/company-stats";
 import { Section, SectionHeading } from "@/components/layout/Section";
 import { ClosingCTA } from "@/components/layout/ClosingCTA";
@@ -232,6 +233,46 @@ export default function ServiceAreas() {
             </p>
           </div>
         </motion.div>
+      </Section>
+
+      {/* ── Areas with a page of their own ──
+          Driven by `areaPages`, so a new one appears here without an edit.
+          This band is also how a crawler reaches those pages at all: the
+          sitemap lists them, but a page with no inbound link from the site
+          reads as an orphan. See client/src/lib/area-pages.ts. */}
+      <Section measure="wide" tone="tint">
+        <SectionHeading
+          eyebrow="In depth"
+          title="Areas we've written up properly"
+          lead="Some parts of the map work differently enough to deserve their own page — the towns, the access, and what the season does to the schedule."
+        />
+        <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-5">
+          {Object.values(areaPages).map((area, i) => (
+            <motion.div
+              key={area.slug}
+              variants={fadeUp}
+              initial="hidden"
+              whileInView="visible"
+              viewport={{ once: true }}
+              custom={i}
+            >
+              <Link href={`/service-areas/${area.slug}`} className="block h-full group" data-testid={`link-area-${area.slug}`}>
+                <div className="card-glass p-6 h-full flex flex-col">
+                  <div className="flex items-center gap-2 mb-2">
+                    <MapPin className="w-4 h-4 text-primary flex-shrink-0" aria-hidden="true" />
+                    <h3 className="font-bold text-foreground text-base group-hover:text-primary transition-colors">
+                      {area.name}
+                    </h3>
+                  </div>
+                  <p className="text-sm text-muted-foreground leading-relaxed flex-grow">{area.tagline}</p>
+                  <span className="inline-flex items-center gap-1.5 text-sm font-medium text-primary mt-4">
+                    {area.towns.length} towns <ArrowRight className="w-3.5 h-3.5" aria-hidden="true" />
+                  </span>
+                </div>
+              </Link>
+            </motion.div>
+          ))}
+        </div>
       </Section>
 
       {/* ── CTA ── */}

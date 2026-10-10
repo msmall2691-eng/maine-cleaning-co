@@ -62,6 +62,7 @@ import Book from "@/pages/Book";
 import About from "@/pages/About";
 import HowItWorks from "@/pages/HowItWorks";
 import ServiceAreas from "@/pages/ServiceAreas";
+import ServiceAreaDetail from "@/pages/ServiceAreaDetail";
 import Services from "@/pages/Services";
 import ServiceDetail from "@/pages/ServiceDetail";
 import ShortTermRentals from "@/pages/ShortTermRentals";
@@ -91,6 +92,7 @@ function PublicRoutes() {
       <Route path="/about" component={About} />
       <Route path="/how-it-works" component={HowItWorks} />
       <Route path="/service-areas" component={ServiceAreas} />
+      <Route path="/service-areas/:slug" component={ServiceAreaDetail} />
       <Route path="/services" component={Services} />
       <Route path="/services/:slug" component={ServiceDetail} />
       <Route path="/short-term-rentals" component={ShortTermRentals} />

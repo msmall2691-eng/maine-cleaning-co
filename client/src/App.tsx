@@ -15,6 +15,7 @@ import ResetPassword from "@/pages/ResetPassword";
 import About from "@/pages/About";
 import HowItWorks from "@/pages/HowItWorks";
 import ServiceAreas from "@/pages/ServiceAreas";
+import ServiceAreaDetail from "@/pages/ServiceAreaDetail";
 import Services from "@/pages/Services";
 import ServiceDetail from "@/pages/ServiceDetail";
 import Blog from "@/pages/Blog";
@@ -75,6 +76,10 @@ function Router() {
       <Route path="/about" component={About} />
       <Route path="/how-it-works" component={HowItWorks} />
       <Route path="/service-areas" component={ServiceAreas} />
+      {/* Area landing pages — see client/src/lib/area-pages.ts for why there
+          is one of them and not forty-seven. Keep in sync with SPA_ROUTES in
+          server/static.ts and the Switch in prerender-entry.tsx. */}
+      <Route path="/service-areas/:slug" component={ServiceAreaDetail} />
       <Route path="/services" component={Services} />
       <Route path="/services/:slug" component={ServiceDetail} />
       <Route path="/short-term-rentals" component={ShortTermRentals} />

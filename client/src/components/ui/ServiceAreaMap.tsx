@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { serviceVisits, maxVisits, type ServiceType } from "@/lib/service-visits";
 import { motion, useReducedMotion } from "framer-motion";
 import { MapPin, Maximize2, Expand, Shrink, X } from "lucide-react";
 import { CLEANS_SINCE_2018, RECURRING_CLIENT_RATE, COMMUNITIES_SERVED, TOTAL_COMMUNITIES } from "@/lib/company-stats";
@@ -13,7 +14,6 @@ import { CLEANS_SINCE_2018, RECURRING_CLIENT_RATE, COMMUNITIES_SERVED, TOTAL_COM
  * The cursor gently repels nearby nodes so the graph reacts to motion.
  */
 
-type ServiceType = "residential" | "commercial" | "vacation";
 
 const HQ_COLOR = { h: 42, s: 96, l: 62 };
 const RES_COLOR = { h: 200, s: 82, l: 66 };
@@ -24,34 +24,13 @@ const VAC_COLOR = { h: 282, s: 60, l: 66 };
 // This is used purely to lay out the initial graph and anchor the physics
 // simulation — it is not a public "HQ" address.
 const CENTER = { lat: 43.60, lng: -70.55, name: "The Maine Cleaning Co." };
+
+// Visit data moved to lib/service-visits.ts so the area pages can quote it
+// too. Aliased rather than renamed at twenty-odd call sites below.
+const cities = serviceVisits;
 const MAX_MILES = 95;
 
-type City = { name: string; lat: number; lng: number; visits: number; services: ServiceType[] };
 
-const cities: City[] = [
-  { name: "Portland", lat: 43.6591, lng: -70.2568, visits: 848, services: ["residential", "commercial"] },
-  { name: "Scarborough", lat: 43.5781, lng: -70.3222, visits: 826, services: ["residential", "commercial"] },
-  { name: "Windham", lat: 43.7985, lng: -70.4039, visits: 656, services: ["residential"] },
-  { name: "Naples", lat: 43.9781, lng: -70.6075, visits: 641, services: ["residential", "vacation"] },
-  { name: "Casco", lat: 43.9580, lng: -70.5175, visits: 335, services: ["residential", "vacation"] },
-  { name: "Falmouth", lat: 43.7298, lng: -70.2378, visits: 235, services: ["residential", "commercial"] },
-  { name: "Old Orchard Beach", lat: 43.5168, lng: -70.3773, visits: 218, services: ["residential", "vacation"] },
-  { name: "South Portland", lat: 43.6415, lng: -70.2580, visits: 122, services: ["residential", "commercial"] },
-  { name: "Kennebunk", lat: 43.3884, lng: -70.5449, visits: 86, services: ["residential", "vacation"] },
-  { name: "Wells", lat: 43.3222, lng: -70.5800, visits: 80, services: ["residential", "vacation"] },
-  { name: "Limerick", lat: 43.6880, lng: -70.7930, visits: 79, services: ["residential"] },
-  { name: "Gorham", lat: 43.6795, lng: -70.4434, visits: 72, services: ["residential", "commercial"] },
-  { name: "Baldwin", lat: 43.8386, lng: -70.7700, visits: 63, services: ["residential"] },
-  { name: "Frye Island", lat: 43.8600, lng: -70.5500, visits: 57, services: ["residential", "vacation"] },
-  { name: "Kennebunkport", lat: 43.3612, lng: -70.4767, visits: 49, services: ["residential", "vacation"] },
-  { name: "Denmark", lat: 43.9700, lng: -70.7900, visits: 42, services: ["residential"] },
-  { name: "Waterboro", lat: 43.5368, lng: -70.7192, visits: 34, services: ["residential"] },
-  { name: "Standish", lat: 43.7570, lng: -70.5594, visits: 32, services: ["residential"] },
-  { name: "Raymond", lat: 43.8945, lng: -70.4700, visits: 29, services: ["residential"] },
-  { name: "Cape Elizabeth", lat: 43.5636, lng: -70.2000, visits: 28, services: ["residential", "commercial"] },
-];
-
-const maxVisits = Math.max(...cities.map((c) => c.visits));
 
 // The cities above are the busiest we serve, not all of them — the bars and
 // the graph plot a subset, and the roster in lib/service-areas.ts is the full

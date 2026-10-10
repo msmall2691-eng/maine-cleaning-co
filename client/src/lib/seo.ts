@@ -311,6 +311,56 @@ export function serviceSeo(service: SeoServiceLike): SeoMeta {
   };
 }
 
+/** The shape `areaPages` entries share, narrowed to what SEO needs. */
+export interface SeoAreaLike {
+  slug: string;
+  name: string;
+  seoTitle: string;
+  seoDescription: string;
+  towns: string[];
+  faqs?: ReadonlyArray<{ q: string; a: string }>;
+}
+
+/**
+ * Meta for /service-areas/:slug.
+ *
+ * `areaServed` names the individual towns rather than the two counties. The
+ * counties are already on the LocalBusiness node in index.html; what this
+ * page adds is the granularity a local query actually has — somebody searches
+ * for cleaners in Naples, not in Cumberland County.
+ */
+export function areaPageSeo(area: SeoAreaLike): SeoMeta {
+  const path = `/service-areas/${area.slug}`;
+  const jsonLd: unknown[] = [
+    {
+      "@context": "https://schema.org",
+      "@type": "Service",
+      name: `Cleaning services in the ${area.name} area`,
+      description: area.seoDescription,
+      provider: { "@id": ORGANIZATION_ID },
+      areaServed: area.towns.map((town) => ({
+        "@type": "City",
+        name: town,
+        containedInPlace: { "@type": "State", name: "Maine" },
+      })),
+      url: canonicalUrl(path),
+    },
+    breadcrumbs([
+      { name: "Home", path: "/" },
+      { name: "Service Areas", path: "/service-areas" },
+      { name: area.name, path },
+    ]),
+  ];
+  if (area.faqs?.length) jsonLd.push(faqPageJsonLd(area.faqs));
+
+  return {
+    title: area.seoTitle,
+    description: area.seoDescription,
+    canonicalPath: path,
+    jsonLd,
+  };
+}
+
 /** The shape `blogPosts` entries share, narrowed to what SEO needs. */
 export interface SeoPostLike {
   id: string;

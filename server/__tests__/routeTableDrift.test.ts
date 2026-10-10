@@ -11,8 +11,8 @@ import { sitemapEntries } from "../lib/sitemap";
  *     decides what renders.
  *  2. SPA_ROUTES in server/static.ts — decides whether a path gets HTTP 200
  *     or 404.
- *  3. STATIC_PAGES/SERVICE_SLUGS in server/lib/sitemap.ts — decides what is
- *     advertised to crawlers.
+ *  3. STATIC_PAGES/SERVICE_SLUGS/AREA_SLUGS in server/lib/sitemap.ts —
+ *     decides what is advertised to crawlers.
  *
  * Both copies carry a "keep in sync with App.tsx" comment, which is the tell.
  * The failure is invisible from a browser: add a route to App.tsx, forget
@@ -37,6 +37,27 @@ function routesDeclaredInApp(): string[] {
  */
 function sampleFor(pattern: string): string {
   return pattern.replace(/:[^/]+/g, "sample");
+}
+
+/**
+ * A wouter pattern to a RegExp that matches the real paths it renders:
+ * `/services/:slug` -> /^\/services\/[^/]+$/.
+ *
+ * Replaces a hardcoded `/^\/(services|blog)\/.+$/` that collapsed concrete
+ * sitemap slugs back onto their pattern. That list was itself a fourth copy
+ * of the route table, and it drifted the first time a new route family was
+ * added: `/service-areas/sebago-lake` read as unrenderable because the
+ * alternation had never heard of it, while App.tsx rendered it perfectly.
+ * Deriving the patterns means the next family needs no edit here.
+ */
+function patternToRegExp(pattern: string): RegExp {
+  const source = pattern
+    .split("/")
+    .map((seg) =>
+      seg.startsWith(":") ? "[^/]+" : seg.replace(/[.*+?^${}()|[\]\\]/g, "\\$&"),
+    )
+    .join("/");
+  return new RegExp(`^${source}$`);
 }
 
 describe("route table drift", () => {
@@ -71,12 +92,10 @@ describe("route table drift", () => {
   });
 
   it("the sitemap advertises no path App.tsx cannot render", () => {
-    const declared = new Set(routesDeclaredInApp().map(sampleFor));
+    const patterns = routesDeclaredInApp().map(patternToRegExp);
     const unrenderable = sitemapEntries()
       .map((e) => e.path)
-      // Collapse the concrete slugs back onto their pattern's sample form.
-      .map((p) => p.replace(/^\/(services|blog)\/.+$/, "/$1/sample"))
-      .filter((p) => !declared.has(p));
+      .filter((p) => !patterns.some((re) => re.test(p)));
 
     expect(unrenderable).toEqual([]);
   });
