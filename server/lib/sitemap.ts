@@ -72,6 +72,13 @@ export const DISALLOWED = ["/api/", "/portal", "/booking/manage/"] as const;
  */
 export const AREA_SLUGS = ["sebago-lake"] as const;
 
+/**
+ * Blog post slugs, derived rather than listed — blog-data.ts is already
+ * imported above for the sitemap's <lastmod>, so there is nothing to drift.
+ * server/static.ts reads this to tell a real post from a typo.
+ */
+export const BLOG_SLUGS: readonly string[] = blogPosts.map((post) => post.id);
+
 type SitemapEntry = { path: string; lastmod?: string; changefreq?: string; priority?: string };
 
 /** The pages that aren't data-driven, in rough order of how much they matter. */

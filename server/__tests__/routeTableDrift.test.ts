@@ -31,12 +31,21 @@ function routesDeclaredInApp(): string[] {
 }
 
 /**
- * A wouter pattern to a concrete path `isSpaRoute` can be asked about:
- * `/services/:slug` -> `/services/sample`. Params never contain a slash,
- * which is exactly what the SPA_ROUTES regexes assume.
+ * A wouter pattern to a concrete path `isSpaRoute` can be asked about.
+ *
+ * `/services/:slug` used to become `/services/sample`, which worked only
+ * while SPA_ROUTES matched any slug. Now that the dynamic families are
+ * checked against the real slug lists, a made-up one is correctly a 404 —
+ * so a REAL example is taken from the sitemap where one exists.
+ *
+ * `/booking/manage/:token` has no sitemap entry by design (the token is a
+ * credential, never advertised) and its route is deliberately still open to
+ * any string, so it keeps the substituted form.
  */
-function sampleFor(pattern: string): string {
-  return pattern.replace(/:[^/]+/g, "sample");
+function exampleFor(pattern: string): string {
+  const asRegExp = patternToRegExp(pattern);
+  const advertised = sitemapEntries().map((e) => e.path).find((p) => asRegExp.test(p));
+  return advertised ?? pattern.replace(/:[^/]+/g, "sample");
 }
 
 /**
@@ -72,8 +81,8 @@ describe("route table drift", () => {
 
   it("SPA_ROUTES covers every route declared in App.tsx", () => {
     const missing = routesDeclaredInApp()
-      .map((pattern) => ({ pattern, sample: sampleFor(pattern) }))
-      .filter(({ sample }) => !isSpaRoute(sample))
+      .map((pattern) => ({ pattern, example: exampleFor(pattern) }))
+      .filter(({ example }) => !isSpaRoute(example))
       .map(({ pattern }) => pattern);
 
     // A route here means App.tsx renders that page but server/static.ts
