@@ -257,6 +257,13 @@ export const NOINDEX_PAGE_SEO: Record<string, SeoMeta> = {
 export interface SeoServiceLike {
   id: string;
   title: string;
+  /**
+   * Page title before the brand suffix, when `${title} in Southern Maine`
+   * isn't the phrase people search. "Camp Opening & Closing" is the right
+   * heading for the page and the wrong title for a result — nobody searches
+   * for a camp opening without the word "cleaning" in it.
+   */
+  seoTitle?: string;
   shortDesc: string;
   /** The search snippet. See the note in services-data.ts on why it isn't shortDesc. */
   seoDescription?: string;
@@ -297,7 +304,7 @@ export function serviceSeo(service: SeoServiceLike): SeoMeta {
   if (service.faqs?.length) jsonLd.push(faqPageJsonLd(service.faqs));
 
   return {
-    title: `${service.title} in Southern Maine`,
+    title: service.seoTitle ?? `${service.title} in Southern Maine`,
     description: service.seoDescription ?? service.shortDesc,
     canonicalPath: path,
     jsonLd,

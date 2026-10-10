@@ -47,6 +47,7 @@ export const SERVICE_SLUGS = [
   "commercial",
   "vacation-rentals",
   "move-in-out",
+  "camp-opening-closing",
 ] as const;
 
 /**

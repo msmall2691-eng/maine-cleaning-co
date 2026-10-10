@@ -25,6 +25,9 @@ const SERVICE_PHOTOS: Record<string, Photo> = {
   "commercial": photos.restroomTrailer,
   "vacation-rentals": photos.rentalBathroom,
   "move-in-out": photos.toolkit,
+  // The only frame in the library with the lake in it, which is the whole
+  // subject of this one.
+  "camp-opening-closing": photos.kitchenLakeWindow,
 };
 
 export default function ServiceDetail() {
@@ -73,6 +76,9 @@ export default function ServiceDetail() {
     "vacation-rentals": "str",
     "commercial": "commercial",
     "move-in-out": "deep-clean",
+    // A camp that has sat closed since October prices like a deep clean, not
+    // a maintenance visit.
+    "camp-opening-closing": "deep-clean",
   };
   const estimateCategory = slugToCategoryMap[service.id] || "residential";
 
