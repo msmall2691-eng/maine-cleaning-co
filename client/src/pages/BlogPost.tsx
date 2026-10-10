@@ -1,6 +1,7 @@
 import { useParams, Link } from "wouter";
 import { getBlogPostById } from "@/lib/blog-data";
 import { useSEO } from "@/hooks/use-seo";
+import { blogPostSeo } from "@/lib/seo";
 import { Button } from "@/components/ui/button";
 import { ArrowLeft, Calendar, Clock, Facebook, Twitter, Linkedin } from "lucide-react";
 import ReactMarkdown from "react-markdown";
@@ -9,7 +10,15 @@ import { Section } from "@/components/layout/Section";
 export default function BlogPost() {
   const params = useParams<{ slug: string }>();
   const post = getBlogPostById(params.slug || "");
-  useSEO({ title: post?.title || "Blog Post", description: post?.excerpt || "Read cleaning tips and insights from The Maine Cleaning Co." });
+  useSEO(
+    post
+      ? blogPostSeo(post)
+      : {
+          title: "Blog Post",
+          description: "Read cleaning tips and insights from The Maine Cleaning Co.",
+          noindex: true,
+        },
+  );
 
   const shareUrl = typeof window !== "undefined" ? window.location.href : "";
   const shareTitle = post?.title || "";

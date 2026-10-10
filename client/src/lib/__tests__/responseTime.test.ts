@@ -107,7 +107,11 @@ describe("response-time promises", () => {
     expect(note).toContain("RESPONSE_URGENT");
     expect(note).toContain("SELECTIVITY_NOTE");
 
-    const faq = readFileSync(join(SRC, "pages", "HowItWorks.tsx"), "utf8");
+    // The /how-it-works FAQ pairs moved out of the page and into
+    // lib/faq-data.ts, so the page, the runtime JSON-LD and the pre-rendered
+    // JSON-LD all read one list (FAQPage markup has to match the questions on
+    // the page). The assertion follows the copy; what it guards is unchanged.
+    const faq = readFileSync(join(SRC, "lib", "faq-data.ts"), "utf8");
     expect(faq).toMatch(/call or a? ?text/i);
     // The FAQ is where someone goes to find out whether they'll get a quote.
     expect(faq).toMatch(CAPACITY_REASON);

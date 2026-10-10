@@ -1,6 +1,7 @@
 import { useEffect } from "react";
 import { CheckCircle2, ArrowRight, Leaf } from "lucide-react";
 import { useSEO } from "@/hooks/use-seo";
+import { STATIC_PAGE_SEO } from "@/lib/seo";
 import { Link } from "wouter";
 import { getServicesList } from "@/lib/services-data";
 import { motion } from "framer-motion";
@@ -11,7 +12,7 @@ import { LogoWatermark } from "@/components/brand/Logo";
 import { photos, srcSetFor, SIZES } from "@/lib/photos";
 
 export default function Services() {
-  useSEO({ title: "Residential, Commercial & Airbnb Cleaning Services", description: "Residential, deep cleaning, Airbnb turnovers, commercial janitorial, and move-in/move-out cleaning across Southern Maine. Eco-friendly products, transparent pricing." });
+  useSEO(STATIC_PAGE_SEO["/services"]);
   const services = getServicesList();
 
   useEffect(() => {

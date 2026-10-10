@@ -1,8 +1,18 @@
 import { Home, Sparkles, Building, CalendarCheck, ArrowRightLeft } from "lucide-react";
 
+/**
+ * The five services, their page content, and their search metadata.
+ *
+ * `shortDesc` is card copy for the /services grid. `seoDescription` is the
+ * meta description for /services/<id> and is written separately on purpose:
+ * the grid blurbs run 50-70 characters, and Google shows about 160 and
+ * substitutes its own text when what we supply is too thin to be useful.
+ * `seo.test.ts` holds every page's description to that range.
+ */
 export const servicesData = {
   "residential": {
     id: "residential",
+    seoDescription: "Recurring home cleaning across York and Cumberland County — weekly, bi-weekly or monthly, with eco-friendly products and the same insured crew each visit.",
     title: "Residential Cleaning",
     shortDesc: "Professional home cleaning for regular upkeep and maintenance.",
     tagline: "Your home, refreshed — every single time.",
@@ -30,6 +40,7 @@ export const servicesData = {
   },
   "deep-cleaning": {
     id: "deep-cleaning",
+    seoDescription: "A top-to-bottom deep clean for Southern Maine homes: baseboards, interior windows, grout, high dusting and behind the furniture. Ideal before or after a move.",
     title: "Deep Cleaning",
     shortDesc: "A top-to-bottom refresh covering areas often missed in standard cleans.",
     tagline: "Beyond the surface — a complete reset for your space.",
@@ -57,6 +68,7 @@ export const servicesData = {
   },
   "commercial": {
     id: "commercial",
+    seoDescription: "Office, retail and janitorial cleaning across Southern Maine, scheduled around your hours by insured, background-checked crews to a consistent standard.",
     title: "Commercial & Janitorial",
     shortDesc: "Reliable, discreet maintenance for professional environments.",
     tagline: "Spotless workspaces that mean business.",
@@ -84,6 +96,7 @@ export const servicesData = {
   },
   "vacation-rentals": {
     id: "vacation-rentals",
+    seoDescription: "Same-day Airbnb and VRBO turnovers on the Southern Maine coast, with iCal sync, linen handling, restocking and photo-documented damage reports.",
     title: "Vacation Rental Turnovers",
     shortDesc: "Fast, flawless resets for Airbnb, VRBO, and short-term rentals.",
     tagline: "Five-star turnovers, every guest, every time.",
@@ -111,6 +124,7 @@ export const servicesData = {
   },
   "move-in-out": {
     id: "move-in-out",
+    seoDescription: "Move-in and move-out cleaning for Southern Maine homes and rentals — cabinets, appliances and floors cleaned to deposit-return standard, on the day you need it.",
     title: "Move-In / Move-Out",
     shortDesc: "Complete property reset for new tenants or owners.",
     tagline: "A blank canvas for every new beginning.",

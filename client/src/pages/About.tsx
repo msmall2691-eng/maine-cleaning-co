@@ -1,6 +1,7 @@
 import { motion } from "framer-motion";
 import { Link } from "wouter";
 import { useSEO } from "@/hooks/use-seo";
+import { STATIC_PAGE_SEO } from "@/lib/seo";
 import {
   Calendar, Leaf, CheckCircle2, MessageCircle, Shield, Users, ArrowRight,
   Phone, Star, MapPin, RefreshCw, Quote,
@@ -39,7 +40,7 @@ const testimonials = [
 ];
 
 export default function About() {
-  useSEO({ title: "About Us — Southern Maine's Trusted Cleaning Team", description: "Meet The Maine Cleaning Co. — Southern Maine's trusted cleaning team since 2018. Eco-friendly products, bonded & insured crews, and a commitment to consistent results." });
+  useSEO(STATIC_PAGE_SEO["/about"]);
   return (
     <div className="w-full overflow-x-hidden">
       {/* ── Page Hero ──

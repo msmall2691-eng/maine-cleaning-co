@@ -16,7 +16,7 @@ import { companyInfo } from "@/lib/company-info";
  * lighthouse mark, and hands over the four routes people actually want.
  */
 export default function NotFound() {
-  useSEO({ title: "Page Not Found", description: "The page you're looking for doesn't exist or has been moved." });
+  useSEO({ title: "Page Not Found", description: "The page you're looking for doesn't exist or has been moved.", noindex: true });
 
   return (
     <Section

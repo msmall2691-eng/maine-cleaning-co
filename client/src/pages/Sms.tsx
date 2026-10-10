@@ -1,6 +1,7 @@
 import { Link } from "wouter";
 import { companyInfo } from "@/lib/company-info";
 import { useSEO } from "@/hooks/use-seo";
+import { STATIC_PAGE_SEO } from "@/lib/seo";
 import { Section } from "@/components/layout/Section";
 import { LogoWatermark } from "@/components/brand/Logo";
 
@@ -14,11 +15,7 @@ import { LogoWatermark } from "@/components/brand/Logo";
  * JavaScript disabled, which is how campaign reviewers fetch it.
  */
 export default function Sms() {
-  useSEO({
-    title: "Text Message (SMS) Program",
-    description:
-      "How The Maine Cleaning Co. uses text messages: booking confirmations, scheduling updates and reminders. Reply STOP to opt out, HELP for help.",
-  });
+  useSEO(STATIC_PAGE_SEO["/sms"]);
   return (
     <>
       <Section

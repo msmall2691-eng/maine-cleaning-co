@@ -2,6 +2,7 @@ import { useEffect } from "react";
 import { motion } from "framer-motion";
 import { Link } from "wouter";
 import { useSEO } from "@/hooks/use-seo";
+import { STATIC_PAGE_SEO } from "@/lib/seo";
 import {
   ArrowRight,
   CheckCircle2,
@@ -84,7 +85,7 @@ const scrollToEstimate = () => {
 };
 
 export default function ShortTermRentals() {
-  useSEO({ title: "Airbnb & Short-Term Rental Cleaning", description: "Same-day Airbnb & VRBO turnover cleaning with iCal sync. Full STR property management, guest-ready standards, and Southern Maine's most reliable rental cleaning team." });
+  useSEO(STATIC_PAGE_SEO["/short-term-rentals"]);
   useEffect(() => {
     window.scrollTo(0, 0);
   }, []);

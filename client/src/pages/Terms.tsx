@@ -1,10 +1,11 @@
 import { companyInfo } from "@/lib/company-info";
 import { useSEO } from "@/hooks/use-seo";
+import { STATIC_PAGE_SEO } from "@/lib/seo";
 import { Section } from "@/components/layout/Section";
 import { LogoWatermark } from "@/components/brand/Logo";
 
 export default function Terms() {
-  useSEO({ title: "Terms of Service", description: "Terms of service for The Maine Cleaning Co. — scheduling, cancellations, payment, and satisfaction guarantee." });
+  useSEO(STATIC_PAGE_SEO["/terms"]);
   return (
     <>
       {/* Compact page header — same top rhythm as every other page, so

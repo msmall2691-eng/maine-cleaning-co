@@ -1,10 +1,11 @@
 import { companyInfo } from "@/lib/company-info";
 import { useSEO } from "@/hooks/use-seo";
+import { STATIC_PAGE_SEO } from "@/lib/seo";
 import { Section } from "@/components/layout/Section";
 import { LogoWatermark } from "@/components/brand/Logo";
 
 export default function Privacy() {
-  useSEO({ title: "Privacy Policy", description: "Privacy policy for The Maine Cleaning Co. — how we collect, use, and protect your personal information." });
+  useSEO(STATIC_PAGE_SEO["/privacy"]);
   return (
     <>
       {/* Compact page header — same top rhythm as every other page, so

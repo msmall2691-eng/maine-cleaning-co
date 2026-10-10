@@ -4,9 +4,10 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Shield, Loader2, CheckCircle2, AlertCircle } from "lucide-react";
 import { useSEO } from "@/hooks/use-seo";
+import { NOINDEX_PAGE_SEO } from "@/lib/seo";
 
 export default function ResetPassword() {
-  useSEO({ title: "Reset Password", description: "Set a new password for your Maine Cleaning Co. client portal account." });
+  useSEO(NOINDEX_PAGE_SEO["/portal/reset-password"]);
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
   const [error, setError] = useState("");

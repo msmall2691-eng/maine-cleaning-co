@@ -67,8 +67,8 @@ async function buildAll() {
   console.log("building client...");
   await viteBuild();
 
-  // Policy pages as real HTML — see script/prerender.ts for why.
-  console.log("prerendering policy pages...");
+  // Every public page as real HTML — see script/prerender.ts for why.
+  console.log("prerendering public pages...");
   await prerender();
 
   const buildInfo = resolveBuildInfo();

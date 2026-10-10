@@ -1,20 +1,30 @@
 /**
- * Pre-render the policy pages to static HTML after the Vite client build.
+ * Pre-render every public page to static HTML after the Vite client build.
  *
- * For each path in client/src/prerender-entry.tsx this takes the built
+ * For each path in client/src/lib/seo-routes.ts this takes the built
  * dist/public/index.html shell (so the real hashed asset tags are kept),
- * drops the server-rendered page markup into <div id="root">, swaps the
- * <title>, meta description, OG tags and canonical for the page's own, and
- * writes dist/public/<name>.html. server/static.ts serves that file for the
- * path; express.static also exposes it at /<name>.html.
+ * renders the page with the Footer into <div id="root">, and rewrites the
+ * head — title, description, canonical, og:*, twitter:*, JSON-LD — from that
+ * route's metadata. See client/src/prerender-entry.tsx for which crawlers
+ * this is for and why the SPA shell alone was not enough.
+ *
+ * Output goes to dist/prerendered/, NOT dist/public/. That is deliberate:
+ * express.static serves everything under dist/public, so writing
+ * services.html there would publish /services.html as a second, crawlable
+ * URL for the same page. server/static.ts maps each clean path to its file
+ * from outside the static root, and 301s the legacy /<name>.html URLs the
+ * previous version of this script did expose.
  *
  * Runs in build.ts after viteBuild() and is safe to run standalone:
  *   npx tsx script/prerender.ts
  */
 import { createServer } from "vite";
-import { readFile, writeFile } from "fs/promises";
+import { mkdir, readFile, writeFile } from "fs/promises";
 import { fileURLToPath } from "url";
 import path from "path";
+import { applyHead, outputFileFor } from "./html-head";
+
+export { outputFileFor };
 
 // Derived from import.meta.url rather than import.meta.dirname, which does
 // not exist before Node 20.11. This file is the only one in the repo that
@@ -26,17 +36,7 @@ import path from "path";
 const thisFile = fileURLToPath(import.meta.url);
 const root = path.resolve(path.dirname(thisFile), "..");
 const distPublic = path.join(root, "dist", "public");
-const SITE = "https://www.maineclean.co";
-const BASE_TITLE = "The Maine Cleaning Co.";
-
-function escapeHtml(s: string): string {
-  return s.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;");
-}
-
-function replaceOnce(html: string, pattern: RegExp, replacement: string, label: string): string {
-  if (!pattern.test(html)) throw new Error(`prerender: could not find ${label} in index.html`);
-  return html.replace(pattern, replacement);
-}
+const distPrerendered = path.join(root, "dist", "prerendered");
 
 export async function prerender() {
   const shell = await readFile(path.join(distPublic, "index.html"), "utf-8");
@@ -55,33 +55,20 @@ export async function prerender() {
   try {
     const entry = (await vite.ssrLoadModule("/src/prerender-entry.tsx")) as typeof import("../client/src/prerender-entry");
 
-    for (const [routePath, page] of Object.entries(entry.PRERENDER_PAGES)) {
+    for (const routePath of entry.PRERENDER_PATHS) {
+      const meta = entry.PRERENDER_ROUTES[routePath];
       const body = entry.render(routePath);
-      const title = `${page.title} | ${BASE_TITLE}`;
-      const url = `${SITE}${routePath}`;
+      const { html } = applyHead(shell, routePath, meta, body);
 
-      let html = shell;
-      html = replaceOnce(html, /<title>[^<]*<\/title>/, `<title>${escapeHtml(title)}</title>`, "<title>");
-      html = replaceOnce(
-        html,
-        /<meta name="description" content="[^"]*"\s*\/?>/,
-        `<meta name="description" content="${escapeHtml(page.description)}" />`,
-        "meta description",
-      );
-      html = html
-        .replace(/<meta property="og:title" content="[^"]*"\s*\/?>/, `<meta property="og:title" content="${escapeHtml(title)}" />`)
-        .replace(/<meta property="og:description" content="[^"]*"\s*\/?>/, `<meta property="og:description" content="${escapeHtml(page.description)}" />`)
-        .replace(/<meta property="og:url" content="[^"]*"\s*\/?>/, `<meta property="og:url" content="${url}" />`)
-        .replace(/<meta name="twitter:title" content="[^"]*"\s*\/?>/, `<meta name="twitter:title" content="${escapeHtml(title)}" />`)
-        .replace(/<meta name="twitter:description" content="[^"]*"\s*\/?>/, `<meta name="twitter:description" content="${escapeHtml(page.description)}" />`)
-        .replace(/<link rel="canonical" href="[^"]*"\s*\/?>/, `<link rel="canonical" href="${url}" />`);
-      html = replaceOnce(html, /<div id="root"><\/div>/, `<div id="root">${body}</div>`, '<div id="root">');
+      const outName = outputFileFor(routePath);
+      const outPath = path.join(distPrerendered, outName);
+      await mkdir(path.dirname(outPath), { recursive: true });
+      await writeFile(outPath, html, "utf-8");
 
-      const outName = `${routePath.replace(/^\//, "")}.html`;
-      await writeFile(path.join(distPublic, outName), html, "utf-8");
       const textLen = body.replace(/<[^>]+>/g, " ").replace(/\s+/g, " ").trim().length;
-      console.log(`prerendered ${routePath} -> ${outName} (${textLen} chars of text)`);
+      console.log(`prerendered ${routePath} -> prerendered/${outName} (${textLen} chars of text)`);
     }
+    console.log(`prerendered ${entry.PRERENDER_PATHS.length} pages`);
   } finally {
     await vite.close();
   }

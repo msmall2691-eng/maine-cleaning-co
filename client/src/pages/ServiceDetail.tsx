@@ -8,6 +8,7 @@ import { EstimateCTA } from "@/components/ui/EstimateCTA";
 import { CleaningChecklist } from "@/components/ui/CleaningChecklist";
 import { companyInfo } from "@/lib/company-info";
 import { useSEO } from "@/hooks/use-seo";
+import { serviceSeo } from "@/lib/seo";
 import { Section, SectionHeading } from "@/components/layout/Section";
 import { LogoWatermark } from "@/components/brand/Logo";
 import { photos, srcSetFor, SIZES, type Photo } from "@/lib/photos";
@@ -33,7 +34,17 @@ export default function ServiceDetail() {
     window.scrollTo(0, 0);
   }, [params.slug]);
   const service = servicesData[params.slug as keyof typeof servicesData];
-  useSEO({ title: service?.title || "Service Details", description: service?.description || "Professional cleaning services in Southern Maine from The Maine Cleaning Co." });
+  // An unknown slug renders the not-found block below, so it must not be
+  // indexed under a canonical that implies a real service page exists.
+  useSEO(
+    service
+      ? serviceSeo(service)
+      : {
+          title: "Service Details",
+          description: "Professional cleaning services in Southern Maine from The Maine Cleaning Co.",
+          noindex: true,
+        },
+  );
 
   if (!service) {
     return (

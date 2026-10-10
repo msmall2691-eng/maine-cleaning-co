@@ -2,6 +2,7 @@ import { useMemo } from "react";
 import { useLocation } from "wouter";
 import { Calendar, Sparkles, CheckCircle2, Clock } from "lucide-react";
 import { useSEO } from "@/hooks/use-seo";
+import { STATIC_PAGE_SEO } from "@/lib/seo";
 import { InstantEstimate } from "@/components/ui/InstantEstimate";
 import { companyInfo } from "@/lib/company-info";
 import { RESPONSE_WINDOW } from "@/lib/response-time";
@@ -67,10 +68,7 @@ const reassurance = [
 export default function Book() {
   const [location] = useLocation();
 
-  useSEO({
-    title: "Book a Cleaning · The Maine Cleaning Co.",
-    description: "Pick your date, tell us the essentials, get a confirmed booking. Residential, deep-clean, and vacation-rental cleanings across Southern Maine.",
-  });
+  useSEO(STATIC_PAGE_SEO["/book"]);
 
   // Support /book?service=deep-clean so links from the /services/:slug pages
   // (or a Book Now button on a service card) can preselect the category.
