@@ -3,8 +3,19 @@ name: CI
 on:
   push:
     branches: [main]
+  # Deliberately unfiltered: a pull request gets CI whatever branch it targets.
+  #
+  # This used to be `branches: [main]`, which meant a PR stacked on another
+  # PR's branch got no CI at all — not a red check, no check runs whatsoever,
+  # so the PR page showed nothing rather than showing a problem. PR #76 was
+  # opened against a feature branch and sat unverified until someone noticed
+  # the absence. Stacking is the normal way to split a large change into
+  # reviewable pieces, and the piece that most needs checking is the one
+  # building on unmerged work.
+  #
+  # `push` keeps its filter. Without it every push to every branch would
+  # duplicate the run its own pull request already triggers.
   pull_request:
-    branches: [main]
 
 jobs:
   test:
