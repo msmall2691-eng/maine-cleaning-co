@@ -613,7 +613,7 @@ export async function registerRoutes(
       // estimateMax the client POSTed, and now that it forwards to BrightBase
       // that number would reach the operator's Requests page unchecked.
       // calculateQuote returns nulls for custom-quoted services (STR,
-      // commercial, move-in/out) and for incomplete inputs — only then do we
+      // commercial) and for incomplete inputs — only then do we
       // keep the client's figure, since quote_leads.estimate_min is NOT NULL
       // and there is nothing better to store.
       const quotesServerQuote = calculateQuote({

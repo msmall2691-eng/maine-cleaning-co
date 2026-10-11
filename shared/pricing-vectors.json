@@ -3093,5 +3093,85 @@
         "max": null
       }
     }
+  ],
+  "serviceRouting": [
+    {
+      "serviceType": "standard",
+      "input": {
+        "sqft": 2400,
+        "bathrooms": 2,
+        "frequency": "one-time"
+      },
+      "expected": {
+        "min": 300,
+        "max": 320,
+        "custom": false
+      }
+    },
+    {
+      "serviceType": "deep",
+      "input": {
+        "sqft": 2400,
+        "bathrooms": 2,
+        "frequency": "one-time"
+      },
+      "expected": {
+        "min": 525,
+        "max": 565,
+        "custom": false
+      }
+    },
+    {
+      "serviceType": "move-in-out",
+      "input": {
+        "sqft": 2400,
+        "bathrooms": 2,
+        "frequency": "one-time"
+      },
+      "expected": {
+        "min": 525,
+        "max": 565,
+        "custom": false
+      }
+    },
+    {
+      "serviceType": "str",
+      "input": {
+        "sqft": 2400,
+        "bathrooms": 2,
+        "frequency": "one-time"
+      },
+      "expected": {
+        "min": null,
+        "max": null,
+        "custom": true
+      }
+    },
+    {
+      "serviceType": "vacation-rental",
+      "input": {
+        "sqft": 2400,
+        "bathrooms": 2,
+        "frequency": "one-time"
+      },
+      "expected": {
+        "min": null,
+        "max": null,
+        "custom": true
+      }
+    },
+    {
+      "serviceType": "commercial",
+      "input": {
+        "sqft": 2400,
+        "bathrooms": 2,
+        "frequency": "one-time"
+      },
+      "expected": {
+        "min": null,
+        "max": null,
+        "custom": true
+      }
+    }
   ]
 }

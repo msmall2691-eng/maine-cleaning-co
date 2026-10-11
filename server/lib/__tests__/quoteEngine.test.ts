@@ -72,13 +72,31 @@ describe("calculateQuote", () => {
     expect(q.estimateMax).toBe(605);
   });
 
-  it("returns custom-quote (nulls) for STR / vacation-rental / commercial / move-in-out", () => {
-    for (const t of ["vacation-rental", "str", "commercial", "move-in-out"]) {
+  it("returns custom-quote (nulls) for STR / vacation-rental / commercial", () => {
+    for (const t of ["vacation-rental", "str", "commercial"]) {
       const q = calculateQuote({ serviceType: t, sqft: 1500, bathrooms: 2 });
       expect(q.estimateMin).toBeNull();
       expect(q.estimateMax).toBeNull();
       expect(q.confidence).toBe("custom");
     }
+  });
+
+  it("prices move-in-out as a deep clean rather than refusing it", () => {
+    // This used to sit in the list above, and it was the odd one out of three
+    // engines: the browser calculator prices move-in-out (ServiceDetail.tsx
+    // routes /services/move-in-out through the "deep-clean" category) and
+    // Bright-Space prices it, so only this recompute returned null. The null
+    // was not harmless — routes.ts stores `serverQuote.estimateMin ??
+    // client.estimateMin`, so "move-in-out" was the one serviceType that let a
+    // tampered client have its own number persisted unchecked.
+    const home = { sqft: 1500, bathrooms: 2 };
+    const move = calculateQuote({ serviceType: "move-in-out", ...home });
+    const deep = calculateQuote({ serviceType: "deep", ...home });
+    expect(move.estimateMin).not.toBeNull();
+    expect(move.confidence).toBe("high");
+    expect(move.estimateMin).toBe(deep.estimateMin);
+    expect(move.estimateMax).toBe(deep.estimateMax);
+    expect(move.breakdown.deepMultiplier).toBe(deep.breakdown.deepMultiplier);
   });
 
   it("returns low-confidence nulls when required inputs are missing", () => {
