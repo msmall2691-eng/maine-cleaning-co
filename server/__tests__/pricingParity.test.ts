@@ -26,7 +26,7 @@ import { calculateQuote } from "../lib/quoteEngine";
  * home there. Both engines matched all 156 vectors throughout. The `defaults`
  * and `refusals` sections close that hole.
  */
-const { vectors, defaults, refusals } = vectorsFile as {
+const { vectors, defaults, refusals, serviceRouting } = vectorsFile as {
   vectors: Array<{
     input: { sqft: number; bathrooms: number; cleanType: "standard" | "deep"; frequency: any; condition: any; petHair: any };
     expected: { min: number; max: number; mid: number };
@@ -39,6 +39,11 @@ const { vectors, defaults, refusals } = vectorsFile as {
     label: string;
     input: Record<string, any>;
     expected: { min: null; max: null };
+  }>;
+  serviceRouting: Array<{
+    serviceType: string;
+    input: { sqft: number; bathrooms: number; frequency: string };
+    expected: { min: number | null; max: number | null; custom: boolean };
   }>;
 };
 
@@ -124,5 +129,54 @@ describe("pricing parity — refusals (inputs that must produce no number)", () 
     expect(sized.estimateMin).not.toBeNull();
     expect(unsized.estimateMin).toBeNull();
     expect(unsized.confidence).toBe("low");
+  });
+});
+
+
+describe("pricing parity — service routing (which formula a service takes)", () => {
+  it("covers every service the site accepts", () => {
+    const covered = serviceRouting.map((r) => r.serviceType);
+    for (const s of ["standard", "deep", "move-in-out", "str", "vacation-rental", "commercial"]) {
+      expect(covered, `routing contract is missing ${s}`).toContain(s);
+    }
+  });
+
+  it("calculateQuote routes every service as the contract says", () => {
+    for (const { serviceType, input, expected } of serviceRouting) {
+      const q = calculateQuote({ ...input, serviceType } as any);
+      expect(
+        { min: q.estimateMin, max: q.estimateMax, custom: q.confidence === "custom" },
+        `serviceType=${serviceType}`,
+      ).toEqual(expected);
+    }
+  });
+
+  it("a move-out is a deep clean — same house, same money", () => {
+    // These were three different numbers across three engines. The browser
+    // calculator priced move-in-out as a deep clean, Bright-Space on a flat
+    // 1.65, and this recompute refused to price it at all.
+    const home = { sqft: 2400, bathrooms: 2, frequency: "one-time" as const };
+    const deep = calculateQuote({ ...home, serviceType: "deep" });
+    const move = calculateQuote({ ...home, serviceType: "move-in-out" });
+    expect(move.estimateMin).toBe(deep.estimateMin);
+    expect(move.estimateMax).toBe(deep.estimateMax);
+    expect(move.confidence).toBe("high");
+  });
+
+  it("move-in-out no longer falls through to the client's own number", () => {
+    // The routes handler stores `serverQuote.estimateMin ?? client.estimateMin`.
+    // While move-in-out was custom, that null made it the one serviceType a
+    // tampered client could use to get its own price persisted unchecked.
+    const q = calculateQuote({ serviceType: "move-in-out", sqft: 2400, bathrooms: 2 });
+    expect(q.estimateMin).not.toBeNull();
+    expect(q.estimateMax).not.toBeNull();
+  });
+
+  it("STR and commercial stay hand-priced", () => {
+    for (const serviceType of ["str", "vacation-rental", "commercial"]) {
+      const q = calculateQuote({ serviceType, sqft: 2400, bathrooms: 2 });
+      expect(q.estimateMin, serviceType).toBeNull();
+      expect(q.confidence, serviceType).toBe("custom");
+    }
   });
 });

@@ -47,15 +47,26 @@ export interface QuoteInputs {
 export interface QuoteResult {
   estimateMin: number | null;
   estimateMax: number | null;
-  /** "custom" = STR / commercial / move-in-out — no auto estimate; operator quotes. */
+  /** "custom" = STR / commercial — no auto estimate; operator quotes. */
   confidence: "custom" | "low" | "medium" | "high";
   breakdown: Record<string, number>;
 }
 
+// Hand-priced: the site shows these customers no instant number at all.
+// move-in-out is deliberately NOT here. It used to be, and that was the odd
+// one out of three: the browser calculator prices it (ServiceDetail.tsx routes
+// /services/move-in-out through the "deep-clean" category) and Bright-Space's
+// engine prices it, so only this recompute refused. That had a cost beyond
+// inconsistency — a null here falls through to `?? parsed.estimateMin`, so
+// "move-in-out" was a serviceType that made the server store the CLIENT's
+// number unchecked, which is the exact tampering this recompute exists to stop.
 const isCustomService = (s: string): boolean =>
-  s === "vacation-rental" || s === "str" || s === "commercial" || s === "move-in-out";
+  s === "vacation-rental" || s === "str" || s === "commercial";
 
-const isDeep = (s: string): boolean => s === "deep";
+// A move-in/move-out IS a deep clean — empty house, inside the cabinets and
+// appliances, baseboards — and is priced as one on the same size-scaled
+// multiplier the customer was shown.
+const isDeep = (s: string): boolean => s === "deep" || s === "move-in-out";
 
 /**
  * Compute the estimate range. Returns nulls when the inputs are incomplete
