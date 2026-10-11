@@ -2881,5 +2881,217 @@
         "mid": 665
       }
     }
+  ],
+  "defaults": [
+    {
+      "input": {
+        "sqft": 1200,
+        "bathrooms": 1,
+        "cleanType": "standard"
+      },
+      "expected": {
+        "min": 155,
+        "max": 165,
+        "mid": 160
+      }
+    },
+    {
+      "input": {
+        "sqft": 2000,
+        "bathrooms": 2,
+        "cleanType": "standard"
+      },
+      "expected": {
+        "min": 265,
+        "max": 285,
+        "mid": 275
+      }
+    },
+    {
+      "input": {
+        "sqft": 3600,
+        "bathrooms": 3,
+        "cleanType": "standard"
+      },
+      "expected": {
+        "min": 420,
+        "max": 460,
+        "mid": 440
+      }
+    },
+    {
+      "input": {
+        "sqft": 2000,
+        "bathrooms": 2,
+        "cleanType": "deep"
+      },
+      "expected": {
+        "min": 440,
+        "max": 480,
+        "mid": 460
+      }
+    },
+    {
+      "input": {
+        "sqft": 3600,
+        "bathrooms": 4.5,
+        "cleanType": "deep"
+      },
+      "expected": {
+        "min": 850,
+        "max": 920,
+        "mid": 885
+      }
+    },
+    {
+      "input": {
+        "sqft": 2000,
+        "bathrooms": 2,
+        "cleanType": "standard",
+        "condition": "heavy",
+        "petHair": "some"
+      },
+      "expected": {
+        "min": 380,
+        "max": 410,
+        "mid": 395
+      }
+    },
+    {
+      "input": {
+        "sqft": 2000,
+        "bathrooms": 2,
+        "cleanType": "standard",
+        "frequency": "weekly",
+        "petHair": "some"
+      },
+      "expected": {
+        "min": 165,
+        "max": 175,
+        "mid": 170
+      }
+    },
+    {
+      "input": {
+        "sqft": 2000,
+        "bathrooms": 2,
+        "cleanType": "standard",
+        "frequency": "weekly",
+        "condition": "heavy"
+      },
+      "expected": {
+        "min": 200,
+        "max": 220,
+        "mid": 210
+      }
+    },
+    {
+      "input": {
+        "sqft": 1500,
+        "bathrooms": 1,
+        "cleanType": "deep"
+      },
+      "expected": {
+        "min": 315,
+        "max": 345,
+        "mid": 330
+      }
+    }
+  ],
+  "refusals": [
+    {
+      "label": "no sqft at all",
+      "input": {
+        "serviceType": "standard",
+        "bathrooms": 2
+      },
+      "expected": {
+        "min": null,
+        "max": null
+      }
+    },
+    {
+      "label": "sqft null",
+      "input": {
+        "serviceType": "standard",
+        "sqft": null,
+        "bathrooms": 2
+      },
+      "expected": {
+        "min": null,
+        "max": null
+      }
+    },
+    {
+      "label": "sqft zero",
+      "input": {
+        "serviceType": "standard",
+        "sqft": 0,
+        "bathrooms": 2
+      },
+      "expected": {
+        "min": null,
+        "max": null
+      }
+    },
+    {
+      "label": "sqft negative",
+      "input": {
+        "serviceType": "standard",
+        "sqft": -500,
+        "bathrooms": 2
+      },
+      "expected": {
+        "min": null,
+        "max": null
+      }
+    },
+    {
+      "label": "deep, no sqft",
+      "input": {
+        "serviceType": "deep",
+        "bathrooms": 3
+      },
+      "expected": {
+        "min": null,
+        "max": null
+      }
+    },
+    {
+      "label": "str is hand-priced",
+      "input": {
+        "serviceType": "str",
+        "sqft": 2400,
+        "bathrooms": 2
+      },
+      "expected": {
+        "min": null,
+        "max": null
+      }
+    },
+    {
+      "label": "vacation-rental",
+      "input": {
+        "serviceType": "vacation-rental",
+        "sqft": 2400,
+        "bathrooms": 2
+      },
+      "expected": {
+        "min": null,
+        "max": null
+      }
+    },
+    {
+      "label": "commercial",
+      "input": {
+        "serviceType": "commercial",
+        "sqft": 5000,
+        "bathrooms": 4
+      },
+      "expected": {
+        "min": null,
+        "max": null
+      }
+    }
   ]
 }
