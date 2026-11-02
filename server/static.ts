@@ -30,34 +30,48 @@ function familyPattern(prefix: string, slugs: readonly string[]): RegExp {
 }
 
 /**
- * Every route the SPA router (client/src/App.tsx) knows how to render.
+ * Every route the SPA router knows how to render — the business site in
+ * client/src/App.tsx, and the demo in client/src/demo/DemoShell.tsx.
  * Anything else still gets the shell so the client-side NotFound page
  * renders, but with HTTP 404 — the old catch-all answered 200 for every
  * path, so a bot, a link checker or a reviewer could never tell a real
  * page from a typo. Keep in sync with App.tsx.
  */
 export const SPA_ROUTES: RegExp[] = [
+  // ── The business site ──
   /^\/$/,
-  /^\/book$/,
+  /^\/systems$/,
+  /^\/proof$/,
+  /^\/process$/,
+  /^\/contact$/,
+  /^\/privacy$/,
+
+  // ── The demo: the cleaning company's system, kept whole under /demo ──
+  // Same closed-set treatment as before, so /demo/services/not-a-service is
+  // still a real 404 rather than a soft one. The demo is noindex and
+  // disallowed in robots.txt, but a link checker and a human both still
+  // deserve an honest status code.
+  /^\/demo$/,
+  /^\/demo\/book$/,
   // The token IS the customer's credential and can be any string, so this
   // one stays open: the server cannot tell a wrong token from a right one
   // without a database round trip, and the page itself handles a bad one.
-  /^\/booking\/manage\/[^/]+$/,
-  /^\/portal$/,
-  /^\/portal\/login$/,
-  /^\/portal\/reset-password$/,
-  /^\/about$/,
-  /^\/how-it-works$/,
-  /^\/service-areas$/,
-  familyPattern("/service-areas", AREA_SLUGS),
-  /^\/services$/,
-  familyPattern("/services", SERVICE_SLUGS),
-  /^\/short-term-rentals$/,
-  /^\/blog$/,
-  familyPattern("/blog", BLOG_SLUGS),
-  /^\/privacy$/,
-  /^\/terms$/,
-  /^\/sms$/,
+  /^\/demo\/booking\/manage\/[^/]+$/,
+  /^\/demo\/portal$/,
+  /^\/demo\/portal\/login$/,
+  /^\/demo\/portal\/reset-password$/,
+  /^\/demo\/about$/,
+  /^\/demo\/how-it-works$/,
+  /^\/demo\/service-areas$/,
+  familyPattern("/demo/service-areas", AREA_SLUGS),
+  /^\/demo\/services$/,
+  familyPattern("/demo/services", SERVICE_SLUGS),
+  /^\/demo\/short-term-rentals$/,
+  /^\/demo\/blog$/,
+  familyPattern("/demo/blog", BLOG_SLUGS),
+  /^\/demo\/privacy$/,
+  /^\/demo\/terms$/,
+  /^\/demo\/sms$/,
 ];
 
 export function isSpaRoute(pathname: string): boolean {
@@ -78,6 +92,10 @@ export function isSpaRoute(pathname: string): boolean {
 export function prerenderedFileFor(pathname: string): string | null {
   const p = pathname.length > 1 ? pathname.replace(/\/+$/, "") : pathname;
   if (!isSpaRoute(p)) return null;
+  // Nothing under /demo is pre-rendered — it is noindex by design, so there
+  // is no crawler to render it for. Saying so here is what stops every demo
+  // request paying for a stat() on a file the build never wrote.
+  if (p === "/demo" || p.startsWith("/demo/")) return null;
   if (p === "/") return "index.html";
   if (!/^(\/[A-Za-z0-9_-]+){1,2}$/.test(p)) return null;
   return `${p.replace(/^\//, "")}.html`;

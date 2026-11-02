@@ -30,6 +30,7 @@
  */
 
 import { COMMUNITIES_SERVED } from "./company-stats";
+import { brand, SITE_ORIGIN } from "./brand";
 
 /**
  * The canonical origin. Must agree with CANONICAL_ORIGIN in
@@ -42,9 +43,9 @@ import { COMMUNITIES_SERVED } from "./company-stats";
  * browser; the server reads PUBLIC_SITE_URL, and the test pins them together
  * for the default case.
  */
-export const CANONICAL_ORIGIN = "https://www.maineclean.co";
+export const CANONICAL_ORIGIN = SITE_ORIGIN;
 
-export const BASE_TITLE = "The Maine Cleaning Co.";
+export const BASE_TITLE = brand.name;
 
 /**
  * The default share image, as an ABSOLUTE url.
@@ -89,8 +90,16 @@ export interface SeoMeta {
  * Co. | The Maine Cleaning Co." — Google truncates titles around 580px, so
  * the duplicate ate the part a searcher reads.
  */
+const BRAND_SUFFIX_RE = new RegExp(
+  // BASE_TITLE, not a hardcoded name. This used to spell out the cleaning
+  // company, so the moment the brand changed the dedupe silently stopped
+  // working and every title that already carried the brand got a second copy.
+  `\\s*[|·—-]\\s*${BASE_TITLE.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")}\\.?\\s*$`,
+  "i",
+);
+
 export function formatTitle(title: string): string {
-  const bare = title.replace(/\s*[|·—-]\s*The Maine Cleaning Co\.?\s*$/i, "").trim();
+  const bare = title.replace(BRAND_SUFFIX_RE, "").trim();
   return bare ? `${bare} | ${BASE_TITLE}` : BASE_TITLE;
 }
 
@@ -155,8 +164,59 @@ export function faqPageJsonLd(faqs: ReadonlyArray<{ q: string; a: string }>) {
   };
 }
 
-/** The static routes, keyed by canonical path. Dynamic routes use the helpers below. */
+/**
+ * The business site's routes. These are the only pages that are indexed,
+ * pre-rendered and advertised in the sitemap.
+ */
 export const STATIC_PAGE_SEO: Record<string, SeoMeta> = {
+  "/": {
+    title: `${brand.tagline}`,
+    description: brand.promise,
+    canonicalPath: "/",
+  },
+  "/systems": {
+    title: "What Gets Built",
+    description:
+      "Instant quoting, lead intake, booking, a client portal, an operator dashboard and search that actually indexes — the whole path from a stranger to a repeat customer.",
+    canonicalPath: "/systems",
+  },
+  "/proof": {
+    title: "Proof — The System That Ran a Real Business",
+    description:
+      `Built for ${brand.operator.priorBusiness} and used for ${brand.operator.yearsRun} years to quote, book and invoice thousands of jobs across Southern Maine. Still online, in full, as a live demo.`,
+    canonicalPath: "/proof",
+  },
+  "/process": {
+    title: "How It Works — Fixed Scope, Fixed Price",
+    description:
+      "A conversation about the work, then a fixed scope and price in writing before anything starts. No hourly billing and no open-ended discovery phase.",
+    canonicalPath: "/process",
+  },
+  "/contact": {
+    title: "Book a Call",
+    description:
+      "An hour, free, and a straight answer about whether an operations system is worth building for your service business. If it isn't, you'll be told on the call.",
+    canonicalPath: "/contact",
+  },
+  "/privacy": {
+    title: "Privacy",
+    description:
+      "What this site collects, what it is used for, and how to have it deleted. One contact form and analytics — nothing else.",
+    canonicalPath: "/privacy",
+  },
+};
+
+/**
+ * The DEMO's page metadata — the cleaning company's site, kept whole under
+ * /demo as proof that the system is real.
+ *
+ * Every entry is forced `noindex` and stripped of its canonical by the
+ * wrapper below. That is not tidiness, it is the point: the business has
+ * wound down, and a page still ranking for "house cleaning Portland Maine"
+ * would send real people to book a service nobody is going to deliver. The
+ * sitemap drops these too, and robots.txt disallows /demo.
+ */
+const demoPages: Record<string, SeoMeta> = {
   "/": {
     title: "Airbnb Turnover & House Cleaning in Southern Maine",
     description:
@@ -228,6 +288,19 @@ export const STATIC_PAGE_SEO: Record<string, SeoMeta> = {
     canonicalPath: "/sms",
   },
 };
+
+/**
+ * One wrapper rather than `noindex: true` typed onto eighteen entries — it
+ * cannot be forgotten on a new one, and dropping `canonicalPath` stops a
+ * demo page claiming to be the canonical copy of a URL that no longer serves
+ * the business.
+ */
+export const DEMO_PAGE_SEO: Record<string, SeoMeta> = Object.fromEntries(
+  Object.entries(demoPages).map(([path, meta]) => [
+    path,
+    { ...meta, canonicalPath: undefined, noindex: true },
+  ]),
+);
 
 /**
  * Routes that must never be indexed, and why — see DISALLOWED in
@@ -303,10 +376,13 @@ export function serviceSeo(service: SeoServiceLike): SeoMeta {
   ];
   if (service.faqs?.length) jsonLd.push(faqPageJsonLd(service.faqs));
 
+  // Demo page — see DEMO_PAGE_SEO. The service pages describe work the
+  // business no longer takes, so they must not be indexed or claim a
+  // canonical URL.
   return {
     title: service.seoTitle ?? `${service.title} in Southern Maine`,
     description: service.seoDescription ?? service.shortDesc,
-    canonicalPath: path,
+    noindex: true,
     jsonLd,
   };
 }
@@ -353,10 +429,11 @@ export function areaPageSeo(area: SeoAreaLike): SeoMeta {
   ];
   if (area.faqs?.length) jsonLd.push(faqPageJsonLd(area.faqs));
 
+  // Demo page — see the note in serviceSeo.
   return {
     title: area.seoTitle,
     description: area.seoDescription,
-    canonicalPath: path,
+    noindex: true,
     jsonLd,
   };
 }
@@ -386,7 +463,8 @@ export function blogPostSeo(post: SeoPostLike): SeoMeta {
   return {
     title: post.title,
     description: post.excerpt,
-    canonicalPath: path,
+    // Demo page — see the note in serviceSeo.
+    noindex: true,
     ogType: "article",
     ogImage: post.image && /^https?:\/\//.test(post.image) ? post.image : undefined,
     publishedTime: published,

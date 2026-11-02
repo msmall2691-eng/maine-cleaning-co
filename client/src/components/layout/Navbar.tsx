@@ -6,6 +6,7 @@ import { Button } from "@/components/ui/button";
 import { ThemeToggle } from "@/components/ui/ThemeToggle";
 import { companyInfo } from "@/lib/company-info";
 import { LogoLockup } from "@/components/brand/Logo";
+import { useBasePath, withBase } from "@/demo/demo-mode";
 
 // Four links, deliberately. The bar previously carried eight plus the phone,
 // Sign In, the theme toggle and TWO call-to-action buttons — more than fits
@@ -31,6 +32,7 @@ const mobileNavLinks = [
 
 export default function Navbar() {
   const [location] = useLocation();
+  const base = useBasePath();
   const [scrolled, setScrolled] = useState(false);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
@@ -74,7 +76,7 @@ export default function Navbar() {
     const id = hash.replace("#", "");
     const el = document.getElementById(id);
     if (el) el.scrollIntoView({ behavior: "smooth" });
-    else window.location.href = "/#" + id;
+    else window.location.href = withBase(base, "/#" + id);
   };
 
   const scrollToEstimate = () => scrollToSection("get-estimate");

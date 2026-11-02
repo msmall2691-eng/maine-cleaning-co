@@ -2,7 +2,7 @@ import { describe, it, expect } from "vitest";
 import fs from "fs";
 import path from "path";
 import { isSpaRoute } from "../static";
-import { sitemapEntries } from "../lib/sitemap";
+import { AREA_SLUGS, BLOG_SLUGS, SERVICE_SLUGS, sitemapEntries } from "../lib/sitemap";
 
 /**
  * The route table now lives in three places, and two of them fail silently.
@@ -23,11 +23,32 @@ import { sitemapEntries } from "../lib/sitemap";
  */
 
 const APP_TSX = path.resolve(__dirname, "..", "..", "client", "src", "App.tsx");
+const DEMO_TSX = path.resolve(__dirname, "..", "..", "client", "src", "demo", "DemoShell.tsx");
 
-/** The `path` of every <Route path="…"> in App.tsx, in file order. */
-function routesDeclaredInApp(): string[] {
-  const src = fs.readFileSync(APP_TSX, "utf-8");
+function routesIn(file: string): string[] {
+  const src = fs.readFileSync(file, "utf-8");
   return [...src.matchAll(/<Route\s+path="([^"]+)"/g)].map((m) => m[1]);
+}
+
+/**
+ * Every route the client can render, as a path the server can be asked about.
+ *
+ * There are two routers now. App.tsx owns the business site and mounts the
+ * demo at /demo; DemoShell.tsx owns the demo's own routes, declared RELATIVE
+ * to that mount because they live inside `<Router base="/demo">`. Reading
+ * only App.tsx would leave eighteen demo pages unguarded — which is the exact
+ * silent failure this file exists to catch, just moved one directory over.
+ *
+ * The `/demo/*` mount pattern is dropped: it is a deliberate catch-all
+ * so an unknown demo path reaches the client's NotFound page, and the server
+ * is supposed to answer 404 for it. The concrete demo routes below are what
+ * actually need SPA_ROUTES coverage. `declaresTheDemoMount` asserts the mount
+ * itself is still there.
+ */
+function routesDeclaredInApp(): string[] {
+  const app = routesIn(APP_TSX).filter((p) => p !== "/demo/*");
+  const demo = routesIn(DEMO_TSX).map((p) => (p === "/" ? "/demo" : `/demo${p}`));
+  return [...new Set([...app, ...demo])];
 }
 
 /**
@@ -45,7 +66,17 @@ function routesDeclaredInApp(): string[] {
 function exampleFor(pattern: string): string {
   const asRegExp = patternToRegExp(pattern);
   const advertised = sitemapEntries().map((e) => e.path).find((p) => asRegExp.test(p));
-  return advertised ?? pattern.replace(/:[^/]+/g, "sample");
+  if (advertised) return advertised;
+  // The demo's dynamic families are no longer advertised anywhere (it is
+  // noindex), so a real slug comes from the same closed lists the server
+  // validates against — still derived, never re-typed.
+  const demoConcrete = [
+    ...SERVICE_SLUGS.map((s) => `/demo/services/${s}`),
+    ...AREA_SLUGS.map((s) => `/demo/service-areas/${s}`),
+    ...BLOG_SLUGS.map((s) => `/demo/blog/${s}`),
+  ];
+  const real = demoConcrete.find((p) => asRegExp.test(p));
+  return real ?? pattern.replace(/:[^/]+\*?/g, "sample");
 }
 
 /**
@@ -70,13 +101,23 @@ function patternToRegExp(pattern: string): RegExp {
 }
 
 describe("route table drift", () => {
-  it("finds the routes in App.tsx at all", () => {
+  it("finds the routes in both routers at all", () => {
     // If the JSX is ever reformatted so this regex stops matching, every
     // other assertion here would vacuously pass. Fail loudly instead.
     const routes = routesDeclaredInApp();
     expect(routes.length).toBeGreaterThanOrEqual(15);
+    // one from each router, so neither file can silently stop being read
     expect(routes).toContain("/");
-    expect(routes).toContain("/sms");
+    expect(routes).toContain("/systems");
+    expect(routes).toContain("/demo/sms");
+  });
+
+  it("still mounts the demo", () => {
+    // Dropped from the coverage list above because it is a deliberate
+    // catch-all, so it needs its own assertion or nothing checks the demo is
+    // reachable at all.
+    expect(routesIn(APP_TSX)).toContain("/demo/*");
+    expect(routesIn(APP_TSX)).toContain("/demo");
   });
 
   it("SPA_ROUTES covers every route declared in App.tsx", () => {

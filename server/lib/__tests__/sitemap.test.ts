@@ -5,8 +5,7 @@ import {
   sitemapEntries,
   toW3CDate,
   SERVICE_SLUGS,
-  DISALLOWED,
-} from "../sitemap";
+  DISALLOWED, buildRobotsTxt } from "../sitemap";
 import { servicesData } from "@/lib/services-data";
 import { blogPosts } from "@/lib/blog-data";
 
@@ -52,21 +51,34 @@ describe("buildSitemap", () => {
     expect((xml.match(/<url>/g) ?? []).length).toBe((xml.match(/<\/url>/g) ?? []).length);
   });
 
-  it("lists the home page and the booking page", () => {
-    expect(xml).toContain(`<loc>${ORIGIN}/</loc>`);
-    expect(xml).toContain(`<loc>${ORIGIN}/book</loc>`);
+  it("lists the business site's pages", () => {
+    for (const path of ["/", "/systems", "/proof", "/process", "/contact"]) {
+      expect(xml).toContain(`<loc>${ORIGIN}${path}</loc>`);
+    }
   });
 
-  it("lists every service detail page", () => {
+  /**
+   * The inverse of the three assertions this replaced.
+   *
+   * The service pages, the area pages and the blog used to be the whole point
+   * of the sitemap. They are the DEMO now — the cleaning company has wound
+   * down — and a sitemap entry is an active request to index. Advertising
+   * them would send real people to book a service nobody will deliver, so the
+   * tests that once demanded they be listed now demand they are not.
+   */
+  it("advertises none of the demo's pages", () => {
+    expect(xml).not.toContain("/demo");
     for (const slug of Object.keys(servicesData)) {
-      expect(xml).toContain(`<loc>${ORIGIN}/services/${slug}</loc>`);
+      expect(xml).not.toContain(`/services/${slug}<`);
     }
+    for (const post of blogPosts) {
+      expect(xml).not.toContain(`/blog/${post.id}<`);
+    }
+    expect(xml).not.toContain(`<loc>${ORIGIN}/book</loc>`);
   });
 
-  it("lists every blog post, so a new post cannot be missed", () => {
-    for (const post of blogPosts) {
-      expect(xml).toContain(`<loc>${ORIGIN}/blog/${post.id}</loc>`);
-    }
+  it("disallows the demo in robots.txt", () => {
+    expect(buildRobotsTxt()).toContain("Disallow: /demo");
   });
 
   it("never advertises the capability URL or the signed-in portal", () => {

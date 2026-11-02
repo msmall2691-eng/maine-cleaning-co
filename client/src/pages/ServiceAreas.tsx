@@ -2,7 +2,7 @@ import { motion } from "framer-motion";
 import { Link } from "wouter";
 import { MapPin, ArrowRight, Phone, RefreshCw, Sparkles, Calendar } from "lucide-react";
 import { useSEO } from "@/hooks/use-seo";
-import { STATIC_PAGE_SEO } from "@/lib/seo";
+import { DEMO_PAGE_SEO } from "@/lib/seo";
 import { Button } from "@/components/ui/button";
 import { ServiceAreaMap } from "@/components/ui/ServiceAreaMap";
 import { companyInfo } from "@/lib/company-info";
@@ -57,7 +57,7 @@ const kpiStats = [
 ];
 
 export default function ServiceAreas() {
-  useSEO(STATIC_PAGE_SEO["/service-areas"]);
+  useSEO(DEMO_PAGE_SEO["/service-areas"]);
   return (
     <div className="w-full clip-x">
       {/* ── Page Hero ──
