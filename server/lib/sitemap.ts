@@ -27,8 +27,20 @@ import { blogPosts } from "@/lib/blog-data";
  *
  * Keep this in step with the canonical/og:url in client/index.html.
  */
+/**
+ * The origin to fall back to when PUBLIC_SITE_URL is unset.
+ *
+ * Exported because server/lib/canonicalHost.ts needs the same value and used
+ * to carry its own copy of the literal. When this one moved to the new
+ * business's domain and that one did not, the app advertised one host in the
+ * sitemap and every canonical tag while 301-redirecting toward another — and
+ * the test that exists to catch exactly that re-typed the literal too, so it
+ * passed throughout. One constant, imported, is the fix.
+ */
+export const DEFAULT_ORIGIN = "https://www.smallworks.systems";
+
 export const CANONICAL_ORIGIN = (
-  process.env.PUBLIC_SITE_URL || "https://www.smallworks.systems"
+  process.env.PUBLIC_SITE_URL || DEFAULT_ORIGIN
 ).replace(/\/+$/, "");
 
 /**

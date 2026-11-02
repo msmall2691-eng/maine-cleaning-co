@@ -1,3 +1,4 @@
+import { useEffect, useRef } from "react";
 import { Router, Switch, Route } from "wouter";
 import { ArrowLeft, Info } from "lucide-react";
 import { brand } from "@/lib/brand";
@@ -61,9 +62,48 @@ import NotFound from "@/pages/not-found";
  * minutes and that was a mistake.
  */
 function DemoBanner() {
+  const ref = useRef<HTMLDivElement>(null);
+
+  /**
+   * Publish the banner's REAL height, so the navbar and the page sit below
+   * whatever it actually occupies.
+   *
+   * It used to be a fixed 3.5rem/2.75rem with `h-[var(--demo-banner-h)]` on
+   * the box. That is only true at desktop widths: the sentence wraps to two
+   * lines under 1280px and three under ~420px, so the text overflowed its own
+   * box, ran off the top of the viewport (measured at -7px on a 390px screen,
+   * -14px at 640px) and was struck through by the navbar below it. The one
+   * notice that is deliberately not dismissible was the one you could not
+   * read on a phone — which is exactly what an old maineclean.co link 301s
+   * someone to.
+   *
+   * Measured rather than guessed, because the height depends on the font, the
+   * viewport and the copy, and any constant here is a guess that goes stale
+   * the next time one of those changes. Written to <html> so it inherits into
+   * both `.demo-shell`'s padding and the navbar's `top` — and NOT declared on
+   * `.demo-shell` in CSS, because a declaration there would shadow this one
+   * for the whole subtree.
+   */
+  useEffect(() => {
+    const el = ref.current;
+    if (!el) return;
+    const root = document.documentElement;
+    const apply = () => root.style.setProperty("--demo-banner-h", `${el.offsetHeight}px`);
+    apply();
+    const ro = new ResizeObserver(apply);
+    ro.observe(el);
+    return () => {
+      ro.disconnect();
+      root.style.removeProperty("--demo-banner-h");
+    };
+  }, []);
+
   return (
     <div
-      className="fixed top-0 left-0 right-0 z-[70] h-[var(--demo-banner-h)] flex items-center band-deep border-b border-foreground/10"
+      ref={ref}
+      /* No fixed height: the box is sized by its content, and the effect
+         above tells the rest of the layout how tall that turned out to be. */
+      className="fixed top-0 left-0 right-0 z-[70] py-2 sm:py-2.5 flex items-center band-deep border-b border-foreground/10"
       data-testid="demo-banner"
     >
       <div className="container mx-auto px-5 sm:px-6 lg:px-8 flex items-center gap-3 sm:gap-4">
