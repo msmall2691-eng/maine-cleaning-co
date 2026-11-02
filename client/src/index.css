@@ -5,6 +5,11 @@
 
 @theme inline {
   --font-sans: "Inter", sans-serif;
+  /* The display face. `--font-serif` is the old name for the same stack and is
+     kept only so existing `font-serif` utilities keep rendering; new code uses
+     the type classes (.type-display / .type-h2 / .type-h3) rather than naming
+     a family at all. Space Grotesk is not a serif and never was. */
+  --font-display: "Space Grotesk", "Inter", sans-serif;
   --font-serif: "Space Grotesk", sans-serif;
   --font-mono: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
 
@@ -33,6 +38,12 @@
   --color-brand-harbor: hsl(var(--brand-harbor));
   --color-brand-pine: hsl(var(--brand-pine));
   --color-brand-stone: hsl(var(--brand-stone));
+
+  /* Inverted band. See .band-deep. */
+  --color-deep: hsl(var(--deep));
+  --color-deep-foreground: hsl(var(--deep-foreground));
+  --color-deep-muted: hsl(var(--deep-muted));
+  --color-deep-accent: hsl(var(--deep-accent));
 
   --radius-lg: var(--radius);
   --radius-md: calc(var(--radius) - 2px);
@@ -77,7 +88,12 @@
     --secondary-foreground: 30 6% 20%;
 
     --muted: 30 8% 95%;
-    --muted-foreground: 30 4% 42%;
+    /* 38%, not 42%. The bands below got deeper so sections actually read as
+       separate, and at 42% secondary text only cleared AA against the page
+       background (5.06) — it failed on the deepest band. 38% clears 4.5 on
+       every surface the site paints: background 5.89, card 6.14, band-tint
+       5.38, band-sink 4.92. */
+    --muted-foreground: 30 5% 38%;
 
     --accent: 30 8% 94%;
     --accent-foreground: 214 55% 36%;
@@ -99,8 +115,8 @@
        and bottom edge, so a band reads as a change in weight rather than a
        ruled line across the page. Keep the steps small — the point is that
        you feel the section change without seeing a seam. */
-    --band-tint: 30 9% 96%;
-    --band-sink: 30 10% 93%;
+    --band-tint: 30 9% 94%;
+    --band-sink: 32 11% 90%;
 
     /* Component-specific theme tokens */
     /* Decorative weather tint. applyWeatherAccent() writes
@@ -109,6 +125,18 @@
        site is exactly the brand. Nothing that carries meaning may use it:
        see lib/weather-accent.ts for why that is a hard rule. */
     --weather-accent: var(--weather-accent-light, var(--primary));
+
+    /* ── Inverted band ──────────────────────────────────────────────────
+       One deep navy band per page, used where a section should land with
+       weight rather than politely alternate. Identical in both themes on
+       purpose: it is a fixed dark surface, the way a printed page uses a
+       reversed panel, so it reads the same whichever theme you are in.
+       .band-deep redefines the theme tokens inside itself, so ordinary
+       components (cards, muted text, buttons) invert without being told. */
+    --deep: 215 45% 17%;
+    --deep-foreground: 210 22% 86%;      /* 10.64 on --deep */
+    --deep-muted: 210 18% 72%;           /*  7.32 on --deep */
+    --deep-accent: 202 75% 70%;          /*  7.58 on --deep */
 
     --navbar-glass-bg: 0 0% 100% / 0.88;  /* was 0.72 — page headings read
                                              straight through the bar once light
@@ -131,7 +159,14 @@
     --popover-foreground: 210 22% 93%;
 
     --primary: 212 58% 62%;
-    --primary-foreground: 0 0% 100%;
+    /* NOT white. --primary is a light blue on this theme (62% lightness) so
+       that it works as link/accent INK on the dark background, where it reads
+       6.12:1. White on top of it is 2.92:1 — which is every filled button on
+       the site, plus the whole closing-CTA band, failing AA by a wide margin
+       and failing even the 3:1 large-text floor. Dark ink on that same blue
+       is 6.24:1, so the button keeps the brand colour and becomes legible,
+       and the CTA band reads as a deliberate inverse panel. */
+    --primary-foreground: 222 45% 10%;
 
     /* Same family, re-lit for the dark surface — a tint tuned for off-white is
        mud on navy, so these are not the light values with opacity. */
@@ -144,7 +179,8 @@
     --secondary-foreground: 210 20% 85%;
 
     --muted: 222 16% 18%;
-    --muted-foreground: 215 14% 57%;
+    /* Lifted with the deeper bands below — see the light-theme note. */
+    --muted-foreground: 215 15% 60%;
 
     --accent: 222 18% 16%;
     --accent-foreground: 212 58% 62%;
@@ -159,8 +195,14 @@
     --section-cream: 222 20% 12%;
     --section-warm: 222 18% 14%;
 
-    --band-tint: 222 21% 12%;
-    --band-sink: 222 20% 14%;
+    --band-tint: 222 21% 13%;
+    --band-sink: 222 20% 16%;
+
+    /* The inverted band does not flip with the theme — see :root. */
+    --deep: 215 45% 17%;
+    --deep-foreground: 210 22% 86%;
+    --deep-muted: 210 18% 72%;
+    --deep-accent: 202 75% 70%;
 
     --weather-accent: var(--weather-accent-dark, var(--primary));
 
@@ -209,6 +251,79 @@
       font-size: 16px !important;
     }
   }
+}
+
+/* ── The type scale ──────────────────────────────────────────────────────
+   Every display-sized piece of text on the site comes from one of these.
+
+   Before this there were five different h1 recipes across eight public pages
+   — Inter 800 at 4.5rem on the homepage, Inter 800 at 4rem on About/How It
+   Works/Service Areas, Inter 800 at 3.75rem on Short-Term Rentals, and Space
+   Grotesk 700 at 3.5rem on Services/Book/Blog — while SectionHeading rendered
+   every h2 in Space Grotesk. So on most pages the largest text on screen was
+   in a different typeface from the heading directly beneath it.
+
+   One family for display (Space Grotesk, the more characterful of the two and
+   already the majority), Inter for body and UI. Sizes are fluid, so there are
+   no breakpoint jumps to keep in sync either.
+
+   `text-wrap: balance` is the other half of the job: it evens out the lines of
+   a heading instead of leaving one word stranded on the last line, which is
+   what "The Way Cleaning Should / Be." and "What Happens / Next" were doing.
+   Browsers that do not support it simply wrap as before. */
+.type-display {
+  font-family: var(--font-display);
+  font-weight: 700;
+  font-size: clamp(2.6rem, 6vw, 4.75rem);
+  line-height: 1.02;
+  letter-spacing: -0.035em;
+  text-wrap: balance;
+}
+/* Second-level pages — a service, a town, a blog post, the legal pages.
+   .type-display tops out at 4.75rem, which is right for a landing page and
+   far too loud for "Deep Cleaning" sitting next to a 64px service icon. Same
+   family, same treatment, one step down. */
+.type-display-sm {
+  font-family: var(--font-display);
+  font-weight: 700;
+  font-size: clamp(2rem, 4vw, 3.25rem);
+  line-height: 1.05;
+  letter-spacing: -0.03em;
+  text-wrap: balance;
+}
+.type-h2 {
+  font-family: var(--font-display);
+  font-weight: 700;
+  font-size: clamp(1.9rem, 3.4vw, 2.9rem);
+  line-height: 1.08;
+  letter-spacing: -0.025em;
+  text-wrap: balance;
+}
+.type-h3 {
+  font-family: var(--font-display);
+  font-weight: 600;
+  font-size: clamp(1.1rem, 1.5vw, 1.3rem);
+  line-height: 1.25;
+  letter-spacing: -0.015em;
+  text-wrap: balance;
+}
+/* Standfirst under a heading. `pretty` only protects the last line, which is
+   what a paragraph needs — `balance` on body copy makes the measure jump. */
+.type-lead {
+  font-size: clamp(1rem, 1.15vw, 1.1875rem);
+  line-height: 1.6;
+  color: hsl(var(--muted-foreground));
+  text-wrap: pretty;
+}
+.type-eyebrow {
+  font-size: 0.6875rem;
+  font-weight: 600;
+  letter-spacing: 0.22em;
+  text-transform: uppercase;
+  color: hsl(var(--primary));
+}
+@media (min-width: 640px) {
+  .type-eyebrow { font-size: 0.75rem; }
 }
 
 .label-sm {
@@ -263,6 +378,17 @@
   .section-fade {
     opacity: 1 !important;
     transform: none !important;
+  }
+}
+
+/* A horizontal scroller whose last card is cut off by the container edge
+   reads as a clipping bug rather than as "there is more this way". Fading the
+   edge makes it deliberate. Only from sm up: below that the scroller runs
+   deliberately full-bleed (-mx-5) and a fade there eats the first card. */
+@media (min-width: 640px) {
+  .scroll-fade-x {
+    -webkit-mask-image: linear-gradient(to right, #000 0, #000 calc(100% - 4rem), transparent 100%);
+    mask-image: linear-gradient(to right, #000 0, #000 calc(100% - 4rem), transparent 100%);
   }
 }
 
@@ -424,6 +550,69 @@
   transition: background-image 0.35s ease;
 }
 
+/* ── The inverted band ───────────────────────────────────────────────────
+   .band-tint and .band-sink are deliberately quiet — they give a section its
+   own weight without drawing a seam. That works, but a page made only of
+   quiet steps has no landmark in it: scrolling the homepage you passed seven
+   sections that were all within 4% lightness of one another.
+
+   This is the loud one. Use it sparingly: at most one mid-page band, plus the
+   page close (<ClosingCTA> and the footer, which share this surface so a page
+   ends in one dark region rather than two stacked slabs). More than that and
+   it stops meaning anything.
+
+   It works by redefining the theme tokens on itself rather than by restyling
+   its children. A <Card>, a muted <p>, a <Button> or anything else that reads
+   --card / --muted-foreground / --primary inside this band gets the inverted
+   value automatically and needs no variant of its own. Every value is
+   contrast-checked against --deep: body 10.64, muted 7.32, accent 7.58.
+
+   It does NOT flip with the theme. It is a fixed dark panel in both, the way
+   a printed page uses a reversed panel, so the page reads the same either way. */
+.band-deep {
+  --background: var(--deep);
+  --foreground: var(--deep-foreground);
+  --card: 215 42% 22%;
+  --card-foreground: var(--deep-foreground);
+  --popover: 215 42% 22%;
+  --popover-foreground: var(--deep-foreground);
+  --muted: 215 35% 25%;
+  --muted-foreground: var(--deep-muted);
+  --secondary: 215 35% 25%;
+  --secondary-foreground: var(--deep-foreground);
+  --accent: 215 35% 26%;
+  --accent-foreground: var(--deep-accent);
+  --border: 212 28% 33%;
+  --input: 212 28% 33%;
+  --ring: var(--deep-accent);
+  --primary: var(--deep-accent);
+  --primary-foreground: 215 45% 13%;
+  /* The brand family has to be re-lit here too, or anything categorical
+     inside the band keeps its LIGHT-theme cut — and --brand-pine at 27%
+     lightness on a 17% navy is invisible. These are the dark-theme values,
+     which is exactly the job: a dark surface. */
+  --brand-navy: 212 58% 66%;
+  --brand-harbor: 194 55% 62%;
+  --brand-pine: 164 45% 56%;
+  --brand-stone: 210 14% 68%;
+  --card-shadow-strength: 0.3;
+  --dot-grid-alpha: 0.07;
+
+  background-color: hsl(var(--deep));
+  color: hsl(var(--deep-foreground));
+}
+/* A slow vertical lift so the panel has some light in it rather than reading
+   as a flat rectangle of navy. */
+.band-deep::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  background:
+    radial-gradient(ellipse 70% 60% at 50% 0%, hsl(202 60% 40% / 0.22) 0%, transparent 70%),
+    radial-gradient(ellipse 60% 50% at 85% 100%, hsl(196 55% 35% / 0.16) 0%, transparent 65%);
+}
+
 /* Left-aligned counterpart to .section-heading-accent — a short rule under
    the heading rather than a centred one, so left- and centre-aligned
    sections carry the same mark. */
@@ -470,12 +659,17 @@
      ever exposing an edge of the band. */
   height: 100%;
   object-fit: cover;
-  opacity: 0.2;
-  filter: saturate(0.45) contrast(0.95);
+  /* Backed off from 0.2 / 0.14. The intent here is texture, and at the old
+     values it was subject matter: behind "Transparent pricing" you could make
+     out a restroom trailer well enough to be distracted by it, and it ran
+     under the body copy and the 48-hour note as a visible grey smudge rather
+     than as a surface. Low enough now to feel the photo and not read it. */
+  opacity: 0.13;
+  filter: saturate(0.4) contrast(0.95) blur(0.5px);
 }
 :root:not(.dark) .photo-ambient img {
-  opacity: 0.14;
-  filter: saturate(0.3) contrast(0.92);
+  opacity: 0.085;
+  filter: saturate(0.28) contrast(0.92) blur(0.5px);
 }
 
 /* The moving layer. The image is 140% of the band and offset -20%, so a
@@ -721,26 +915,19 @@
   animation: dot-drift 8s ease-in-out infinite;
 }
 
-@keyframes gradient-text-shimmer {
-  0% { background-position: 0% 50%; }
-  50% { background-position: 100% 50%; }
-  100% { background-position: 0% 50%; }
-}
+/* ── The emphasised word in a headline ───────────────────────────────────
+   This replaces .hero-gradient-text, which was a five-stop animated gradient
+   in hues nobody else on the site used (hsl 200-210 at 50-70% lightness, next
+   to a --primary of hsl(214 55% 36%)) — so the one word a visitor's eye lands
+   on first was painted in a second, brighter blue that is not the brand. It
+   also could not be read: at its lightest stop it measured 1.80:1 against the
+   page, where AA wants 4.5.
 
-.hero-gradient-text {
-  background: linear-gradient(
-    135deg,
-    hsl(210 58% 50%) 0%,
-    hsl(207 68% 62%) 25%,
-    hsl(200 80% 70%) 50%,
-    hsl(207 63% 58%) 75%,
-    hsl(210 58% 50%) 100%
-  );
-  background-size: 200% auto;
-  -webkit-background-clip: text;
-  background-clip: text;
-  -webkit-text-fill-color: transparent;
-  animation: gradient-text-shimmer 6s ease-in-out infinite;
+   It is now simply --primary, which is 7.22:1 on the light page and 6.12:1 on
+   the dark one, and is by definition the brand. Because it is a token and not
+   a literal, it also re-tints itself inside .band-deep without a second rule. */
+.heading-accent {
+  color: hsl(var(--primary));
 }
 
 /* ── Skeleton shimmer ── */
@@ -920,9 +1107,6 @@
     animation: none;
   }
   .hero-dot-grid {
-    animation: none;
-  }
-  .hero-gradient-text {
     animation: none;
   }
   .skeleton-shimmer {

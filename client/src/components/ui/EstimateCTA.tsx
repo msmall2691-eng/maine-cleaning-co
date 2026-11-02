@@ -30,7 +30,7 @@ export function EstimateCTA({
 
   return (
     <div className="bg-card rounded-2xl border border-border shadow-sm p-6 sm:p-8 text-center">
-      <h2 className="text-xl sm:text-2xl font-serif font-bold text-foreground mb-2.5">{heading}</h2>
+      <h2 className="type-h3 text-foreground mb-2.5">{heading}</h2>
       <p className="text-muted-foreground text-sm leading-relaxed max-w-sm mx-auto mb-6">{sub}</p>
 
       <Link href={href}>

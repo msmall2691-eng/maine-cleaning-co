@@ -10,6 +10,7 @@ import { serviceRegions } from "@/lib/service-areas";
 import { areaPages } from "@/lib/area-pages";
 import { COMMUNITIES_SERVED, RECURRING_CLIENT_RATE } from "@/lib/company-stats";
 import { Section, SectionHeading } from "@/components/layout/Section";
+import { PageHero } from "@/components/layout/PageHero";
 import { ClosingCTA } from "@/components/layout/ClosingCTA";
 import { LogoWatermark } from "@/components/brand/Logo";
 import { photos, srcSetFor, SIZES } from "@/lib/photos";
@@ -63,73 +64,26 @@ export default function ServiceAreas() {
           A page about the places we serve had no photograph on it at all.
           Copy left, one of our own vacation-rental turnovers right — the work
           those coastal towns actually book us for. */}
-      <section className="relative pt-28 sm:pt-36 lg:pt-40 pb-14 sm:pb-20 overflow-hidden">
-        <div className="hero-aurora" aria-hidden="true" />
-        <div className="hero-dot-grid" aria-hidden="true" />
-        <div className="container mx-auto px-5 sm:px-6 lg:px-8 relative z-10">
-          <div className="max-w-[78rem] mx-auto grid lg:grid-cols-[minmax(0,1.04fr)_minmax(0,1fr)] gap-10 lg:gap-14 xl:gap-20 items-center">
-            <div className="text-center lg:text-left">
-              <motion.span
-                initial={{ opacity: 0, y: 10 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ duration: 0.5 }}
-                className="inline-flex items-center gap-2 text-[11px] sm:text-xs font-semibold uppercase tracking-[0.2em] text-primary/80 mb-4"
-              >
-                <MapPin className="w-3.5 h-3.5" /> York & Cumberland County
-              </motion.span>
-              <motion.h1
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ duration: 0.7, ease: [0.22, 1, 0.36, 1] }}
-                className="text-[2.5rem] sm:text-[3.5rem] md:text-[4rem] font-extrabold leading-[1.04] tracking-[-0.04em] text-foreground mb-5"
-              >
-                Where We <span className="hero-gradient-text">Serve</span>
-              </motion.h1>
-              <motion.p
-                initial={{ opacity: 0, y: 12 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ duration: 0.6, delay: 0.15 }}
-                className="text-[15px] sm:text-lg text-muted-foreground leading-relaxed max-w-lg mx-auto lg:mx-0 mb-8"
-              >
-                Trusted by homeowners and hosts across York & Cumberland County — with 93% of clients returning regularly. If your town isn't listed, reach out — we may still be able to help.
-              </motion.p>
-              <motion.div
-                initial={{ opacity: 0, y: 10 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ duration: 0.5, delay: 0.3 }}
-                className="flex flex-col sm:flex-row justify-center lg:justify-start gap-3 sm:gap-4 flex-wrap"
-              >
-                <Link href="/#get-estimate">
-                  <Button size="lg" className="w-full sm:w-auto h-13 sm:h-14 px-8 sm:px-10 rounded-full text-base sm:text-[17px] font-semibold gap-2 shadow-[0_2px_12px_rgba(0,0,0,0.12)]" data-testid="button-sa-hero-estimate">
-                    Get My Estimate <ArrowRight className="w-4 h-4" />
-                  </Button>
-                </Link>
-                <a href={companyInfo.contact.phoneHref}>
-                  <Button size="lg" variant="outline" className="w-full sm:w-auto h-13 sm:h-14 px-8 sm:px-10 rounded-full text-base font-semibold border-2 border-primary hover:bg-primary/5 bg-card/80 backdrop-blur-sm shadow-[0_1px_4px_rgba(0,0,0,0.15)]" data-testid="button-sa-hero-call">
-                    <Phone className="w-4 h-4 mr-2" /> Call Us
-                  </Button>
-                </a>
-              </motion.div>
-            </div>
-
-            <motion.figure
-              initial={{ opacity: 0, scale: 0.97 }}
-              animate={{ opacity: 1, scale: 1 }}
-              transition={{ duration: 0.9, delay: 0.2, ease: [0.22, 1, 0.36, 1] }}
-              className="photo-frame aspect-[4/3] lg:aspect-[4/5] max-w-md mx-auto lg:max-w-none w-full"
-            >
-              <img
-                src={photos.kitchenLakeWindow.src}
-                srcSet={srcSetFor(photos.kitchenLakeWindow)}
-                sizes={SIZES.half}
-                alt={photos.kitchenLakeWindow.alt}
-                fetchPriority="high"
-                decoding="async"
-              />
-            </motion.figure>
-          </div>
-        </div>
-      </section>
+      <PageHero
+        eyebrow={<><MapPin className="w-3.5 h-3.5" /> York &amp; Cumberland County</>}
+        title={<>Where We <span className="heading-accent">Serve</span></>}
+        lead="Trusted by homeowners and hosts across York & Cumberland County — with 93% of clients returning regularly. If your town isn't listed, reach out — we may still be able to help."
+        photo={photos.kitchenLakeWindow}
+        actions={
+          <>
+            <Link href="/#get-estimate">
+              <Button size="lg" className="w-full sm:w-auto h-13 sm:h-14 px-8 sm:px-10 rounded-full text-base sm:text-[17px] font-semibold gap-2 shadow-[0_2px_12px_rgba(0,0,0,0.12)]" data-testid="button-sa-hero-estimate">
+                Get My Estimate <ArrowRight className="w-4 h-4" />
+              </Button>
+            </Link>
+            <a href={companyInfo.contact.phoneHref}>
+              <Button size="lg" variant="outline" className="w-full sm:w-auto h-13 sm:h-14 px-8 sm:px-10 rounded-full text-base font-semibold border-2 border-primary hover:bg-primary/5 bg-card/80 backdrop-blur-sm shadow-[0_1px_4px_rgba(0,0,0,0.15)]" data-testid="button-sa-hero-call">
+                <Phone className="w-4 h-4 mr-2" /> Call Us
+              </Button>
+            </a>
+          </>
+        }
+      />
 
       {/* ── KPI Stats Strip ──
           Was ruled off top and bottom with a 1px border across the full
@@ -153,7 +107,10 @@ export default function ServiceAreas() {
                 <div className={`w-10 h-10 rounded-xl ${stat.bg} flex items-center justify-center mx-auto mb-3`}>
                   <Icon className={`w-4.5 h-4.5 ${stat.color}`} />
                 </div>
-                <div className={`text-2xl sm:text-3xl font-bold tracking-tight mb-1 ${stat.color}`}>{stat.value}</div>
+                {/* One ink. The tinted icon above is where the brand family does its
+                    categorical job; running the numbers in four hues as well made
+                    a four-item row read as four unrelated things. */}
+                <div className="text-2xl sm:text-3xl font-bold tracking-tight mb-1 text-foreground">{stat.value}</div>
                 <div className="text-[13px] font-semibold text-foreground">{stat.label}</div>
                 <div className="text-[11px] text-muted-foreground mt-0.5 leading-snug">{stat.desc}</div>
               </motion.div>

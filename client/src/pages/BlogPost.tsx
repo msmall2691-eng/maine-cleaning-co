@@ -41,7 +41,7 @@ export default function BlogPost() {
         className="pt-28 sm:pt-36 lg:pt-40 pb-[clamp(3.25rem,6vw,5.5rem)]"
       >
         <div className="text-center">
-          <h1 className="text-[2.25rem] sm:text-5xl leading-[1.05] font-serif font-bold tracking-[-0.02em] text-foreground section-heading-accent">
+          <h1 className="type-display-sm text-foreground section-heading-accent">
             Post Not Found
           </h1>
           <p className="mt-8 mb-8 text-[15px] sm:text-base text-muted-foreground leading-relaxed">
@@ -74,7 +74,7 @@ export default function BlogPost() {
           </span>
         </div>
 
-        <h1 className="text-[2.25rem] sm:text-5xl leading-[1.05] font-serif font-bold tracking-[-0.02em] text-foreground" data-testid="text-blog-title">
+        <h1 className="type-display-sm text-foreground" data-testid="text-blog-title">
           {post.title}
         </h1>
 
@@ -146,7 +146,7 @@ export default function BlogPost() {
         </div>
 
         <div className="mt-12 sm:mt-16 card-glass p-6 sm:p-8 md:p-10 text-center">
-          <h3 className="text-[1.375rem] sm:text-[1.625rem] leading-snug font-serif font-bold mb-4 text-foreground">Need professional cleaning?</h3>
+          <h3 className="type-h3 mb-4 text-foreground">Need professional cleaning?</h3>
           <p className="text-muted-foreground mb-7 sm:mb-8 max-w-[30rem] mx-auto text-[15px] sm:text-base leading-relaxed">
             Let the experts at The Maine Cleaning Co. handle the dirty work so you can enjoy your free time.
           </p>

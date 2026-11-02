@@ -32,7 +32,7 @@ export default function NotFound() {
           404
         </p>
 
-        <h1 className="mt-3 text-[2.25rem] sm:text-5xl md:text-[3.5rem] leading-[1.05] font-serif font-bold tracking-[-0.02em] text-foreground section-heading-accent">
+        <h1 className="mt-3 type-display-sm text-foreground section-heading-accent">
           Page not found
         </h1>
 

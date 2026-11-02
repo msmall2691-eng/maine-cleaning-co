@@ -284,6 +284,8 @@ type LockupProps = {
   /** Drops the "Est. 2018 · Southern Maine" line. */
   showTagline?: boolean;
   className?: string;
+  /** Extra classes on the mark itself — see the note in <LogoLockup>. */
+  markClassName?: string;
 };
 
 const SIZES = {
@@ -305,13 +307,18 @@ const SIZES = {
  * below and the element stays visible. Wrap it in an element that carries the
  * responsive display instead.
  */
-export function LogoLockup({ size = "md", showTagline = true, className = "" }: LockupProps) {
+export function LogoLockup({ size = "md", showTagline = true, className = "", markClassName = "" }: LockupProps) {
   const s = SIZES[size];
   return (
     <span className={`inline-flex items-center gap-2.5 ${className}`}>
       <LighthouseBeacon
         minimal={size === "sm"}
-        className={`${s.mark} flex-shrink-0 rounded-[22%] transition-transform duration-200 group-hover:scale-105`}
+        /* markClassName exists for dark surfaces. The beacon carries its own
+           near-black navy plate, which is the point — it renders identically
+           on cream, on a photo and in an email. But on the footer's deep navy
+           the plate is within a few percent of the surface behind it and the
+           mark simply disappears, so the footer passes a hairline ring. */
+        className={`${s.mark} flex-shrink-0 rounded-[22%] transition-transform duration-200 group-hover:scale-105 ${markClassName}`}
       />
       <span className="flex flex-col leading-none min-w-0">
         <span

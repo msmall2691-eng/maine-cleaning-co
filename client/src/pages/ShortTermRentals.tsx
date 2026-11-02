@@ -28,6 +28,7 @@ import { Button } from "@/components/ui/button";
 import { companyInfo } from "@/lib/company-info";
 import { EstimateCTA } from "@/components/ui/EstimateCTA";
 import { Section, SectionHeading } from "@/components/layout/Section";
+import { PageHero } from "@/components/layout/PageHero";
 import { LogoWatermark } from "@/components/brand/Logo";
 import { photos, srcSetFor, SIZES } from "@/lib/photos";
 
@@ -99,100 +100,40 @@ export default function ShortTermRentals() {
           strange thing for a page selling guest-ready rooms; the bathroom
           shot is the only frame in the library of a finished, guest-ready
           space, so it leads here. */}
-      <section className="relative pt-28 sm:pt-36 lg:pt-40 pb-14 sm:pb-20 overflow-hidden">
-        <div className="hero-aurora" aria-hidden="true" />
-        <div className="hero-dot-grid" aria-hidden="true" />
-
-        <div className="container mx-auto px-5 sm:px-6 lg:px-8 relative z-10">
-          <div className="max-w-[78rem] mx-auto grid lg:grid-cols-[minmax(0,1.04fr)_minmax(0,1fr)] gap-12 lg:gap-16 items-center">
-            <div className="text-center lg:text-left">
-              <motion.div
-                initial={{ opacity: 0, y: 14 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ duration: 0.5, ease: [0.22, 1, 0.36, 1] }}
-                className="mb-4"
-              >
-                <span className="inline-flex items-center gap-2 text-[11px] sm:text-xs font-semibold uppercase tracking-[0.2em] text-primary/80" data-testid="text-str-label">
-                  Southern Maine's STR Specialists
-                </span>
-              </motion.div>
-
-              <motion.h1
-                initial={{ opacity: 0, y: 24 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ duration: 0.8, ease: [0.22, 1, 0.36, 1] }}
-                className="text-[2.25rem] sm:text-[3rem] md:text-[3.5rem] lg:text-[3.75rem] font-extrabold leading-[1.04] tracking-[-0.04em] text-foreground mb-5"
-                data-testid="text-str-title"
-              >
-                Airbnb & Short-Term{" "}
-                <span className="hero-gradient-text">Rental Experts.</span>
-              </motion.h1>
-
-              <motion.p
-                initial={{ opacity: 0, y: 14 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ duration: 0.7, delay: 0.15 }}
-                className="text-[15px] sm:text-lg text-muted-foreground max-w-lg mx-auto lg:mx-0 leading-relaxed mb-8"
-                data-testid="text-str-subtitle"
-              >
-                Same-day turnovers, automated scheduling via iCal sync, property management, and full-service hosting support — everything Southern Maine vacation rental hosts need to earn 5-star reviews and maximize revenue.
-              </motion.p>
-
-              <motion.div
-                initial={{ opacity: 0, y: 14 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ duration: 0.5, delay: 0.3 }}
-                className="flex flex-col sm:flex-row justify-center lg:justify-start gap-3 sm:gap-4 mb-8"
-              >
-                <Button size="lg" className="h-13 sm:h-14 px-8 sm:px-10 rounded-full text-base sm:text-[17px] font-semibold shadow-[0_2px_12px_rgba(0,0,0,0.12)]" onClick={scrollToEstimate} data-testid="button-str-hero-estimate">
-                  Get an Estimate <ArrowRight className="ml-2.5 w-4 h-4" />
-                </Button>
-                <a href={companyInfo.contact.phoneHref} data-testid="link-str-hero-call">
-                  <Button size="lg" variant="outline" className="w-full sm:w-auto h-13 sm:h-14 px-8 sm:px-10 rounded-full text-base border-border bg-card/80 backdrop-blur-sm shadow-[0_1px_4px_rgba(0,0,0,0.15)]">
-                    <Phone className="w-4 h-4 mr-2" /> Call Us
-                  </Button>
-                </a>
-              </motion.div>
-
-              <motion.div
-                initial={{ opacity: 0 }}
-                animate={{ opacity: 1 }}
-                transition={{ duration: 0.6, delay: 0.5 }}
-                className="flex flex-wrap justify-center lg:justify-start gap-x-6 gap-y-2"
-              >
-                {[
-                  { icon: Zap, label: "Same-Day Turnovers" },
-                  { icon: RefreshCw, label: "iCal Sync" },
-                  { icon: Shield, label: "Fully Insured" },
-                  { icon: Star, label: "5-Star Standard" },
-                ].map((s, i) => (
-                  <div key={i} className="flex items-center gap-1.5 text-muted-foreground">
-                    <s.icon className="w-3.5 h-3.5 text-primary/70" />
-                    <span className="text-xs sm:text-[13px] font-medium tracking-wide">{s.label}</span>
-                  </div>
-                ))}
-              </motion.div>
-            </div>
-
-            {/* LCP candidate on desktop — eager on purpose. */}
-            <motion.figure
-              initial={{ opacity: 0, scale: 0.97 }}
-              animate={{ opacity: 1, scale: 1 }}
-              transition={{ duration: 0.9, delay: 0.2, ease: [0.22, 1, 0.36, 1] }}
-              className="photo-frame aspect-[4/3] lg:aspect-[4/5] max-w-md mx-auto lg:max-w-none w-full"
-            >
-              <img
-                src={photos.rentalBathroom.src}
-                srcSet={srcSetFor(photos.rentalBathroom)}
-                sizes={SIZES.half}
-                alt={photos.rentalBathroom.alt}
-                fetchPriority="high"
-                decoding="async"
-              />
-            </motion.figure>
+      <PageHero
+        data-testid="hero-str"
+        eyebrow={<span data-testid="text-str-label">Southern Maine's STR Specialists</span>}
+        title={<>Airbnb &amp; Short-Term <span className="heading-accent">Rental Experts.</span></>}
+        lead={<span data-testid="text-str-subtitle">Same-day turnovers, automated scheduling via iCal sync, property management, and full-service hosting support — everything Southern Maine vacation rental hosts need to earn 5-star reviews and maximize revenue.</span>}
+        photo={photos.rentalBathroom}
+        actions={
+          <>
+            <Button size="lg" className="h-13 sm:h-14 px-8 sm:px-10 rounded-full text-base sm:text-[17px] font-semibold shadow-[0_2px_12px_rgba(0,0,0,0.12)]" onClick={scrollToEstimate} data-testid="button-str-hero-estimate">
+              Get an Estimate <ArrowRight className="ml-2.5 w-4 h-4" />
+            </Button>
+            <a href={companyInfo.contact.phoneHref} data-testid="link-str-hero-call">
+              <Button size="lg" variant="outline" className="w-full sm:w-auto h-13 sm:h-14 px-8 sm:px-10 rounded-full text-base font-semibold border-2 border-primary hover:bg-primary/5 bg-card/80 backdrop-blur-sm shadow-[0_1px_4px_rgba(0,0,0,0.15)]">
+                <Phone className="w-4 h-4 mr-2" /> Call Us
+              </Button>
+            </a>
+          </>
+        }
+        meta={
+          <div className="flex flex-wrap justify-center lg:justify-start gap-x-6 gap-y-2">
+            {[
+              { icon: Zap, label: "Same-Day Turnovers" },
+              { icon: RefreshCw, label: "iCal Sync" },
+              { icon: Shield, label: "Fully Insured" },
+              { icon: Star, label: "5-Star Standard" },
+            ].map((s, i) => (
+              <div key={i} className="flex items-center gap-1.5 text-muted-foreground">
+                <s.icon className="w-3.5 h-3.5 text-primary/70" />
+                <span className="text-xs sm:text-[13px] font-medium tracking-wide">{s.label}</span>
+              </div>
+            ))}
           </div>
-        </div>
-      </section>
+        }
+      />
 
       {/* ── Why STR is Booming in Southern Maine ── */}
       <Section measure="default">
@@ -496,7 +437,12 @@ export default function ShortTermRentals() {
       <Section
         measure="default"
         rhythm="loose"
-        className="bg-primary text-primary-foreground isolate overflow-hidden"
+        /* Same change as <ClosingCTA>: `bg-primary` with white ink is 2.93:1
+           on the dark theme, because --primary is a light blue there. This
+           page kept its own copy of the closing band rather than using the
+           shared component, so it needed the same fix a second time. */
+        tone="deep"
+        className="isolate overflow-hidden"
         innerClassName="text-center"
       >
         <div className="absolute inset-0 -z-10 overflow-hidden" aria-hidden="true">
@@ -508,29 +454,29 @@ export default function ShortTermRentals() {
             aria-hidden="true"
             loading="lazy"
             decoding="async"
-            className="w-full h-full object-cover opacity-[0.18] saturate-50"
+            className="w-full h-full object-cover opacity-[0.22] saturate-50"
           />
-          <div className="absolute inset-0 bg-gradient-to-b from-primary via-primary/70 to-primary" />
+          <div className="absolute inset-0 bg-gradient-to-b from-deep via-deep/75 to-deep" />
         </div>
 
         <Home className="w-11 h-11 mx-auto mb-6 opacity-80" aria-hidden="true" />
-        <h2 className="text-[1.75rem] sm:text-4xl md:text-[2.5rem] leading-[1.1] font-serif font-bold mb-6 tracking-[-0.02em]">
+        <h2 className="type-h2 text-foreground mb-6">
           Ready to take your STR to the next level?
         </h2>
-        <p className="text-base sm:text-lg opacity-85 mb-9 leading-relaxed max-w-[38rem] mx-auto">
+        <p className="type-lead mb-9 max-w-[38rem] mx-auto">
           Whether you host one cabin or ten beachfront properties — we're your Southern Maine short-term rental partner.
         </p>
         <div className="flex flex-col sm:flex-row justify-center gap-3 sm:gap-4">
           <Button
             size="lg"
-            className="h-13 sm:h-14 px-9 rounded-full bg-background text-foreground hover:bg-background/90 shadow-[0_4px_20px_rgba(0,0,0,0.3)] font-semibold text-base sm:text-[17px]"
+            className="h-13 sm:h-14 px-9 rounded-full bg-primary text-primary-foreground hover:bg-primary/90 shadow-[0_4px_20px_rgba(0,0,0,0.35)] font-semibold text-base sm:text-[17px]"
             onClick={scrollToEstimate}
             data-testid="button-str-final-cta"
           >
             Get My Estimate
           </Button>
           <a href={companyInfo.contact.phoneHref} data-testid="link-str-final-call">
-            <Button size="lg" variant="outline" className="w-full sm:w-auto h-13 sm:h-14 px-9 rounded-full border-white/20 hover:bg-white/10 text-white font-semibold text-base">
+            <Button size="lg" variant="outline" className="w-full sm:w-auto h-13 sm:h-14 px-9 rounded-full border-2 border-foreground/25 hover:bg-foreground/10 text-foreground font-semibold text-base">
               <Phone className="w-4 h-4 mr-2" /> Call {companyInfo.contact.phoneDisplay}
             </Button>
           </a>

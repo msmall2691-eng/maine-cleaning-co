@@ -401,7 +401,7 @@ export default function Home() {
             {/* ── Copy ── */}
             <div className="text-center lg:text-left">
               <motion.div initial={{ opacity: 0, y: 14 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.5 }} className="mb-4">
-                <span className="inline-flex items-center gap-2 text-[11px] sm:text-xs font-semibold uppercase tracking-[0.2em] text-primary/80" data-testid="text-hero-label">
+                <span className="type-eyebrow inline-flex items-center gap-2" data-testid="text-hero-label">
                   Southern Maine's Premier Cleaning Co.
                 </span>
               </motion.div>
@@ -410,17 +410,17 @@ export default function Home() {
                 initial={{ opacity: 0, y: 24 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ duration: 0.8, ease: [0.22, 1, 0.36, 1] }}
-                className="text-[2.75rem] sm:text-[3.5rem] lg:text-[3.75rem] xl:text-[4.5rem] font-extrabold leading-[1.02] tracking-[-0.04em] text-foreground mb-6"
+                className="type-display text-foreground mb-6"
                 data-testid="text-hero-title"
               >
-                The Way Cleaning{" "}<span className="hero-gradient-text">Should Be.</span>
+                The Way Cleaning <span className="heading-accent">Should&nbsp;Be.</span>
               </motion.h1>
 
               <motion.p
                 initial={{ opacity: 0, y: 14 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ duration: 0.7, delay: 0.15 }}
-                className="text-[15px] sm:text-lg text-muted-foreground max-w-lg mx-auto lg:mx-0 leading-relaxed mb-8"
+                className="type-lead max-w-xl mx-auto lg:mx-0 mb-8"
                 data-testid="text-hero-subtitle"
               >
                 Residential, rental, and commercial cleaning across Southern Maine — eco-friendly products, consistent results, and a team that genuinely cares.
@@ -468,7 +468,10 @@ export default function Home() {
                 initial={{ opacity: 0 }}
                 animate={{ opacity: 1 }}
                 transition={{ duration: 0.6, delay: 0.5 }}
-                className="flex flex-wrap justify-center lg:justify-start gap-x-5 gap-y-2 sm:gap-x-7"
+                /* Two columns on a phone, a row from sm. Four items in a
+                   centred flex-wrap broke 3 + 1, leaving "Eco-Conscious"
+                   stranded and centred on its own line under the other three. */
+                className="grid grid-cols-2 gap-x-4 gap-y-2.5 max-w-[17rem] mx-auto sm:flex sm:flex-wrap sm:max-w-none sm:mx-0 sm:justify-center lg:sm:justify-start sm:gap-x-7 sm:gap-y-2 lg:justify-start"
               >
                 {trustSignals.map((signal, i) => (
                   <div key={i} className="flex items-center gap-1.5 text-muted-foreground">
@@ -510,13 +513,18 @@ export default function Home() {
                 <div className="text-[11px] text-muted-foreground truncate">Quick reply</div>
               </div>
             </a>
-            <a href={companyInfo.contact.phoneHref} data-testid="quick-action-text-desktop" className="hidden sm:flex group items-center gap-3 p-3 sm:p-3.5 rounded-xl hover:bg-secondary/60 active:bg-secondary/80 transition-all border border-transparent hover:border-border/60">
+            {/* Desktop's second slot used to be "Call or Text", pointing at the
+                same tel: link and printing the same number as "Call Now" two
+                inches to its left — three quick actions, two of them identical.
+                Texting isn't a distinct action on a desktop anyway, so the slot
+                goes to email: the one channel the strip was otherwise missing. */}
+            <a href={companyInfo.contact.emailHref} data-testid="quick-action-email-desktop" className="hidden sm:flex group items-center gap-3 p-3 sm:p-3.5 rounded-xl hover:bg-secondary/60 active:bg-secondary/80 transition-all border border-transparent hover:border-border/60">
               <div className="w-9 h-9 rounded-lg bg-brand-harbor/10 flex items-center justify-center flex-shrink-0 group-hover:bg-brand-harbor/20 transition-colors">
-                <MessageSquare className="w-4 h-4 text-brand-harbor" />
+                <Mail className="w-4 h-4 text-brand-harbor" />
               </div>
               <div className="min-w-0">
-                <div className="text-[13px] font-semibold text-foreground group-hover:text-brand-harbor transition-colors truncate">Call or Text</div>
-                <div className="text-[11px] text-muted-foreground truncate">{companyInfo.contact.phoneDisplay}</div>
+                <div className="text-[13px] font-semibold text-foreground group-hover:text-brand-harbor transition-colors truncate">Email Us</div>
+                <div className="text-[11px] text-muted-foreground truncate">{companyInfo.contact.email}</div>
               </div>
             </a>
             <Link href="/service-areas" data-testid="quick-action-areas" className="col-span-2 md:col-span-1 group flex items-center gap-3 p-3 sm:p-3.5 rounded-xl hover:bg-secondary/60 active:bg-secondary/80 transition-all border border-transparent hover:border-border/60">
@@ -609,7 +617,12 @@ export default function Home() {
       </Section>
 
       {/* ── Reviews ── */}
-      <Section id="reviews" measure="wide" tone="sink">
+      {/* The page's one inverted band. Seven sections that were all within 4%
+          lightness of each other gave the scroll no landmark; the reviews are
+          the right place to put the weight, because they're the thing a
+          visitor is actually looking for before they call. One per page — see
+          .band-deep. */}
+      <Section id="reviews" measure="wide" tone="deep">
         <SectionHeading
           align="left"
           eyebrow="Reviews"
@@ -638,14 +651,18 @@ export default function Home() {
           }
         />
 
-        <div ref={carouselRef} className="flex gap-4 overflow-x-auto snap-x snap-mandatory scroll-smooth pb-4 -mx-5 px-5 sm:mx-0 sm:px-0 no-scrollbar">
+        <div ref={carouselRef} className="flex gap-4 overflow-x-auto snap-x snap-mandatory scroll-smooth pb-4 -mx-5 px-5 sm:mx-0 sm:px-0 no-scrollbar scroll-fade-x">
           {reviews.map((r, i) => (
-            <div key={i} className="snap-start flex-shrink-0 w-[85%] sm:w-[48%] lg:w-[31.5%] card-soft p-5 sm:p-6" data-testid={`card-review-${i}`}>
+            /* flex-col + mt-auto on the footer: the cards are equal height, but
+               the attribution used to sit directly under whatever length the
+               quote happened to be, so it landed at a different height in every
+               card across the row. */
+            <div key={i} className="snap-start flex-shrink-0 w-[85%] sm:w-[48%] lg:w-[31.5%] card-soft p-5 sm:p-6 flex flex-col" data-testid={`card-review-${i}`}>
               <div className="flex gap-0.5 mb-3">
                 {[1,2,3,4,5].map(s => <Star key={s} className="w-3.5 h-3.5 fill-yellow-400 text-yellow-500 dark:text-yellow-400" />)}
               </div>
               <p className="text-sm text-foreground leading-relaxed mb-4 italic">"{r.text}"</p>
-              <div className="flex items-center justify-between">
+              <div className="flex items-center justify-between mt-auto pt-2">
                 <span className="text-xs font-semibold text-muted-foreground">— {r.author}</span>
                 <span className="text-[11px] text-muted-foreground/60">{r.date}</span>
               </div>
@@ -683,7 +700,10 @@ export default function Home() {
           section isn't a flat rectangle of form controls. It's decoration, so
           it's aria-hidden and lazy. */}
       <Section id="get-estimate" measure="wide" className="isolate">
-        <AmbientPhoto photo={photos.restroomTrailer} />
+        {/* A calm, bright subject. The restroom trailer that used to run here
+            was legible enough through the scrim to be distracting, directly
+            behind the copy and the 48-hour note. */}
+        <AmbientPhoto photo={photos.kitchenCooktop} />
         <LogoWatermark position="right" />
 
         {/* The estimator is ~1,400px tall and this column is ~600px, so the

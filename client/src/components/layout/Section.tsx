@@ -84,8 +84,13 @@ type SectionProps = {
    * Background band. `plain` inherits the page background — which is the
    * right answer most of the time. `tint` and `sink` are *soft* steps, not
    * the hard white/cream stripes the site used to alternate between.
+   *
+   * `deep` is the loud one: a fixed navy panel that redefines the theme
+   * tokens inside itself, so children invert without needing variants. Use it
+   * at most ONCE per page, on the section that should stop you. See
+   * `.band-deep` in index.css.
    */
-  tone?: "plain" | "tint" | "sink";
+  tone?: "plain" | "tint" | "sink" | "deep";
   /** Fades and lifts the band in as it enters the viewport. */
   reveal?: boolean;
   /** Extra classes on the <section> element itself. */
@@ -109,7 +114,13 @@ export function Section({
   const { ref, shown } = useReveal<HTMLElement>(reveal);
 
   const toneClass =
-    tone === "tint" ? "band-tint" : tone === "sink" ? "band-sink" : "";
+    tone === "tint"
+      ? "band-tint"
+      : tone === "sink"
+        ? "band-sink"
+        : tone === "deep"
+          ? "band-deep isolate"
+          : "";
 
   return (
     <section
@@ -120,7 +131,7 @@ export function Section({
       } ${className}`}
       {...rest}
     >
-      <div className="container mx-auto px-5 sm:px-6 lg:px-8">
+      <div className="container relative z-10 mx-auto px-5 sm:px-6 lg:px-8">
         <div className={`${MEASURES[measure]} mx-auto ${innerClassName}`}>{children}</div>
       </div>
     </section>
@@ -156,30 +167,22 @@ export function SectionHeading({
   className = "",
 }: HeadingProps) {
   const isCenter = align === "center";
-  const size =
-    Tag === "h1"
-      ? "text-[2.25rem] sm:text-5xl md:text-[3.5rem] leading-[1.05]"
-      : "text-[1.75rem] sm:text-4xl md:text-[2.5rem] leading-[1.1]";
+  // One scale, defined in index.css. Don't reach for a font family or a
+  // font-size here again — that is how the site ended up with five different
+  // h1 treatments and an h2 in a different typeface from the h1 above it.
+  const size = Tag === "h1" ? "type-display" : "type-h2";
 
   const block = (
-    <div className={isCenter ? "max-w-[38rem] mx-auto text-center" : "max-w-[34rem]"}>
-      {eyebrow && (
-        <p className="text-[11px] sm:text-xs font-semibold uppercase tracking-[0.2em] text-primary/80 mb-3">
-          {eyebrow}
-        </p>
-      )}
+    <div className={isCenter ? "max-w-[42rem] mx-auto text-center" : "max-w-[38rem]"}>
+      {eyebrow && <p className="type-eyebrow mb-4">{eyebrow}</p>}
       <Tag
-        className={`${size} font-serif font-bold text-foreground tracking-[-0.02em] ${
+        className={`${size} text-foreground ${
           isCenter ? "section-heading-accent" : "heading-rule-left"
         }`}
       >
         {title}
       </Tag>
-      {lead && (
-        <p className="text-[15px] sm:text-base text-muted-foreground leading-relaxed mt-6">
-          {lead}
-        </p>
-      )}
+      {lead && <p className="type-lead mt-6">{lead}</p>}
     </div>
   );
 

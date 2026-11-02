@@ -44,10 +44,18 @@ export function ClosingCTA({
   photo = photos.rentalBathroom,
 }: ClosingCTAProps) {
   return (
+    /* Was `bg-primary` with white ink. That is 7.53:1 on the light theme but
+       2.92:1 on the dark one, because --primary is a *light* blue there — so
+       the band that closes every page failed AA for every dark-theme visitor.
+       The deep band is a fixed panel with contrast-checked ink (body 10.64,
+       muted 7.32, accent 7.58) that reads the same in both themes, and it
+       runs straight into the footer, which is now the same surface: the page
+       ends in one confident dark region instead of two stacked navy slabs. */
     <Section
       rhythm="loose"
       measure="default"
-      className="bg-primary text-primary-foreground overflow-hidden"
+      tone="deep"
+      className="overflow-hidden"
     >
       {/* Texture, not content: the photo is scrimmed back into the brand
           colour so the type keeps its contrast in both themes. `.photo-ambient`
@@ -61,23 +69,23 @@ export function ClosingCTA({
           alt=""
           loading="lazy"
           decoding="async"
-          className="absolute inset-0 h-full w-full object-cover opacity-25 mix-blend-luminosity"
+          className="absolute inset-0 h-full w-full object-cover opacity-30 mix-blend-luminosity"
         />
         <div
           className="absolute inset-0"
           style={{
             background:
-              "radial-gradient(ellipse 90% 80% at 50% 50%, hsl(var(--primary) / 0.5) 0%, hsl(var(--primary) / 0.92) 70%, hsl(var(--primary)) 100%)",
+              "radial-gradient(ellipse 90% 80% at 50% 50%, hsl(var(--deep) / 0.55) 0%, hsl(var(--deep) / 0.92) 70%, hsl(var(--deep)) 100%)",
           }}
         />
       </div>
 
       <div className="relative grid gap-9 lg:grid-cols-[minmax(0,1.15fr)_auto] lg:items-center lg:gap-14">
         <div className="text-center lg:text-left">
-          <h2 className="text-[1.75rem] sm:text-4xl md:text-[2.5rem] leading-[1.1] font-serif font-bold tracking-[-0.02em] mb-5">
+          <h2 className="type-h2 text-foreground mb-5">
             {title}
           </h2>
-          <p className="text-base opacity-85 leading-relaxed max-w-[34rem] mx-auto lg:mx-0">
+          <p className="type-lead max-w-[36rem] mx-auto lg:mx-0">
             {lead}
           </p>
         </div>
@@ -86,7 +94,10 @@ export function ClosingCTA({
           <Link href={ctaHref}>
             <Button
               size="lg"
-              className="w-full sm:w-auto h-13 sm:h-14 px-8 sm:px-10 rounded-full bg-background text-foreground hover:bg-background/90 shadow-[0_4px_20px_rgba(0,0,0,0.3)] font-semibold text-base"
+              /* bg-primary, not bg-background: inside .band-deep --background
+                 IS the band, so the old classes painted a navy button on a
+                 navy panel. --primary resolves to the band's light accent. */
+              className="w-full sm:w-auto h-13 sm:h-14 px-8 sm:px-10 rounded-full bg-primary text-primary-foreground hover:bg-primary/90 shadow-[0_4px_20px_rgba(0,0,0,0.35)] font-semibold text-base"
               data-testid={ctaTestId}
             >
               {ctaLabel}
@@ -96,7 +107,7 @@ export function ClosingCTA({
             <Button
               size="lg"
               variant="outline"
-              className="w-full sm:w-auto h-13 sm:h-14 px-8 sm:px-10 rounded-full border-primary-foreground/25 hover:bg-primary-foreground/10 text-primary-foreground font-semibold text-base"
+              className="w-full sm:w-auto h-13 sm:h-14 px-8 sm:px-10 rounded-full border-2 border-foreground/25 hover:bg-foreground/10 text-foreground font-semibold text-base"
             >
               <Phone className="w-4 h-4 mr-2" /> Call {companyInfo.contact.phoneDisplay}
             </Button>
