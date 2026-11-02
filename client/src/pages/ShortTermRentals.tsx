@@ -2,7 +2,7 @@ import { useEffect } from "react";
 import { motion } from "framer-motion";
 import { Link } from "wouter";
 import { useSEO } from "@/hooks/use-seo";
-import { STATIC_PAGE_SEO } from "@/lib/seo";
+import { DEMO_PAGE_SEO } from "@/lib/seo";
 import {
   ArrowRight,
   CheckCircle2,
@@ -86,7 +86,7 @@ const scrollToEstimate = () => {
 };
 
 export default function ShortTermRentals() {
-  useSEO(STATIC_PAGE_SEO["/short-term-rentals"]);
+  useSEO(DEMO_PAGE_SEO["/short-term-rentals"]);
   useEffect(() => {
     window.scrollTo(0, 0);
   }, []);

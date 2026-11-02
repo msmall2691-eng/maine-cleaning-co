@@ -39,6 +39,15 @@ type PageHeroProps = {
   media?: ReactNode;
   /** Narrower copy column, for pages whose picture is the point. */
   mediaBias?: boolean;
+  /**
+   * Step the headline down a size.
+   *
+   * `.type-display` tops out at 4.75rem, which is right for a short statement
+   * and wrong for a long one: a two-sentence headline at that size runs to
+   * four lines and pushes the call to action off the first screen. Use "sm"
+   * when the copy is the point and the size is in its way.
+   */
+  titleSize?: "display" | "display-sm";
   className?: string;
   "data-testid"?: string;
 };
@@ -58,6 +67,7 @@ export function PageHero({
   photo,
   media,
   mediaBias = false,
+  titleSize = "display",
   className = "",
   ...rest
 }: PageHeroProps) {
@@ -99,7 +109,7 @@ export function PageHero({
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.7, ease: [0.22, 1, 0.36, 1] }}
-              className="type-display text-foreground mb-5"
+              className={`${titleSize === "display-sm" ? "type-display-sm" : "type-display"} text-foreground mb-5`}
             >
               {title}
             </motion.h1>

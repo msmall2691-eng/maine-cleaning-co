@@ -1,7 +1,7 @@
 import { motion } from "framer-motion";
 import { Link } from "wouter";
 import { useSEO } from "@/hooks/use-seo";
-import { STATIC_PAGE_SEO, faqPageJsonLd } from "@/lib/seo";
+import { DEMO_PAGE_SEO, faqPageJsonLd } from "@/lib/seo";
 import {
   ArrowRight, Zap, CheckCircle2, ClipboardList, CalendarCheck,
   Sparkles, MessageSquare,
@@ -50,7 +50,7 @@ const steps = [
 ];
 
 export default function HowItWorks() {
-  useSEO({ ...STATIC_PAGE_SEO["/how-it-works"], jsonLd: faqPageJsonLd(faqs) });
+  useSEO({ ...DEMO_PAGE_SEO["/how-it-works"], jsonLd: faqPageJsonLd(faqs) });
 
   return (
     <div className="w-full clip-x">

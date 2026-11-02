@@ -56,51 +56,35 @@ import { Router, Switch, Route } from "wouter";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { WeatherProvider } from "@/lib/weather";
-import Footer from "@/components/layout/Footer";
-import Home from "@/pages/Home";
-import Book from "@/pages/Book";
-import About from "@/pages/About";
-import HowItWorks from "@/pages/HowItWorks";
-import ServiceAreas from "@/pages/ServiceAreas";
-import ServiceAreaDetail from "@/pages/ServiceAreaDetail";
-import Services from "@/pages/Services";
-import ServiceDetail from "@/pages/ServiceDetail";
-import ShortTermRentals from "@/pages/ShortTermRentals";
-import Blog from "@/pages/Blog";
-import BlogPost from "@/pages/BlogPost";
-import Privacy from "@/pages/Privacy";
-import Terms from "@/pages/Terms";
-import Sms from "@/pages/Sms";
+import StudioFooter from "@/studio/components/StudioFooter";
+import StudioHome from "@/studio/pages/StudioHome";
+import Systems from "@/studio/pages/Systems";
+import Proof from "@/studio/pages/Proof";
+import Process from "@/studio/pages/Process";
+import Contact from "@/studio/pages/Contact";
+import StudioPrivacy from "@/studio/pages/StudioPrivacy";
 import { PRERENDER_ROUTES, PRERENDER_PATHS } from "@/lib/seo-routes";
 
 export { PRERENDER_ROUTES, PRERENDER_PATHS };
 
 /**
- * The public routes, mirroring App.tsx. Dynamic segments are declared here
- * rather than resolved by the caller so /services/:slug and /blog/:slug get
- * their params from the router, exactly as they do in the browser.
+ * The business site's public routes, mirroring the StudioSite switch in
+ * App.tsx.
  *
- * The portal, the admin screen and /booking/manage/:token are deliberately
- * absent: they are behind a sign-in or ARE a credential, and nothing about
- * them should be baked into a static file.
+ * The /demo subtree is deliberately absent. It is noindex by design — the
+ * cleaning company has wound down — so there is nothing for a crawler to
+ * read there and no reason to bake it into a static file. See the note at
+ * the top of lib/seo-routes.ts.
  */
 function PublicRoutes() {
   return (
     <Switch>
-      <Route path="/" component={Home} />
-      <Route path="/book" component={Book} />
-      <Route path="/about" component={About} />
-      <Route path="/how-it-works" component={HowItWorks} />
-      <Route path="/service-areas" component={ServiceAreas} />
-      <Route path="/service-areas/:slug" component={ServiceAreaDetail} />
-      <Route path="/services" component={Services} />
-      <Route path="/services/:slug" component={ServiceDetail} />
-      <Route path="/short-term-rentals" component={ShortTermRentals} />
-      <Route path="/blog" component={Blog} />
-      <Route path="/blog/:slug" component={BlogPost} />
-      <Route path="/privacy" component={Privacy} />
-      <Route path="/terms" component={Terms} />
-      <Route path="/sms" component={Sms} />
+      <Route path="/" component={StudioHome} />
+      <Route path="/systems" component={Systems} />
+      <Route path="/proof" component={Proof} />
+      <Route path="/process" component={Process} />
+      <Route path="/contact" component={Contact} />
+      <Route path="/privacy" component={StudioPrivacy} />
     </Switch>
   );
 }
@@ -125,7 +109,7 @@ export function render(path: string): string {
               <main className="flex-1 pb-20 lg:pb-0">
                 <PublicRoutes />
               </main>
-              <Footer />
+              <StudioFooter />
             </div>
           </Router>
         </TooltipProvider>

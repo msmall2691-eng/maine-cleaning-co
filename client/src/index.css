@@ -804,6 +804,27 @@
   pointer-events: none;
 }
 
+/* ── The demo's notice bar ───────────────────────────────────────────────
+   <Navbar> is `fixed top-0`, so a banner in normal flow above it scrolled
+   away while the navbar stayed — and on first paint the two overlapped, with
+   the wordmark reading through the notice. The banner is fixed instead, and
+   this class moves the navbar and the page down by exactly its height.
+   Dismissing the banner removes the class and everything returns. */
+.demo-shell {
+  --demo-banner-h: 3.5rem;
+  padding-top: var(--demo-banner-h);
+}
+@media (min-width: 640px) {
+  .demo-shell {
+    --demo-banner-h: 2.75rem;
+  }
+}
+/* (0,1,1) beats Tailwind's `top-0` utility (0,1,0), so the navbar follows the
+   banner without the shared component needing to know the demo exists. */
+.demo-shell header {
+  top: var(--demo-banner-h);
+}
+
 .safe-area-bottom {
   padding-bottom: env(safe-area-inset-bottom, 0px);
 }

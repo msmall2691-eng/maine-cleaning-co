@@ -20,28 +20,27 @@
     <meta name="mobile-web-app-capable" content="yes" />
     <meta name="apple-mobile-web-app-capable" content="yes" />
     <meta name="apple-mobile-web-app-status-bar-style" content="default" />
-    <meta name="apple-mobile-web-app-title" content="Maine Clean Co." />
+    <meta name="apple-mobile-web-app-title" content="Smallworks" />
     <link rel="apple-touch-icon" sizes="512x512" href="/apple-touch-icon.png" />
-    <meta name="description" content="The Maine Cleaning Co. — Southern Maine's premier cleaning & short-term rental management company. Airbnb & VRBO turnovers, iCal scheduling, property management, residential & commercial cleaning across York & Cumberland County." />
+    <meta name="description" content="Operations software for local service businesses. Instant quoting, lead intake, booking, a client portal and an operator dashboard — built by someone who ran one." />
     <meta name="robots" content="index, follow, max-snippet:-1, max-image-preview:large, max-video-preview:-1" />
-    <!-- maineclean.co, no hyphen. www.maineclean.co is the Railway app you are
-         reading; maine-clean.co is a separate B12 site on different DNS. These
-         tags used to point at the hyphenated one, which told search engines the
-         canonical copy of every page here lived on a site this app does not
-         serve. Keep canonical, og:url and the JSON-LD url/image/logo on the
-         same host the app is actually deployed to. -->
-    <link rel="canonical" href="https://www.maineclean.co/" />
+    <!-- The canonical host. Keep this, og:url, the JSON-LD @id/url and
+         CANONICAL_ORIGIN in server/lib/sitemap.ts on the SAME host the app is
+         actually deployed to, or every page asks to be indexed somewhere it
+         is not served. client/src/lib/brand.ts holds the copy the app reads at
+         runtime; these tags are read before JavaScript runs, which is the only
+         reason the value is duplicated here. -->
+    <link rel="canonical" href="https://www.smallworks.systems/" />
 
-    <meta property="og:title" content="The Maine Cleaning Co. | Airbnb & STR Cleaning + Management in Southern Maine" />
-    <meta property="og:description" content="Southern Maine's short-term rental experts. Same-day Airbnb turnovers, iCal scheduling, property management & residential cleaning across York & Cumberland County." />
+    <meta property="og:title" content="Smallworks | Operations software for local service businesses" />
+    <meta property="og:description" content="I spent seven years running a cleaning company and built the software that ran it. Now I build that same system — quoting, intake, booking, portal, dashboard — for other local service businesses." />
     <meta property="og:type" content="website" />
-    <meta property="og:url" content="https://www.maineclean.co/" />
-    <meta property="og:image" content="https://www.maineclean.co/opengraph.jpg" />
+    <meta property="og:url" content="https://www.smallworks.systems/" />
+    <meta property="og:image" content="https://www.smallworks.systems/opengraph.jpg" />
     <meta name="twitter:card" content="summary_large_image" />
-    <meta name="twitter:site" content="@mainecleaningco" />
-    <meta name="twitter:title" content="The Maine Cleaning Co. | Airbnb & STR Cleaning + Management in Southern Maine" />
-    <meta name="twitter:description" content="Southern Maine's short-term rental experts. Same-day Airbnb turnovers, iCal scheduling, property management & residential cleaning across York & Cumberland County." />
-    <meta name="twitter:image" content="https://www.maineclean.co/opengraph.jpg" />
+    <meta name="twitter:title" content="Smallworks | Operations software for local service businesses" />
+    <meta name="twitter:description" content="I spent seven years running a cleaning company and built the software that ran it. Now I build that same system — quoting, intake, booking, portal, dashboard — for other local service businesses." />
+    <meta name="twitter:image" content="https://www.smallworks.systems/opengraph.jpg" />
 
     <!-- Google Analytics 4 -->
     <script async src="https://www.googletagmanager.com/gtag/js?id=G-T476Q8GYS5"></script>
@@ -52,7 +51,7 @@
       gtag('config', 'G-T476Q8GYS5');
     </script>
 
-    <title>The Maine Cleaning Co. | Airbnb Cleaning & STR Management — Southern Maine</title>
+    <title>Smallworks | Operations software for local service businesses</title>
     <!-- SVG first so the mark stays sharp on hi-dpi tabs; the PNG is the
          fallback for browsers that still refuse SVG favicons. -->
     <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
@@ -82,64 +81,85 @@
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Space+Grotesk:wght@400;500;600;700&display=swap" rel="stylesheet">
     
     <script type="application/ld+json">
-    {
-      "@context": "https://schema.org",
-      "@type": "LocalBusiness",
-      "@id": "https://www.maineclean.co/#organization",
-      "name": "The Maine Cleaning Co.",
-      "image": "https://www.maineclean.co/opengraph.jpg",
-      "logo": "https://www.maineclean.co/apple-touch-icon.png",
-      "description": "Dependable residential, commercial, and short-term rental cleaning across Southern Maine since 2018. Eco-friendly products, transparent pricing, and consistent results.",
-      "url": "https://www.maineclean.co/",
-      "telephone": "+12075720502",
-      "email": "office@mainecleaningco.com",
-      "foundingDate": "2018",
-      "address": {
-        "@type": "PostalAddress",
-        "addressRegion": "ME",
-        "addressCountry": "US"
-      },
-      "areaServed": [
-        {
-          "@type": "AdministrativeArea",
-          "name": "York County, ME"
-        },
-        {
-          "@type": "AdministrativeArea",
-          "name": "Cumberland County, ME"
+{
+  "@context": "https://schema.org",
+  "@type": "ProfessionalService",
+  "@id": "https://www.smallworks.systems/#organization",
+  "name": "Smallworks",
+  "image": "https://www.smallworks.systems/opengraph.jpg",
+  "description": "Operations software for local service businesses. Instant quoting, lead intake, booking, a client portal and an operator dashboard \u2014 built by someone who ran one.",
+  "url": "https://www.smallworks.systems/",
+  "email": "msmall2691@gmail.com",
+  "founder": {
+    "@type": "Person",
+    "name": "Mike Small"
+  },
+  "areaServed": {
+    "@type": "Country",
+    "name": "United States"
+  },
+  "knowsAbout": [
+    "Service business operations software",
+    "Instant quoting engines",
+    "Online booking and scheduling",
+    "Customer portals",
+    "Local SEO for service businesses"
+  ],
+  "hasOfferCatalog": {
+    "@type": "OfferCatalog",
+    "name": "What gets built",
+    "itemListElement": [
+      {
+        "@type": "Offer",
+        "itemOffered": {
+          "@type": "Service",
+          "name": "Instant quoting engine",
+          "description": "A customer describes the job and gets a real price range on the spot."
         }
-      ],
-      "sameAs": [
-        "https://www.facebook.com/mainecleaningco",
-        "https://www.instagram.com/mainecleaningco/"
-      ],
-      "priceRange": "$$",
-      "openingHoursSpecification": {
-        "@type": "OpeningHoursSpecification",
-        "dayOfWeek": ["Monday","Tuesday","Wednesday","Thursday","Friday"],
-        "opens": "08:00",
-        "closes": "17:00"
       },
-      "hasOfferCatalog": {
-        "@type": "OfferCatalog",
-        "name": "Cleaning & Property Management Services",
-        "itemListElement": [
-          { "@type": "Offer", "itemOffered": { "@type": "Service", "name": "Airbnb Turnover Cleaning", "description": "Same-day short-term rental turnover cleaning with iCal sync for Airbnb and VRBO hosts in Southern Maine." } },
-          { "@type": "Offer", "itemOffered": { "@type": "Service", "name": "Short-Term Rental Property Management", "description": "Full-service STR management including listing optimization, guest communication, and revenue strategy." } },
-          { "@type": "Offer", "itemOffered": { "@type": "Service", "name": "Residential Cleaning" } },
-          { "@type": "Offer", "itemOffered": { "@type": "Service", "name": "Deep Cleaning" } },
-          { "@type": "Offer", "itemOffered": { "@type": "Service", "name": "Vacation Rental Turnovers" } },
-          { "@type": "Offer", "itemOffered": { "@type": "Service", "name": "Commercial & Janitorial" } },
-          { "@type": "Offer", "itemOffered": { "@type": "Service", "name": "Move-In / Move-Out Cleaning" } }
-        ]
+      {
+        "@type": "Offer",
+        "itemOffered": {
+          "@type": "Service",
+          "name": "Lead intake",
+          "description": "Enquiries stored before they are emailed, with retries and a sweep for failed deliveries."
+        }
       },
-      "hasCredential": [
-        { "@type": "EducationalOccupationalCredential", "credentialCategory": "Professional Certification", "name": "ISSA CIMS" },
-        { "@type": "EducationalOccupationalCredential", "credentialCategory": "Professional Certification", "name": "GBAC STAR" },
-        { "@type": "EducationalOccupationalCredential", "credentialCategory": "Professional Certification", "name": "IICRC Certified" },
-        { "@type": "EducationalOccupationalCredential", "credentialCategory": "Professional Certification", "name": "Green Seal Certified" }
-      ]
-    }
+      {
+        "@type": "Offer",
+        "itemOffered": {
+          "@type": "Service",
+          "name": "Booking and scheduling",
+          "description": "Date selection, self-serve reschedule and cancel, confirmations and reminders."
+        }
+      },
+      {
+        "@type": "Offer",
+        "itemOffered": {
+          "@type": "Service",
+          "name": "Client portal",
+          "description": "Accounts, quote and booking history, upcoming schedule and documents."
+        }
+      },
+      {
+        "@type": "Offer",
+        "itemOffered": {
+          "@type": "Service",
+          "name": "Operator dashboard",
+          "description": "Leads, quotes, bookings and customers in one screen built for the owner."
+        }
+      },
+      {
+        "@type": "Offer",
+        "itemOffered": {
+          "@type": "Service",
+          "name": "Search and local SEO",
+          "description": "Pre-rendered pages with their own metadata and structured data, including per-town landing pages."
+        }
+      }
+    ]
+  }
+}
     </script>
   </head>
   <body>

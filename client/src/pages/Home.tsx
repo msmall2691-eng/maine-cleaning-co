@@ -1,6 +1,6 @@
 import { useRef, useEffect, useState, useCallback } from "react";
 import { useSEO } from "@/hooks/use-seo";
-import { STATIC_PAGE_SEO } from "@/lib/seo";
+import { DEMO_PAGE_SEO } from "@/lib/seo";
 import { motion } from "framer-motion";
 import { Link } from "wouter";
 import {
@@ -32,6 +32,7 @@ import { CoastalConditions } from "@/components/ui/CoastalConditions";
 import { companyInfo } from "@/lib/company-info";
 import { RESPONSE_REPLY, AVAILABILITY_NOTE } from "@/lib/response-time";
 import { ResponseNote } from "@/components/ui/ResponseNote";
+import { DEMO_BLOCKED_MESSAGE, useIsDemo } from "@/demo/demo-mode";
 import { COMMUNITIES_SERVED, CLEANS_SINCE_2018 } from "@/lib/company-stats";
 import { Section, SectionHeading } from "@/components/layout/Section";
 import { LogoWatermark } from "@/components/brand/Logo";
@@ -145,8 +146,12 @@ const CONTACT_EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
 function ContactForm() {
   const [form, setForm] = useState({ name: "", email: "", phone: "", message: "" });
-  const [status, setStatus] = useState<"idle" | "sending" | "sent" | "error">("idle");
+  const [status, setStatus] = useState<"idle" | "sending" | "sent" | "error" | "demo">("idle");
   const [showContactHint, setShowContactHint] = useState(false);
+  // This page is the demo now. The server refuses the write as well
+  // (server/demoGuard.ts); this is what turns the refusal into a sentence
+  // rather than a generic failure.
+  const isDemo = useIsDemo();
 
   // Mirrors the server's intakeSubmitSchema refine: a message with no phone
   // AND no email can never be answered.
@@ -164,6 +169,10 @@ function ContactForm() {
       return;
     }
     setShowContactHint(false);
+    if (isDemo) {
+      setStatus("demo");
+      return;
+    }
     setStatus("sending");
     try {
       const res = await fetch("/api/intake/submit", {
@@ -266,6 +275,11 @@ function ContactForm() {
       {showContactHint && !hasContactMethod && (
         <p role="alert" className="text-sm text-amber-500">Please add a phone number or email so we can get back to you.</p>
       )}
+      {status === "demo" && (
+        <p role="alert" className="text-sm text-muted-foreground bg-muted/60 border border-border rounded-xl p-4" data-testid="contact-demo-notice">
+          {DEMO_BLOCKED_MESSAGE}
+        </p>
+      )}
       {status === "error" && (
         <p role="alert" className="text-sm text-red-600 dark:text-red-400">Something went wrong. Please try again or call us directly.</p>
       )}
@@ -281,7 +295,7 @@ function ContactForm() {
 }
 
 export default function Home() {
-  useSEO(STATIC_PAGE_SEO["/"]);
+  useSEO(DEMO_PAGE_SEO["/"]);
   const carouselRef = useRef<HTMLDivElement>(null);
   const [pastThreshold, setPastThreshold] = useState(false);
   const [activeReviewIndex, setActiveReviewIndex] = useState(0);

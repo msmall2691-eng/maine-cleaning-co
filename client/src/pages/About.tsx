@@ -1,7 +1,7 @@
 import { motion } from "framer-motion";
 import { Link } from "wouter";
 import { useSEO } from "@/hooks/use-seo";
-import { STATIC_PAGE_SEO } from "@/lib/seo";
+import { DEMO_PAGE_SEO } from "@/lib/seo";
 import {
   Calendar, Leaf, CheckCircle2, MessageCircle, Shield, Users, ArrowRight,
   Phone, Star, MapPin, RefreshCw, Quote,
@@ -41,7 +41,7 @@ const testimonials = [
 ];
 
 export default function About() {
-  useSEO(STATIC_PAGE_SEO["/about"]);
+  useSEO(DEMO_PAGE_SEO["/about"]);
   return (
     <div className="w-full clip-x">
       {/* ── Page Hero ──

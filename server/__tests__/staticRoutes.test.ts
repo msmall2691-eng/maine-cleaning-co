@@ -1,30 +1,70 @@
 import { describe, it, expect } from "vitest";
 import { isSpaRoute, prerenderedFileFor } from "../static";
 import { AREA_SLUGS, BLOG_SLUGS, SERVICE_SLUGS, sitemapEntries } from "../lib/sitemap";
+import { legacyTargetFor } from "../legacyRedirects";
 
 // The SPA catch-all used to answer 200 for every path. Known client routes
 // still get 200; anything else gets the shell with a real 404 status.
 describe("isSpaRoute", () => {
+  // The business site.
   it.each([
-    "/", "/book", "/booking/manage/abc123", "/portal", "/portal/login",
-    "/portal/reset-password", "/about", "/how-it-works", "/service-areas",
-    "/services", "/short-term-rentals", "/blog", "/privacy", "/terms",
-    "/sms", "/about/",
+    "/", "/systems", "/proof", "/process", "/contact", "/privacy", "/systems/",
   ])("%s is a known route", (p) => {
     expect(isSpaRoute(p)).toBe(true);
   });
 
+  // The demo — the cleaning company's system, kept whole under /demo.
+  it.each([
+    "/demo", "/demo/book", "/demo/booking/manage/abc123", "/demo/portal",
+    "/demo/portal/login", "/demo/portal/reset-password", "/demo/about",
+    "/demo/how-it-works", "/demo/service-areas", "/demo/services",
+    "/demo/short-term-rentals", "/demo/blog", "/demo/privacy", "/demo/terms",
+    "/demo/sms", "/demo/about/",
+  ])("%s is a known route", (p) => {
+    expect(isSpaRoute(p)).toBe(true);
+  });
+
+  /**
+   * The cleaning site's OLD root-level URLs. They are not routes any more —
+   * those pages moved under /demo — but they must not simply 404 either:
+   * server/legacyRedirects.ts answers them with a 301 to the /demo copy, so
+   * the hundreds of inbound links and index entries still land somewhere
+   * real. This asserts the router no longer claims them, which is what makes
+   * the redirect reachable.
+   */
+  it.each([
+    "/book", "/about", "/how-it-works", "/service-areas", "/services",
+    "/short-term-rentals", "/blog", "/terms", "/sms", "/portal",
+  ])("%s is no longer a route here (it 301s to /demo)", (p) => {
+    expect(isSpaRoute(p)).toBe(false);
+    expect(legacyTargetFor(p)).toBe(`/demo${p}`);
+  });
+
+  it("does not redirect the two paths that still mean something here", () => {
+    // / is the new homepage; /privacy is the BUSINESS's privacy page, not
+    // the cleaning company's (which is still at /demo/privacy).
+    expect(legacyTargetFor("/")).toBeNull();
+    expect(legacyTargetFor("/privacy")).toBeNull();
+    expect(legacyTargetFor("/demo/about")).toBeNull();
+  });
+
+  it("carries the slug across on a legacy deep link", () => {
+    expect(legacyTargetFor("/services/deep-cleaning")).toBe("/demo/services/deep-cleaning");
+    expect(legacyTargetFor("/service-areas/sebago-lake")).toBe("/demo/service-areas/sebago-lake");
+    expect(legacyTargetFor("/blog/spring-cleaning-checklist")).toBe("/demo/blog/spring-cleaning-checklist");
+  });
+
   // Real slugs, read from the same lists the server validates against, so
   // adding or renaming one can't leave this test asserting a dead URL.
-  it.each(SERVICE_SLUGS.map((s) => `/services/${s}`))("%s is a known route", (p) => {
+  it.each(SERVICE_SLUGS.map((s) => `/demo/services/${s}`))("%s is a known route", (p) => {
     expect(isSpaRoute(p)).toBe(true);
   });
 
-  it.each(AREA_SLUGS.map((s) => `/service-areas/${s}`))("%s is a known route", (p) => {
+  it.each(AREA_SLUGS.map((s) => `/demo/service-areas/${s}`))("%s is a known route", (p) => {
     expect(isSpaRoute(p)).toBe(true);
   });
 
-  it.each(BLOG_SLUGS.map((s) => `/blog/${s}`))("%s is a known route", (p) => {
+  it.each(BLOG_SLUGS.map((s) => `/demo/blog/${s}`))("%s is a known route", (p) => {
     expect(isSpaRoute(p)).toBe(true);
   });
 
@@ -46,12 +86,12 @@ describe("isSpaRoute", () => {
    * surfaces as a broken one.
    */
   it.each([
-    "/services/not-a-service",
-    "/services/residential-cleaning",
-    "/service-areas/not-a-place",
-    "/service-areas/portland",
-    "/blog/not-a-post",
-    "/blog/some-post",
+    "/demo/services/not-a-service",
+    "/demo/services/residential-cleaning",
+    "/demo/service-areas/not-a-place",
+    "/demo/service-areas/portland",
+    "/demo/blog/not-a-post",
+    "/demo/blog/some-post",
   ])("%s is a soft 404 and must not answer 200", (p) => {
     expect(isSpaRoute(p)).toBe(false);
   });
@@ -63,8 +103,8 @@ describe("isSpaRoute", () => {
    * itself handles a bad token.
    */
   it.each([
-    "/booking/manage/anything-at-all",
-    "/booking/manage/9f2c1e4a-0000-4444-8888-aaaabbbbcccc",
+    "/demo/booking/manage/anything-at-all",
+    "/demo/booking/manage/9f2c1e4a-0000-4444-8888-aaaabbbbcccc",
   ])("%s stays servable — the token is a credential, not a slug", (p) => {
     expect(isSpaRoute(p)).toBe(true);
   });
@@ -92,14 +132,29 @@ describe("prerenderedFileFor", () => {
    * build never wrote. Same outcome either way — the shell gets served — but
    * the status is 404 now, so the two have to agree.
    */
-  it.each(["/services/not-a-service", "/blog/not-a-post", "/service-areas/not-a-place"])(
-    "has no pre-rendered file for %s",
+  it.each([
+    "/demo/services/not-a-service",
+    "/demo/blog/not-a-post",
+    "/demo/service-areas/not-a-place",
+  ])("has no pre-rendered file for %s", (p) => {
+    expect(prerenderedFileFor(p)).toBeNull();
+  });
+
+  /**
+   * The demo is noindex, so the build writes nothing for it. Resolving a file
+   * name here anyway would cost a stat() per request for a file that is never
+   * going to exist.
+   */
+  it.each([`/demo/services/${SERVICE_SLUGS[0]}`, "/demo", "/demo/about"])(
+    "writes no pre-rendered file for the demo route %s",
     (p) => {
       expect(prerenderedFileFor(p)).toBeNull();
     },
   );
 
   it("still resolves a real page", () => {
-    expect(prerenderedFileFor(`/services/${SERVICE_SLUGS[0]}`)).toBe(`services/${SERVICE_SLUGS[0]}.html`);
+    expect(prerenderedFileFor("/")).toBe("index.html");
+    expect(prerenderedFileFor("/systems")).toBe("systems.html");
+    expect(prerenderedFileFor("/proof")).toBe("proof.html");
   });
 });
