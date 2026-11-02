@@ -15,8 +15,13 @@
  * passed straight through. A middleware that redirected every unrecognised
  * host would be one typo away from a redirect loop on the live site.
  */
+import { DEFAULT_ORIGIN } from "./sitemap";
+
 
 import type { RequestHandler } from "express";
+
+/** The host DEFAULT_ORIGIN names. Computed once; see the note on the import. */
+const DEFAULT_HOST = new URL(DEFAULT_ORIGIN).hostname.toLowerCase();
 
 /** Strip the port: "maineclean.co:8080" -> "maineclean.co". */
 function hostnameOf(host: string): string {
@@ -44,11 +49,11 @@ export function aliasesOf(canonicalHost: string): string[] {
  * to, so both read one setting.
  */
 export function canonicalHostFromEnv(env: NodeJS.ProcessEnv = process.env): string {
-  const raw = env.PUBLIC_SITE_URL || "https://www.maineclean.co";
+  const raw = env.PUBLIC_SITE_URL || DEFAULT_ORIGIN;
   try {
     return hostnameOf(new URL(raw).host);
   } catch {
-    return "www.maineclean.co";
+    return DEFAULT_HOST;
   }
 }
 
