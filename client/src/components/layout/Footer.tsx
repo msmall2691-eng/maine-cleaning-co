@@ -16,10 +16,17 @@ export default function Footer() {
   };
 
   return (
-    /* No top border. A 1px rule across the full width is exactly the kind of
-       hard seam that made the page read as a stack of unrelated slabs; the
-       footer instead fades up out of the page background into the card tone. */
-    <footer className="relative overflow-hidden pt-20 pb-8 bg-gradient-to-b from-transparent via-card to-card">
+    /* The footer used to fade from the page background into --card — which on
+       the light theme is white on off-white, a 2% step. It had no weight at
+       all: the page simply ran out rather than ending, and the one thing
+       anchoring the bottom of every page was a 320px lighthouse watermark at
+       3.5% alpha.
+
+       It is the deep band now, the same surface as <ClosingCTA> directly above
+       it, so a page closes with one deliberate dark region. .band-deep
+       redefines the theme tokens on itself, so every link, heading and muted
+       line inside here inverts without needing its own dark variant. */
+    <footer className="band-deep relative isolate overflow-hidden pt-20 pb-8">
       <LogoWatermark position="left" />
       <div className="container mx-auto px-5 sm:px-6 lg:px-8 relative">
 
@@ -27,7 +34,12 @@ export default function Footer() {
             One of our own job photos sits behind this, run right down under
             the primary tint so it reads as texture. It is the last thing on
             every page, so it should feel like the company, not like a box. */}
-        <div className="relative overflow-hidden rounded-3xl border border-primary/20 px-6 py-7 sm:px-8 mb-16 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-5">
+        {/* `justify-between` across a 144px badge, a two-line block of text and
+            a button spread them to the edges of a 1086px banner and parked the
+            text alone in the middle, with a ~200px hole either side of it. The
+            badge and the copy are one unit — they belong together on the left,
+            with the button opposite. */}
+        <div className="relative overflow-hidden rounded-3xl border border-foreground/15 px-6 py-7 sm:px-8 mb-16 flex flex-col sm:flex-row sm:items-center gap-5 sm:gap-7">
           <div className="absolute inset-0">
             <img
               src={photos.restroomTrailer.src}
@@ -36,18 +48,18 @@ export default function Footer() {
               alt=""
               aria-hidden="true"
               loading="lazy"
-              className="w-full h-full object-cover opacity-[0.18] dark:opacity-[0.14] saturate-50"
+              className="w-full h-full object-cover opacity-[0.22] saturate-50"
             />
-            <div className="absolute inset-0 bg-primary/10 backdrop-blur-[2px]" />
-            <div className="absolute inset-0 bg-gradient-to-r from-card/90 via-card/70 to-card/40" />
+            <div className="absolute inset-0 backdrop-blur-[2px]" />
+            <div className="absolute inset-0 bg-gradient-to-r from-deep/95 via-deep/80 to-deep/55" />
           </div>
-          <LogoBadge className="relative hidden sm:inline-flex w-36 flex-shrink-0" />
-          <div className="relative">
-            <p className="font-serif font-bold text-lg text-foreground">The Maine choice for a clean space.</p>
-            <p className="text-sm text-muted-foreground mt-1">Free estimate in under 60 seconds — no commitment required.</p>
+          <LogoBadge className="relative hidden sm:inline-flex w-28 flex-shrink-0" />
+          <div className="relative sm:flex-1 min-w-0">
+            <p className="type-h3 text-foreground">The Maine choice for a clean space.</p>
+            <p className="text-sm text-muted-foreground mt-1.5">Free estimate in under 60 seconds — no commitment required.</p>
           </div>
           <a href="/#get-estimate" onClick={scrollToEstimate} className="relative flex-shrink-0" data-testid="link-footer-cta-estimate">
-            <Button size="sm" className="rounded-full h-9 px-5 text-sm gap-1.5 flex-shrink-0">
+            <Button size="sm" className="rounded-full h-11 px-6 text-sm font-semibold gap-1.5 flex-shrink-0">
               Get Estimate <ArrowRight className="w-3.5 h-3.5" />
             </Button>
           </a>
@@ -56,7 +68,7 @@ export default function Footer() {
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-10 mb-14">
           {/* Brand */}
           <div className="sm:col-span-2 lg:col-span-1">
-            <LogoLockup size="lg" className="mb-5" />
+            <LogoLockup size="lg" className="mb-5" markClassName="ring-1 ring-foreground/25" />
             <p className="text-muted-foreground text-sm leading-relaxed mb-6 max-w-xs">
               Professional cleaning for homes, businesses, and vacation rentals across Southern Maine since 2018.
             </p>
@@ -116,7 +128,11 @@ export default function Footer() {
           </div>
         </div>
 
-        <div className="border-t border-border/40 pt-6 text-xs text-muted-foreground flex flex-col sm:flex-row justify-between items-center gap-3">
+        {/* lg:pr-14 keeps the right-hand group clear of the fixed back-to-top
+            button (40px wide, right-4). Without it the button sat on top of
+            the "Built by msmall.org" credit and visibly clipped it once you
+            reached the bottom of the page. */}
+        <div className="border-t border-foreground/15 pt-6 lg:pr-14 text-xs text-muted-foreground flex flex-col sm:flex-row justify-between items-center gap-3">
           <p>&copy; {new Date().getFullYear()} The Maine Cleaning Co. All rights reserved.</p>
           <div className="flex items-center gap-5">
             <Link href="/privacy" className="hover:text-foreground transition-colors">Privacy Policy</Link>

@@ -15,11 +15,11 @@
          and ZIP codes as tel: links, which broke copy behavior on estimate
          summaries. address=no also prevents Maps deep-links on street text. -->
     <meta name="format-detection" content="telephone=no, address=no, email=no, date=no" />
-    <!-- Add-to-Home-Screen: launch full-screen with a status-bar tint that
-         matches the dark theme (the site defaults to dark per index.html:38). -->
+    <!-- Add-to-Home-Screen: launch full-screen. `default` gives dark status-bar
+         text, which is what the light theme the site boots into needs. -->
     <meta name="mobile-web-app-capable" content="yes" />
     <meta name="apple-mobile-web-app-capable" content="yes" />
-    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+    <meta name="apple-mobile-web-app-status-bar-style" content="default" />
     <meta name="apple-mobile-web-app-title" content="Maine Clean Co." />
     <link rel="apple-touch-icon" sizes="512x512" href="/apple-touch-icon.png" />
     <meta name="description" content="The Maine Cleaning Co. — Southern Maine's premier cleaning & short-term rental management company. Airbnb & VRBO turnovers, iCal scheduling, property management, residential & commercial cleaning across York & Cumberland County." />
@@ -59,21 +59,27 @@
     <link rel="icon" type="image/png" sizes="180x180" href="/favicon.png" />
 
     <script>
+      /* Paint the stored theme before first paint, so there is no flash.
+         The fallback MUST match readInitialTheme() in src/lib/theme.tsx —
+         both default to light. They disagreed before this: the inline script
+         defaulted to dark and the React provider to light, so every first
+         visit painted the whole page dark and then snapped to light as soon
+         as React mounted. If you change the default, change it in BOTH. */
       (function () {
+        var theme = 'light';
         try {
           var stored = localStorage.getItem('mcc-theme');
-          var theme = stored === 'light' || stored === 'dark' ? stored : 'dark';
-          if (theme === 'dark') document.documentElement.classList.add('dark');
-          document.documentElement.style.colorScheme = theme;
+          if (stored === 'light' || stored === 'dark') theme = stored;
         } catch (e) {
-          document.documentElement.classList.add('dark');
-          document.documentElement.style.colorScheme = 'dark';
+          /* private mode / storage disabled — keep the default */
         }
+        if (theme === 'dark') document.documentElement.classList.add('dark');
+        document.documentElement.style.colorScheme = theme;
       })();
     </script>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Space+Grotesk:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Space+Grotesk:wght@400;500;600;700&display=swap" rel="stylesheet">
     
     <script type="application/ld+json">
     {

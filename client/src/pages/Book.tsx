@@ -93,7 +93,7 @@ export default function Book() {
             <p className="flex items-center gap-2 text-[11px] sm:text-xs font-semibold uppercase tracking-[0.2em] text-primary/80 mb-4">
               <Sparkles className="w-3.5 h-3.5" /> Book in Minutes
             </p>
-            <h1 className="text-[2.25rem] sm:text-5xl md:text-[3.5rem] leading-[1.05] font-serif font-bold tracking-[-0.02em] text-foreground heading-rule-left">
+            <h1 className="type-display text-foreground heading-rule-left">
               Book Your Cleaning
             </h1>
             <p className="mt-8 text-[15px] sm:text-base text-muted-foreground leading-relaxed max-w-[34rem]">

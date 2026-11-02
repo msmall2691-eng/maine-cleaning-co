@@ -28,7 +28,7 @@ export default function Blog() {
         <div className="grid lg:grid-cols-[minmax(0,1.15fr)_minmax(0,0.85fr)] gap-10 lg:gap-14 items-center">
           <div>
             <h1
-              className="text-[2.25rem] sm:text-5xl md:text-[3.5rem] leading-[1.05] font-serif font-bold tracking-[-0.02em] text-foreground heading-rule-left"
+              className="type-display text-foreground heading-rule-left"
               data-testid="text-blog-heading"
             >
               Journal & Insights

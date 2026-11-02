@@ -1,5 +1,5 @@
 import { useEffect } from "react";
-import { CheckCircle2, ArrowRight, Leaf } from "lucide-react";
+import { CheckCircle2, ArrowRight, Leaf, Calendar, Phone } from "lucide-react";
 import { useSEO } from "@/hooks/use-seo";
 import { STATIC_PAGE_SEO } from "@/lib/seo";
 import { Link } from "wouter";
@@ -8,6 +8,9 @@ import { motion } from "framer-motion";
 import { CleaningQuiz } from "@/components/ui/CleaningQuiz";
 import { EstimateCTA } from "@/components/ui/EstimateCTA";
 import { Section, SectionHeading } from "@/components/layout/Section";
+import { PageHero } from "@/components/layout/PageHero";
+import { Button } from "@/components/ui/button";
+import { companyInfo } from "@/lib/company-info";
 import { LogoWatermark } from "@/components/brand/Logo";
 import { photos, srcSetFor, SIZES } from "@/lib/photos";
 
@@ -27,50 +30,29 @@ export default function Services() {
           page used to run this same photo full-bleed behind the text at 7%
           opacity, which is invisible — it read as an empty grey band with a
           heading floating in it. */}
-      <section className="relative pt-28 sm:pt-36 lg:pt-40 pb-14 sm:pb-20 overflow-hidden">
-        <div className="hero-aurora" aria-hidden="true" />
-        <div className="hero-dot-grid" aria-hidden="true" />
-
-        <div className="container mx-auto px-5 sm:px-6 lg:px-8 relative z-10">
-          <div className="max-w-[78rem] mx-auto grid lg:grid-cols-[minmax(0,1.05fr)_minmax(0,1fr)] gap-10 lg:gap-16 items-center">
-            <div className="text-center lg:text-left">
-              <motion.h1
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ duration: 0.7, ease: [0.22, 1, 0.36, 1] }}
-                className="text-[2.25rem] sm:text-5xl md:text-[3.5rem] leading-[1.05] font-serif font-bold tracking-[-0.02em] mb-6 text-foreground"
-              >
-                Our Services
-              </motion.h1>
-              <motion.p
-                initial={{ opacity: 0, y: 14 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ duration: 0.7, delay: 0.12 }}
-                className="text-muted-foreground text-base sm:text-lg leading-relaxed max-w-lg mx-auto lg:mx-0"
-              >
-                Tailored cleaning solutions for homes, rentals, and businesses across Southern Maine.
-              </motion.p>
-            </div>
-
-            {/* Eager, not lazy — this is the LCP candidate on desktop. */}
-            <motion.figure
-              initial={{ opacity: 0, scale: 0.97 }}
-              animate={{ opacity: 1, scale: 1 }}
-              transition={{ duration: 0.9, delay: 0.15, ease: [0.22, 1, 0.36, 1] }}
-              className="photo-frame aspect-[4/3] lg:aspect-[5/4] max-w-md mx-auto lg:max-w-none w-full"
-            >
-              <img
-                src={photos.vacuumFleet.src}
-                srcSet={srcSetFor(photos.vacuumFleet)}
-                sizes={SIZES.half}
-                alt={photos.vacuumFleet.alt}
-                fetchPriority="high"
-                decoding="async"
-              />
-            </motion.figure>
-          </div>
-        </div>
-      </section>
+      <PageHero
+        eyebrow="What we do"
+        /* Non-breaking spaces inside the accent so `text-wrap: balance`
+            can only break before it — otherwise it splits the emphasised
+            phrase as "kind / of space." across two lines. */
+        title={<>Cleaning for every <span className="heading-accent">kind&nbsp;of&nbsp;space.</span></>}
+        lead="Tailored cleaning solutions for homes, rentals, and businesses across Southern Maine."
+        photo={photos.vacuumFleet}
+        actions={
+          <>
+            <Link href="/book">
+              <Button size="lg" className="w-full sm:w-auto h-13 sm:h-14 px-8 sm:px-10 rounded-full text-base sm:text-[17px] font-semibold gap-2 shadow-[0_2px_12px_rgba(0,0,0,0.12)]" data-testid="button-services-hero-book">
+                <Calendar className="w-4 h-4" /> Book a Cleaning
+              </Button>
+            </Link>
+            <a href={companyInfo.contact.phoneHref}>
+              <Button size="lg" variant="outline" className="w-full sm:w-auto h-13 sm:h-14 px-8 sm:px-10 rounded-full text-base font-semibold border-2 border-primary hover:bg-primary/5 bg-card/80 backdrop-blur-sm shadow-[0_1px_4px_rgba(0,0,0,0.15)]" data-testid="button-services-hero-call">
+                <Phone className="w-4 h-4 mr-2" /> Call Us
+              </Button>
+            </a>
+          </>
+        }
+      />
 
       {/* ── The services themselves ── */}
       <Section measure="wide" rhythm="tight">

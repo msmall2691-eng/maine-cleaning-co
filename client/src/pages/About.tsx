@@ -15,6 +15,7 @@ import { CLEANS_SINCE_2018, CLEANS_SINCE_2018_PLAIN, RECURRING_CLIENT_RATE, COMM
 import { WorkGallery } from "@/components/ui/WorkGallery";
 import { SocialFollow } from "@/components/ui/SocialFollow";
 import { Section, SectionHeading } from "@/components/layout/Section";
+import { PageHero } from "@/components/layout/PageHero";
 import { ClosingCTA } from "@/components/layout/ClosingCTA";
 import { LogoWatermark, LogoBadge } from "@/components/brand/Logo";
 import { photos, srcSetFor, srcSetForSrc, SIZES } from "@/lib/photos";
@@ -48,79 +49,61 @@ export default function About() {
           90% empty on a laptop. Same shape as the homepage now: copy left,
           one of our own photos right, collapsing to centred copy plus a
           single wide photo below lg. */}
-      <section className="relative pt-28 sm:pt-36 lg:pt-40 pb-14 sm:pb-20 overflow-hidden">
-        <div className="hero-aurora" aria-hidden="true" />
-        <div className="hero-dot-grid" aria-hidden="true" />
-        <div className="container mx-auto px-5 sm:px-6 lg:px-8 relative z-10">
-          <div className="max-w-[78rem] mx-auto grid lg:grid-cols-[minmax(0,1.04fr)_minmax(0,1fr)] gap-10 lg:gap-14 xl:gap-20 items-center">
-            <div className="text-center lg:text-left">
-              <motion.span
-                initial={{ opacity: 0, y: 10 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ duration: 0.5 }}
-                className="inline-flex items-center gap-2 text-[11px] sm:text-xs font-semibold uppercase tracking-[0.2em] text-primary/80 mb-4"
-              >
-                Southern Maine Since 2018
-              </motion.span>
-              <motion.h1
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ duration: 0.7, ease: [0.22, 1, 0.36, 1] }}
-                className="text-[2.5rem] sm:text-[3.5rem] md:text-[4rem] font-extrabold leading-[1.04] tracking-[-0.04em] text-foreground mb-5"
-              >
-                About <span className="hero-gradient-text">Maine Cleaning Co.</span>
-              </motion.h1>
-              <motion.p
-                initial={{ opacity: 0, y: 12 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ duration: 0.6, delay: 0.15 }}
-                className="text-[15px] sm:text-lg text-muted-foreground leading-relaxed max-w-lg mx-auto lg:mx-0 mb-8"
-              >
-                A team that genuinely cares — about your space, your family, and the environment.
-              </motion.p>
-              <motion.div
-                initial={{ opacity: 0, y: 10 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ duration: 0.5, delay: 0.3 }}
-                className="flex flex-col sm:flex-row justify-center lg:justify-start gap-3 sm:gap-4 flex-wrap"
-              >
-                <Link href="/#get-estimate">
-                  <Button size="lg" className="w-full sm:w-auto h-13 sm:h-14 px-8 sm:px-10 rounded-full text-base sm:text-[17px] font-semibold gap-2 shadow-[0_2px_12px_rgba(0,0,0,0.12)]" data-testid="button-about-hero-estimate">
-                    Get My Estimate <ArrowRight className="w-4 h-4" />
-                  </Button>
-                </Link>
-                <a href={companyInfo.contact.phoneHref}>
-                  <Button size="lg" variant="outline" className="w-full sm:w-auto h-13 sm:h-14 px-8 sm:px-10 rounded-full text-base font-semibold border-2 border-primary hover:bg-primary/5 bg-card/80 backdrop-blur-sm shadow-[0_1px_4px_rgba(0,0,0,0.15)]" data-testid="button-about-hero-call">
-                    <Phone className="w-4 h-4 mr-2" /> Call Us
-                  </Button>
-                </a>
-              </motion.div>
-            </div>
+      <PageHero
+        eyebrow="Southern Maine Since 2018"
+        title={<>About <span className="heading-accent">Maine Cleaning Co.</span></>}
+        lead="A team that genuinely cares — about your space, your family, and the environment."
+        photo={photos.vacuumFleet}
+        actions={
+          <>
+            <Link href="/#get-estimate">
+              <Button size="lg" className="w-full sm:w-auto h-13 sm:h-14 px-8 sm:px-10 rounded-full text-base sm:text-[17px] font-semibold gap-2 shadow-[0_2px_12px_rgba(0,0,0,0.12)]" data-testid="button-about-hero-estimate">
+                Get My Estimate <ArrowRight className="w-4 h-4" />
+              </Button>
+            </Link>
+            <a href={companyInfo.contact.phoneHref}>
+              <Button size="lg" variant="outline" className="w-full sm:w-auto h-13 sm:h-14 px-8 sm:px-10 rounded-full text-base font-semibold border-2 border-primary hover:bg-primary/5 bg-card/80 backdrop-blur-sm shadow-[0_1px_4px_rgba(0,0,0,0.15)]" data-testid="button-about-hero-call">
+                <Phone className="w-4 h-4 mr-2" /> Call Us
+              </Button>
+            </a>
+          </>
+        }
+      />
 
-            {/* Our own kit, not a stock photo of a stock kitchen. */}
-            <motion.figure
-              initial={{ opacity: 0, scale: 0.97 }}
-              animate={{ opacity: 1, scale: 1 }}
-              transition={{ duration: 0.9, delay: 0.2, ease: [0.22, 1, 0.36, 1] }}
-              className="photo-frame aspect-[4/3] lg:aspect-[5/4] max-w-md mx-auto lg:max-w-none w-full"
-            >
-              <img
-                src={photos.vacuumFleet.src}
-              srcSet={srcSetFor(photos.vacuumFleet)}
-              sizes={SIZES.half}
-                alt={photos.vacuumFleet.alt}
-                fetchPriority="high"
-                decoding="async"
-              />
-            </motion.figure>
-          </div>
+      {/* ── The numbers ──
+          These used to be the right-hand half of the story grid below, which
+          was `lg:grid-cols-2 items-start` with ~1,100px of story on the left
+          and a ~240px stat block on the right. The right column simply stopped
+          after the stats and left roughly 860px of empty page beside the rest
+          of the copy — about half the viewport, for most of the scroll.
+
+          They are a band of their own now, six across, which is both the shape
+          the content wanted and the page's one piece of weight. */}
+      <Section measure="wide" rhythm="tight" tone="deep">
+        <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3 sm:gap-4">
+          {achievements.map((item, i) => {
+            const Icon = item.icon;
+            return (
+              <div key={i} className="kpi-card p-4 sm:p-5 flex flex-col gap-2.5" data-testid={`achievement-${i}`}>
+                <div className={`w-9 h-9 rounded-xl ${item.bg} flex items-center justify-center`}>
+                  <Icon className={`w-4 h-4 ${item.color}`} />
+                </div>
+                {/* One ink for every number. The icon tile is where the brand
+                    family does its categorical job; running the VALUES in four
+                    different hues as well (navy, pine, harbor, gold) made a
+                    six-item row read as six unrelated things. */}
+                <div className="text-xl sm:text-2xl font-bold tracking-tight text-foreground">{item.value}</div>
+                <div className="text-[11px] font-medium text-muted-foreground leading-tight">{item.label}</div>
+              </div>
+            );
+          })}
         </div>
-      </section>
+      </Section>
 
-      {/* ── Our Story + Stats + What Sets Us Apart ── */}
+      {/* ── Our Story + What Sets Us Apart ── */}
       <Section measure="wide">
         <LogoWatermark position="right" />
-        <div className="grid lg:grid-cols-2 gap-12 lg:gap-16 items-start">
+        <div className="grid lg:grid-cols-[minmax(0,1.08fr)_minmax(0,0.92fr)] gap-12 lg:gap-16 items-start">
           {/* Story */}
           <motion.div
             initial={{ opacity: 0, x: -20 }}
@@ -147,27 +130,6 @@ export default function About() {
               }
             />
 
-            {/* What sets us apart — integrated values */}
-            <h3 className="text-sm font-bold text-foreground uppercase tracking-wider mb-4">What sets us apart</h3>
-            <div className="space-y-3 mb-7">
-              {[
-                { icon: Calendar, text: "Reliable scheduling — same team, same day, every time" },
-                { icon: Leaf, text: "Eco-friendly Melaleuca EcoSense® products, safe for kids & pets" },
-                { icon: CheckCircle2, text: "Homes, vacation rentals, and offices — one trusted team" },
-                { icon: MessageCircle, text: "Transparent pricing and responsive communication" },
-                { icon: Shield, text: "Fully bonded and insured with comprehensive liability coverage" },
-                { icon: Users, text: "100% local Southern Maine team since 2018" },
-              ].map((item, i) => {
-                const Icon = item.icon;
-                return (
-                  <div key={i} className="flex items-start gap-3 text-sm text-muted-foreground">
-                    <Icon className="w-4 h-4 text-primary mt-0.5 flex-shrink-0" />
-                    <span>{item.text}</span>
-                  </div>
-                );
-              })}
-            </div>
-
             <div className="flex flex-wrap gap-3">
               <Link href="/how-it-works">
                 <Button className="rounded-full px-7 h-11 font-semibold gap-2" data-testid="button-about-howitworks">
@@ -182,26 +144,36 @@ export default function About() {
             </div>
           </motion.div>
 
-          {/* Achievement stat grid */}
+          {/* What sets us apart — the right-hand column now has something in
+              it for the full height of the story beside it. */}
           <motion.div
             initial={{ opacity: 0, x: 20 }}
             whileInView={{ opacity: 1, x: 0 }}
             viewport={{ once: true }}
             transition={{ duration: 0.7, ease: [0.22, 1, 0.36, 1] }}
-            className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-2 xl:grid-cols-3 gap-3"
+            className="card-soft p-6 sm:p-8 lg:sticky lg:top-28"
           >
-            {achievements.map((item, i) => {
-              const Icon = item.icon;
-              return (
-                <div key={i} className="kpi-card p-4 flex flex-col gap-2" data-testid={`achievement-${i}`}>
-                  <div className={`w-9 h-9 rounded-xl ${item.bg} flex items-center justify-center`}>
-                    <Icon className={`w-4 h-4 ${item.color}`} />
+            <h3 className="type-eyebrow mb-6">What sets us apart</h3>
+            <div className="space-y-5">
+              {[
+                { icon: Calendar, text: "Reliable scheduling — same team, same day, every time" },
+                { icon: Leaf, text: "Eco-friendly Melaleuca EcoSense® products, safe for kids & pets" },
+                { icon: CheckCircle2, text: "Homes, vacation rentals, and offices — one trusted team" },
+                { icon: MessageCircle, text: "Transparent pricing and responsive communication" },
+                { icon: Shield, text: "Fully bonded and insured with comprehensive liability coverage" },
+                { icon: Users, text: "100% local Southern Maine team since 2018" },
+              ].map((item, i) => {
+                const Icon = item.icon;
+                return (
+                  <div key={i} className="flex items-start gap-3.5 text-[15px] text-muted-foreground leading-relaxed">
+                    <span className="w-8 h-8 rounded-lg bg-primary/10 flex items-center justify-center flex-shrink-0 mt-0.5">
+                      <Icon className="w-4 h-4 text-primary" />
+                    </span>
+                    <span>{item.text}</span>
                   </div>
-                  <div className={`text-xl font-bold tracking-tight ${item.color}`}>{item.value}</div>
-                  <div className="text-[11px] font-medium text-muted-foreground leading-tight">{item.label}</div>
-                </div>
-              );
-            })}
+                );
+              })}
+            </div>
           </motion.div>
         </div>
       </Section>

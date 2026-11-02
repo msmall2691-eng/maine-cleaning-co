@@ -82,7 +82,7 @@ export default function ServiceAreaDetail() {
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ duration: 0.7, ease: [0.22, 1, 0.36, 1] }}
-                className="text-[2.25rem] sm:text-5xl md:text-[3.25rem] leading-[1.05] font-serif font-bold tracking-[-0.02em] text-foreground mb-3"
+                className="type-display-sm text-foreground mb-3"
                 data-testid="text-area-title"
               >
                 {area.headline}

@@ -24,7 +24,7 @@ export default function Sms() {
         reveal={false}
         className="pt-28 sm:pt-36 lg:pt-40 pb-[clamp(1.75rem,3vw,2.75rem)]"
       >
-        <h1 className="text-[2.25rem] sm:text-5xl md:text-[3.5rem] leading-[1.05] font-serif font-bold tracking-[-0.02em] text-foreground heading-rule-left">
+        <h1 className="type-display-sm text-foreground heading-rule-left">
           Text Message (SMS) Program
         </h1>
         <p className="mt-7 text-sm text-muted-foreground">Last updated: September 2026</p>
@@ -34,7 +34,7 @@ export default function Sms() {
         <LogoWatermark position="right" />
         <div className="prose prose-neutral dark:prose-invert max-w-none space-y-8 text-[0.95rem] leading-relaxed text-muted-foreground">
           <section>
-            <h2 className="text-[1.25rem] sm:text-[1.375rem] font-serif font-bold text-foreground mb-3">Program description</h2>
+            <h2 className="type-h3 text-foreground mb-3">Program description</h2>
             <p>
               {companyInfo.name} sends text messages to customers about the cleaning services they have requested or
               booked. Messages include estimate follow-ups, booking confirmations, scheduling changes, appointment
@@ -43,7 +43,7 @@ export default function Sms() {
           </section>
 
           <section>
-            <h2 className="text-[1.25rem] sm:text-[1.375rem] font-serif font-bold text-foreground mb-3">How you opt in</h2>
+            <h2 className="type-h3 text-foreground mb-3">How you opt in</h2>
             <p>
               You opt in by providing your mobile number and agreeing to receive text messages when you request an
               estimate or book a cleaning on our website, or by texting our business number first. Consenting to text
@@ -52,7 +52,7 @@ export default function Sms() {
           </section>
 
           <section>
-            <h2 className="text-[1.25rem] sm:text-[1.375rem] font-serif font-bold text-foreground mb-3">Message frequency and cost</h2>
+            <h2 className="type-h3 text-foreground mb-3">Message frequency and cost</h2>
             <p>
               Message frequency varies and depends on your bookings — typically a few messages per cleaning. Message and
               data rates may apply. Carriers are not liable for delayed or undelivered messages.
@@ -60,7 +60,7 @@ export default function Sms() {
           </section>
 
           <section>
-            <h2 className="text-[1.25rem] sm:text-[1.375rem] font-serif font-bold text-foreground mb-3">How to opt out</h2>
+            <h2 className="type-h3 text-foreground mb-3">How to opt out</h2>
             <p>
               Reply <strong>STOP</strong> to any message at any time to stop receiving texts. You will receive one final
               confirmation message and no further texts. Reply <strong>START</strong> to opt back in.
@@ -68,7 +68,7 @@ export default function Sms() {
           </section>
 
           <section>
-            <h2 className="text-[1.25rem] sm:text-[1.375rem] font-serif font-bold text-foreground mb-3">Help and support</h2>
+            <h2 className="type-h3 text-foreground mb-3">Help and support</h2>
             <p>
               Reply <strong>HELP</strong> to any message for assistance, email{" "}
               <a href={companyInfo.contact.emailHref} className="text-primary underline">
@@ -83,7 +83,7 @@ export default function Sms() {
           </section>
 
           <section>
-            <h2 className="text-[1.25rem] sm:text-[1.375rem] font-serif font-bold text-foreground mb-3">Your privacy</h2>
+            <h2 className="type-h3 text-foreground mb-3">Your privacy</h2>
             <p>
               We do not sell or share your mobile number or SMS opt-in consent with third parties or affiliates for
               marketing or promotional purposes. See our{" "}

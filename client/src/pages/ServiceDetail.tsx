@@ -121,8 +121,8 @@ export default function ServiceDetail() {
                   <Icon className="w-7 h-7 sm:w-8 sm:h-8" />
                 </div>
                 <div className="min-w-0">
-                  <h1 className="text-[2rem] sm:text-5xl md:text-[3.25rem] leading-[1.05] font-serif font-bold tracking-[-0.02em] text-foreground mb-3" data-testid="text-service-title">{service.title}</h1>
-                  <p className={`text-sm font-semibold tracking-wide uppercase ${service.iconAccent} mb-2`} data-testid="text-service-tagline">{service.tagline}</p>
+                  <h1 className="type-display-sm text-foreground mb-3" data-testid="text-service-title">{service.title}</h1>
+                  <p className={`text-[15px] font-medium ${service.iconAccent} mb-2.5`} data-testid="text-service-tagline">{service.tagline}</p>
                   <p className="text-muted-foreground text-[15px] sm:text-base leading-relaxed">{service.shortDesc}</p>
                   {showEstimate && (
                     <div className="mt-6 flex flex-wrap items-center gap-2.5">
@@ -255,7 +255,7 @@ export default function ServiceDetail() {
       ) : (
         <Section measure="prose" tone="sink">
           <div className="bg-card rounded-2xl border border-border shadow-[0_4px_20px_rgba(0,0,0,0.15)] p-6 sm:p-8 text-center">
-            <h2 className="text-[1.75rem] sm:text-4xl md:text-[2.5rem] leading-[1.1] font-serif font-bold tracking-[-0.02em] text-foreground mb-4">Interested in {service.title}?</h2>
+            <h2 className="type-h2 text-foreground mb-4">Interested in {service.title}?</h2>
             <p className="text-muted-foreground text-sm mb-6 max-w-md mx-auto">
               Reach out for a custom quote tailored to your space. We'll walk through the details and find the right plan for you.
             </p>

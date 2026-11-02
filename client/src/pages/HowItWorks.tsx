@@ -10,6 +10,7 @@ import { Accordion, AccordionItem, AccordionTrigger, AccordionContent } from "@/
 import { Button } from "@/components/ui/button";
 import { howItWorksFaqs as faqs } from "@/lib/faq-data";
 import { Section, SectionHeading } from "@/components/layout/Section";
+import { PageHero } from "@/components/layout/PageHero";
 import { ClosingCTA } from "@/components/layout/ClosingCTA";
 import { LogoWatermark } from "@/components/brand/Logo";
 import { photos, srcSetFor, SIZES } from "@/lib/photos";
@@ -57,69 +58,19 @@ export default function HowItWorks() {
           Copy left, one photo right from lg; centred copy over a single wide
           photo below that. The text-only version of this hero was an almost
           entirely empty screenful on a laptop. */}
-      <section className="relative pt-28 sm:pt-36 lg:pt-40 pb-14 sm:pb-20 overflow-hidden">
-        <div className="hero-aurora" aria-hidden="true" />
-        <div className="hero-dot-grid" aria-hidden="true" />
-        <div className="container mx-auto px-5 sm:px-6 lg:px-8 relative z-10">
-          <div className="max-w-[78rem] mx-auto grid lg:grid-cols-[minmax(0,1.04fr)_minmax(0,1fr)] gap-10 lg:gap-14 xl:gap-20 items-center">
-            <div className="text-center lg:text-left">
-              <motion.span
-                initial={{ opacity: 0, y: 10 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ duration: 0.5 }}
-                className="inline-flex items-center gap-2 text-[11px] sm:text-xs font-semibold uppercase tracking-[0.2em] text-primary/80 mb-4"
-              >
-                Simple & Transparent
-              </motion.span>
-              <motion.h1
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ duration: 0.7, ease: [0.22, 1, 0.36, 1] }}
-                className="text-[2.5rem] sm:text-[3.5rem] md:text-[4rem] font-extrabold leading-[1.04] tracking-[-0.04em] text-foreground mb-5"
-              >
-                What Happens <span className="hero-gradient-text">Next</span>
-              </motion.h1>
-              <motion.p
-                initial={{ opacity: 0, y: 12 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ duration: 0.6, delay: 0.15 }}
-                className="text-[15px] sm:text-lg text-muted-foreground leading-relaxed max-w-lg mx-auto lg:mx-0 mb-8"
-              >
-                From your first message to a spotless space — five simple steps that take the guesswork out of professional cleaning.
-              </motion.p>
-              <motion.div
-                initial={{ opacity: 0, y: 10 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ duration: 0.5, delay: 0.3 }}
-                className="flex justify-center lg:justify-start"
-              >
-                <Link href="/#get-estimate">
-                  <Button size="lg" className="w-full sm:w-auto h-13 sm:h-14 px-8 sm:px-10 rounded-full text-base sm:text-[17px] font-semibold gap-2 shadow-[0_2px_12px_rgba(0,0,0,0.12)]" data-testid="button-hiw-hero-estimate">
-                    Get My Estimate <ArrowRight className="w-4 h-4" />
-                  </Button>
-                </Link>
-              </motion.div>
-            </div>
-
-            {/* The kit that turns up at step 4 — our own, not stock. */}
-            <motion.figure
-              initial={{ opacity: 0, scale: 0.97 }}
-              animate={{ opacity: 1, scale: 1 }}
-              transition={{ duration: 0.9, delay: 0.2, ease: [0.22, 1, 0.36, 1] }}
-              className="photo-frame aspect-[4/3] lg:aspect-[4/5] max-w-md mx-auto lg:max-w-none w-full"
-            >
-              <img
-                src={photos.toolkit.src}
-                srcSet={srcSetFor(photos.toolkit)}
-                sizes={SIZES.half}
-                alt={photos.toolkit.alt}
-                fetchPriority="high"
-                decoding="async"
-              />
-            </motion.figure>
-          </div>
-        </div>
-      </section>
+      <PageHero
+        eyebrow="Simple & Transparent"
+        title={<>What Happens <span className="heading-accent">Next</span></>}
+        lead="From your first message to a spotless space — five simple steps that take the guesswork out of professional cleaning."
+        photo={photos.toolkit}
+        actions={
+          <Link href="/#get-estimate">
+            <Button size="lg" className="w-full sm:w-auto h-13 sm:h-14 px-8 sm:px-10 rounded-full text-base sm:text-[17px] font-semibold gap-2 shadow-[0_2px_12px_rgba(0,0,0,0.12)]" data-testid="button-hiw-hero-estimate">
+              Get My Estimate <ArrowRight className="w-4 h-4" />
+            </Button>
+          </Link>
+        }
+      />
 
       {/* ── 5 Steps ── */}
       <Section measure="default">
@@ -135,16 +86,29 @@ export default function HowItWorks() {
                 whileInView="visible"
                 viewport={{ once: true }}
                 custom={i}
-                className="card-glass p-6 sm:p-8 flex gap-5 sm:gap-8 items-start"
+                className="card-glass relative p-6 sm:p-8 flex gap-5 sm:gap-8 items-start"
                 data-testid={`step-${i + 1}`}
               >
-                <div className="flex-shrink-0 flex flex-col items-center gap-3">
+                {/* The rail. This used to be a `w-px h-6` div INSIDE the card,
+                    directly under the number — so it ran for 24px, stopped at
+                    the card's own padding, and then a 32px gap of nothing sat
+                    between it and the next card. It read as five broken stubs
+                    rather than one timeline.
+
+                    `top-full` on the card itself spans exactly the gap below
+                    it (space-y-6 / sm:space-y-8), and `left-12 sm:left-14` is
+                    the centre of the number above it: padding (24/32px) plus
+                    half the 48px circle. */}
+                {i < steps.length - 1 && (
+                  <span
+                    aria-hidden="true"
+                    className="absolute left-12 sm:left-14 top-full h-6 sm:h-8 w-px bg-border"
+                  />
+                )}
+                <div className="flex-shrink-0">
                   <div className="w-12 h-12 rounded-full bg-primary/10 border-2 border-primary/30 flex items-center justify-center text-sm font-bold text-primary shadow-[0_0_0_4px_hsl(var(--background))]">
                     {item.step}
                   </div>
-                  {i < steps.length - 1 && (
-                    <div className="w-px h-6 sm:h-10 bg-border/50" />
-                  )}
                 </div>
                 <div className="flex-1 pt-1">
                   <div className="flex items-center gap-3 mb-2">

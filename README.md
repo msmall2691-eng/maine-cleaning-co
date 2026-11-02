@@ -58,10 +58,43 @@ under `:root` and under `.dark`. The values here are the light theme — read
 --card:         0 0% 100%     /* pure white card surface */
 --primary:      214 55% 36%   /* Atlantic navy — CTAs, links, accents */
 --primary-foreground: 0 0% 100%
---muted-foreground: 30 4% 42%
+--muted-foreground: 30 5% 38%
 --border:       30 6% 88%
 --radius:       0.875rem      /* default card / button border radius */
 ```
+
+> **`--primary-foreground` is NOT white on the dark theme.** Dark `--primary`
+> is a *light* blue (`212 58% 62%`) so that it works as link and accent ink on
+> a dark page. White on top of that is **2.92:1** — which was every filled
+> button on the site, plus the whole closing-CTA band, failing AA and failing
+> even the 3:1 large-text floor. Dark `--primary-foreground` is therefore
+> `222 45% 10%` (6.24:1). If you ever re-light `--primary`, re-check its
+> foreground in the same change.
+
+#### Section bands
+
+```css
+--band-tint:  30 9% 94%      /* light step   — <Section tone="tint"> */
+--band-sink:  32 11% 90%     /* deeper step  — <Section tone="sink"> */
+
+--deep:            215 45% 17%   /* the inverted band — SAME in both themes */
+--deep-foreground: 210 22% 86%   /* 10.64:1 on --deep */
+--deep-muted:      210 18% 72%   /*  7.32:1 */
+--deep-accent:     202 75% 70%   /*  7.58:1 */
+```
+
+`tint` and `sink` are soft vertical gradients that fade to nothing at both
+edges, so a band reads as a change in weight rather than a ruled line.
+
+`deep` (`<Section tone="deep">`, `.band-deep`) is the loud one. It **redefines
+the theme tokens on itself** — `--card`, `--muted-foreground`, `--primary`, the
+whole `--brand-*` family — so cards, muted text and buttons inside it invert
+automatically and need no variant of their own. It does not flip with the
+theme: it is a fixed dark panel in both, the way print uses a reversed panel.
+
+Use it sparingly: at most one mid-page band, plus the page close. `<ClosingCTA>`
+and the footer already share this surface, so a page ends in one dark region
+rather than two stacked navy slabs.
 
 #### Brand family — derived from the logo
 
@@ -102,13 +135,43 @@ for #61 if you retune any of them.
 
 ### Typography
 
-- **Headings**: `font-serif` — **Space Grotesk** (Google Fonts), bold/extrabold, tight tracking (-0.02em to -0.04em). (An earlier version of this file said Playfair Display; `--font-serif` in `index.css` has been Space Grotesk.)
-- **Body**: `font-sans` — Inter (system stack fallback)
-- **Headings are set by `<SectionHeading>`** (`client/src/components/layout/Section.tsx`), not written out per page. Hand-rolling one is how the site ended up with nine distinct h1 scales and six h2 scales.
-- **Hero h1**: `text-[2.25rem] sm:text-5xl md:text-[3.5rem]`, `tracking-[-0.02em]`
-- **Section h2**: `text-[1.75rem] sm:text-4xl md:text-[2.5rem]`, `tracking-[-0.02em]`
-- **Gradient accent**: `.hero-gradient-text` — CSS linear-gradient from primary through cyan, animated shimmer
-- **Section heading accent**: `.section-heading-accent` — pseudo-element underline in primary color
+- **Display**: `--font-display` — **Space Grotesk** (Google Fonts). `--font-serif`
+  is the old name for the same stack, kept only so existing `font-serif`
+  utilities keep rendering. It is not a serif and never was.
+- **Body / UI**: `--font-sans` — Inter.
+
+**Every display-sized piece of text comes from one of four classes in
+`index.css`. Do not write out a font family or a font size for a heading
+again.**
+
+| Class | Use | Size |
+|---|---|---|
+| `.type-display` | a landing page's `h1` | `clamp(2.6rem, 6vw, 4.75rem)` |
+| `.type-display-sm` | a detail page's `h1` — a service, a town, a post, the legal pages | `clamp(2rem, 4vw, 3.25rem)` |
+| `.type-h2` | section headings | `clamp(1.9rem, 3.4vw, 2.9rem)` |
+| `.type-h3` | sub-headings, card titles | `clamp(1.1rem, 1.5vw, 1.3rem)` |
+
+Plus `.type-lead` for a standfirst and `.type-eyebrow` for the small uppercase
+line above a heading.
+
+Why: there were **five different `h1` recipes across eight public pages** —
+Inter 800 at 4.5rem on the homepage, Inter 800 at 4rem on About / How It Works
+/ Service Areas, Inter 800 at 3.75rem on Short-Term Rentals, Space Grotesk 700
+at 3.5rem on Services / Book / Blog — while `<SectionHeading>` rendered every
+`h2` in Space Grotesk. On most pages the largest text on screen was in a
+different typeface from the heading directly beneath it.
+
+The sizes are fluid, so there are no breakpoint jumps to keep in sync either,
+and each class sets `text-wrap: balance` — which is what stops a headline
+stranding one word on its last line ("The Way Cleaning / **Be.**").
+
+- **Section headings are set by `<SectionHeading>`** (`client/src/components/layout/Section.tsx`), not written out per page.
+- **Page openings are set by `<PageHero>`** (`client/src/components/layout/PageHero.tsx`) — see Page Structure.
+- **Headline accent**: `.heading-accent` — the emphasised word in a headline, in
+  solid `--primary`. It replaced `.hero-gradient-text`, a five-stop animated
+  gradient in hues nothing else on the site used, which measured **1.80:1**
+  against the page at its lightest stop.
+- **Section heading accent**: `.section-heading-accent` (centred) / `.heading-rule-left` (left) — pseudo-element rule under the heading.
 
 ### Card Styles
 
@@ -121,10 +184,11 @@ for #61 if you retune any of them.
 
 ### Section Backgrounds
 
-Alternating rhythm using two patterns:
-- **Default** (white sections): `background: hsl(var(--background))` — `222 22% 10%`
-- **Alternate** (card sections): `background: hsl(222 20% 13%)` — applied via inline style or Tailwind `bg-card/30`
-- Wave dividers (`WaveDivider` component) between major sections on Home
+Set with `<Section tone="...">`, never by hand:
+
+- `plain` (default) — inherits the page background.
+- `tint` / `sink` — soft gradient bands, transparent at both edges.
+- `deep` — the inverted navy panel. See **Section bands** above for the rules.
 
 ### Animation Classes
 
@@ -147,6 +211,24 @@ Alternating rhythm using two patterns:
 ---
 
 ## Page Structure & Layout
+
+### Page openings (`/src/components/layout/PageHero.tsx`)
+
+`/about`, `/how-it-works`, `/service-areas`, `/short-term-rentals` and
+`/services` each used to carry their own near-identical copy of the hero
+markup, and they had drifted — three different `h1` recipes between them, and
+a photo column set to `lg:aspect-[5/4]` on one page and `lg:aspect-[4/5]` on
+the next. That second difference is why the heroes measured 685px, 936px,
+936px and 946px tall, and why two of them had ~250px of empty column under the
+copy: the picture beside it was taller than anything there was to say.
+
+`<PageHero>` takes `eyebrow` / `title` / `lead` / `actions` / `meta` and either
+a `photo` or a custom `media` node. The media gets a **shared fluid height
+band** (`lg:h-[clamp(25rem,34vw,31rem)]`) rather than an aspect ratio, so the
+two columns stay the same length and every page opens at the same size. The
+four single-photo pages now measure 675px each.
+
+Wrap the emphasised word of a `title` in `<span className="heading-accent">`.
 
 ### Navigation Bar (`/src/components/layout/Navbar.tsx`)
 
