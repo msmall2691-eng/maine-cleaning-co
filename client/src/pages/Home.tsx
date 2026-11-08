@@ -20,17 +20,15 @@ import {
   MapPin,
   Users,
   Home as HomeIcon,
-  Send,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { InstantEstimate } from "@/components/ui/InstantEstimate";
 import { WorkGallery } from "@/components/ui/WorkGallery";
-import { SocialFollow } from "@/components/ui/SocialFollow";
 import { SparkleField } from "@/components/ui/SparkleField";
 import { CoverageCheck } from "@/components/ui/CoverageCheck";
 import { CoastalConditions } from "@/components/ui/CoastalConditions";
 import { companyInfo } from "@/lib/company-info";
-import { RESPONSE_REPLY, AVAILABILITY_NOTE } from "@/lib/response-time";
+import { AVAILABILITY_NOTE } from "@/lib/response-time";
 import { ResponseNote } from "@/components/ui/ResponseNote";
 import { COMMUNITIES_SERVED, CLEANS_SINCE_2018 } from "@/lib/company-stats";
 import { Section, SectionHeading } from "@/components/layout/Section";
@@ -136,147 +134,6 @@ function HeroCollage() {
         </div>
       </div>
     </motion.div>
-  );
-}
-
-// Loose on purpose — inline typo-catching only; the server's zod .email()
-// stays the real validator. Same pattern InstantEstimate uses.
-const CONTACT_EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-
-function ContactForm() {
-  const [form, setForm] = useState({ name: "", email: "", phone: "", message: "" });
-  const [status, setStatus] = useState<"idle" | "sending" | "sent" | "error">("idle");
-  const [showContactHint, setShowContactHint] = useState(false);
-
-  // Mirrors the server's intakeSubmitSchema refine: a message with no phone
-  // AND no email can never be answered.
-  const hasContactMethod = Boolean(form.email.trim() || form.phone.trim());
-  const emailInvalid = form.email.trim() !== "" && !CONTACT_EMAIL_RE.test(form.email.trim());
-  // Lenient typo-catcher: a non-empty phone with fewer than 7 digits can't
-  // be dialed and is silently stripped to null server-side. 7+ digits passes.
-  const phoneInvalid = form.phone.trim() !== "" && form.phone.replace(/\D/g, "").length < 7;
-
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!form.name.trim() || !form.message.trim()) return;
-    if (!hasContactMethod || emailInvalid || phoneInvalid) {
-      setShowContactHint(true);
-      return;
-    }
-    setShowContactHint(false);
-    setStatus("sending");
-    try {
-      const res = await fetch("/api/intake/submit", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          name: form.name,
-          email: form.email || null,
-          phone: form.phone || null,
-          notes: form.message,
-          source: "contact_form",
-        }),
-      });
-      if (!res.ok) throw new Error("Failed");
-      setStatus("sent");
-      setForm({ name: "", email: "", phone: "", message: "" });
-    } catch {
-      setStatus("error");
-    }
-  };
-
-  if (status === "sent") {
-    return (
-      <div className="bg-card border border-border/60 rounded-2xl p-8 text-center">
-        <CheckCircle2 className="w-10 h-10 text-primary mx-auto mb-4" />
-        <p className="text-lg font-semibold text-foreground mb-2">Message Sent!</p>
-        <p className="text-sm text-muted-foreground leading-relaxed max-w-sm mx-auto">{RESPONSE_REPLY}</p>
-        <Button variant="outline" className="mt-6 rounded-full" onClick={() => setStatus("idle")}>
-          Send Another Message
-        </Button>
-      </div>
-    );
-  }
-
-  return (
-    <form onSubmit={handleSubmit} className="bg-card border border-border/60 rounded-2xl p-6 sm:p-8 space-y-5">
-      <div className="grid sm:grid-cols-2 gap-5">
-        <div>
-          <label htmlFor="contact-name" className="block text-sm font-medium text-foreground mb-1.5">Name *</label>
-          <input
-            id="contact-name"
-            type="text"
-            required
-            autoComplete="name"
-            value={form.name}
-            onChange={(e) => setForm({ ...form, name: e.target.value })}
-            className="w-full rounded-xl border border-border bg-background px-4 py-2.5 text-sm text-foreground placeholder:text-muted-foreground/50 focus:outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary/50 transition-all"
-            placeholder="Your name"
-          />
-        </div>
-        <div>
-          <label htmlFor="contact-email" className="block text-sm font-medium text-foreground mb-1.5">Email</label>
-          <input
-            id="contact-email"
-            type="email"
-            autoComplete="email"
-            inputMode="email"
-            value={form.email}
-            onChange={(e) => setForm({ ...form, email: e.target.value })}
-            aria-invalid={emailInvalid || undefined}
-            aria-describedby={emailInvalid ? "contact-email-error" : undefined}
-            className="w-full rounded-xl border border-border bg-background px-4 py-2.5 text-sm text-foreground placeholder:text-muted-foreground/50 focus:outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary/50 transition-all"
-            placeholder="you@example.com"
-          />
-          {emailInvalid && (
-            <p id="contact-email-error" role="alert" className="text-xs text-red-600 dark:text-red-400 mt-1.5">That email doesn't look right — double-check it.</p>
-          )}
-        </div>
-      </div>
-      <div>
-        <label htmlFor="contact-phone" className="block text-sm font-medium text-foreground mb-1.5">Phone</label>
-        <input
-          id="contact-phone"
-          type="tel"
-          autoComplete="tel"
-          inputMode="tel"
-          value={form.phone}
-          onChange={(e) => setForm({ ...form, phone: e.target.value })}
-          aria-invalid={phoneInvalid || undefined}
-          aria-describedby={phoneInvalid ? "contact-phone-error" : undefined}
-          className="w-full rounded-xl border border-border bg-background px-4 py-2.5 text-sm text-foreground placeholder:text-muted-foreground/50 focus:outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary/50 transition-all"
-          placeholder="207-555-0123"
-        />
-        {phoneInvalid && (
-          <p id="contact-phone-error" role="alert" className="text-xs text-red-600 dark:text-red-400 mt-1.5">That phone number doesn't look complete.</p>
-        )}
-      </div>
-      <div>
-        <label htmlFor="contact-message" className="block text-sm font-medium text-foreground mb-1.5">Message *</label>
-        <textarea
-          id="contact-message"
-          required
-          rows={4}
-          value={form.message}
-          onChange={(e) => setForm({ ...form, message: e.target.value })}
-          className="w-full rounded-xl border border-border bg-background px-4 py-2.5 text-sm text-foreground placeholder:text-muted-foreground/50 focus:outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary/50 transition-all resize-none"
-          placeholder="How can we help?"
-        />
-      </div>
-      {showContactHint && !hasContactMethod && (
-        <p role="alert" className="text-sm text-amber-500">Please add a phone number or email so we can get back to you.</p>
-      )}
-      {status === "error" && (
-        <p role="alert" className="text-sm text-red-600 dark:text-red-400">Something went wrong. Please try again or call us directly.</p>
-      )}
-      <Button
-        type="submit"
-        disabled={status === "sending"}
-        className="rounded-full h-11 px-8 text-sm font-semibold shadow-[0_2px_8px_rgba(0,0,0,0.15)] gap-2"
-      >
-        {status === "sending" ? "Sending..." : <><Send className="w-4 h-4" /> Send Message</>}
-      </Button>
-    </form>
   );
 }
 
@@ -607,25 +464,25 @@ export default function Home() {
         </div>
       </Section>
 
-      {/* ── See Our Work ── */}
-      {/* Proof of work sits between "here's what we do" (Services) and
-          "here's what people say" (Reviews). Cheap to render — local JPEGs,
-          all lazy — so it earns a slot this high. The Facebook embed
-          deliberately does NOT come with it; see the section further down. */}
-      <Section id="our-work" measure="wide">
-        <WorkGallery />
-      </Section>
+      {/* ── Proof ──
+          "Is it any good?" — one band now, where it used to be two. The
+          photographs and the reviews were separate sections, 1,202px of
+          gallery above 700px of quotes, each with its own heading and its own
+          vertical rhythm, both answering that same single question. Putting
+          them together is most of the reason this page got shorter: the quotes
+          come first because they are what someone is actually looking for, and
+          the photographs sit under them as the thing the quotes are about.
 
-      {/* ── Reviews ── */}
-      {/* The page's one inverted band. Seven sections that were all within 4%
-          lightness of each other gave the scroll no landmark; the reviews are
-          the right place to put the weight, because they're the thing a
-          visitor is actually looking for before they call. One per page — see
-          .band-deep. */}
-      <Section id="reviews" measure="wide" tone="deep">
+          Four photos here, not twelve. The full set still lives on /about,
+          which is where someone who wants to browse the work is going anyway.
+
+          This is the page's one inverted band. Seven sections all within 4%
+          lightness of each other gave the scroll no landmark, and this is the
+          right place to spend the weight. One per page — see .band-deep. */}
+      <Section id="proof" measure="wide" tone="deep">
         <SectionHeading
           align="left"
-          eyebrow="Reviews"
+          eyebrow="Proof"
           title="What clients say"
           lead={
             <>
@@ -685,13 +542,29 @@ export default function Home() {
           ))}
         </div>
 
-        <div className="text-center mt-10">
+        {/* The work itself, under the words about the work. `limit` keeps this
+            to one lead frame plus three, which is two grid rows instead of
+            four — see WorkGallery for why the follow tile is what makes the
+            count come out even. */}
+        <div className="mt-14">
+          <p className="type-eyebrow mb-5">Recent jobs</p>
+          <WorkGallery compact limit={4} />
+        </div>
+
+        <div className="mt-10 flex flex-col sm:flex-row items-center justify-center gap-5">
           <a href="https://g.page/r/CYnY6ulFfvDtEAE/review" target="_blank" rel="noopener noreferrer" data-testid="link-google-reviews">
             <Button variant="outline" className="h-10 px-6 rounded-full border-border text-sm font-semibold gap-2 shadow-[0_1px_4px_rgba(0,0,0,0.15)]">
               <Star className="w-4 h-4 fill-yellow-400 text-yellow-500 dark:text-yellow-400" />
               See all reviews on Google
             </Button>
           </a>
+          <Link
+            href="/about"
+            className="inline-flex items-center gap-1.5 text-sm font-semibold text-primary hover:underline"
+            data-testid="link-more-work"
+          >
+            See more of our work <ArrowRight className="w-3.5 h-3.5" />
+          </Link>
         </div>
       </Section>
 
@@ -750,32 +623,39 @@ export default function Home() {
         </div>
       </Section>
 
-      {/* ── Social ── */}
-      {/* Below the estimate on purpose. This pulls a third-party iframe, so
-          it must not compete with the booking CTA above it. Lazy — nothing is
-          requested from facebook.com until it's scrolled near. */}
-      <Section id="social" measure="wide" tone="tint">
-        <SocialFollow />
-      </Section>
+      {/* ── Reach a person ──
+          This was a second contact form — 866px tall on a desktop, 990 on a
+          phone — posting to the same /api/intake/submit the estimator directly
+          above it already posts to. The same question asked twice, the second
+          time with fewer fields and no estimate at the end of it.
 
-      {/* ── Contact Form ── */}
-      <Section id="contact" measure="prose">
-        <SectionHeading
-          eyebrow="Contact"
-          title="Get in touch"
-          lead="Have a question or need more info? Drop us a message and you'll hear from us within 48 hours."
-        />
-        <ContactForm />
-        <div className="mt-10 flex flex-col sm:flex-row items-center justify-center gap-6 text-sm text-muted-foreground">
-          <a href={companyInfo.contact.phoneHref} className="flex items-center gap-2 hover:text-foreground transition-colors">
-            <Phone className="w-4 h-4 text-primary" /> {companyInfo.contact.phoneDisplay}
-          </a>
-          <a href={companyInfo.contact.emailHref} className="flex items-center gap-2 hover:text-foreground transition-colors">
-            <Mail className="w-4 h-4 text-primary" /> {companyInfo.contact.email}
-          </a>
-          <a href={companyInfo.contact.smsHref} className="flex items-center gap-2 hover:text-foreground transition-colors sm:hidden">
-            <MessageSquare className="w-4 h-4 text-primary" /> Text Us
-          </a>
+          What is left is the one part the form was not duplicating: the
+          channels. /#contact is linked from both the navbar and the footer, so
+          it still has to land on an answer to "how do I reach a human". */}
+      <Section id="contact" measure="prose" rhythm="tight">
+        <div className="text-center">
+          <h2 className="type-h3 text-foreground">Rather just talk to someone?</h2>
+          <p className="text-sm text-muted-foreground mt-3 mb-7 max-w-md mx-auto leading-relaxed">
+            A call or a text is the quickest way to reach us. Email works just as well when
+            it isn't urgent.
+          </p>
+          <div className="flex flex-col sm:flex-row justify-center gap-3">
+            <a href={companyInfo.contact.phoneHref} data-testid="link-contact-call">
+              <Button className="w-full sm:w-auto h-11 px-7 rounded-full text-sm font-semibold gap-2">
+                <Phone className="w-4 h-4" /> {companyInfo.contact.phoneDisplay}
+              </Button>
+            </a>
+            <a href={companyInfo.contact.smsHref} className="sm:hidden" data-testid="link-contact-text">
+              <Button variant="outline" className="w-full h-11 px-7 rounded-full text-sm font-semibold gap-2 border-2 border-primary bg-card/80">
+                <MessageSquare className="w-4 h-4" /> Text us
+              </Button>
+            </a>
+            <a href={companyInfo.contact.emailHref} data-testid="link-contact-email">
+              <Button variant="outline" className="w-full sm:w-auto h-11 px-7 rounded-full text-sm font-semibold gap-2 border-2 border-primary bg-card/80">
+                <Mail className="w-4 h-4" /> Email us
+              </Button>
+            </a>
+          </div>
         </div>
       </Section>
 

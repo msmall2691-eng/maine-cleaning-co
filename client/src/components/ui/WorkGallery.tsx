@@ -15,7 +15,10 @@ import { SectionHeading } from "@/components/layout/Section";
  * tile deep-links to the real post when GalleryItem.postUrl is set and
  * otherwise opens the profile.
  *
- * `compact` drops the heading block for callers that supply their own.
+ * `compact` drops the heading block for callers that supply their own, and
+ * `limit` shows only the first N photos. The home page passes both: four
+ * photos there, the full set here and on /about. Pick a limit that leaves the
+ * grid square — see the note on the follow tile below.
  *
  * LAYOUT: this was eight identical squares in a flat 4-column grid, which
  * gave every photo the same weight and read as a contact sheet. The first
@@ -24,12 +27,24 @@ import { SectionHeading } from "@/components/layout/Section";
  * all; they are now always legible over a scrim that is only painted where
  * the caption sits.
  *
- * The follow tile at the end is not decoration: eight photos plus a 2x2 lead
- * needs 11 cells, and a 4-column grid only comes in multiples of 4, so
- * without it the last row ends in a hole. It fills the twelfth cell and is
- * the one place in the grid that asks for something.
+ * The follow tile at the end is not decoration: the 2x2 lead takes four cells
+ * and eleven singles take eleven more, and a 4-column grid only comes in
+ * multiples of four, so without it the last row ends in a hole. It fills the
+ * sixteenth cell and is the one place in the grid that asks for something.
  */
-export function WorkGallery({ compact = false }: { compact?: boolean }) {
+export function WorkGallery({
+  compact = false,
+  limit,
+}: {
+  compact?: boolean;
+  /** Show only the first N photos. Omit for all of them. */
+  limit?: number;
+}) {
+  // The follow tile takes one cell, and the lead tile takes four on anything
+  // wider than a phone, so a 4-column grid comes out flush at limit 4 (two
+  // rows) or limit 12 (four rows). Other values leave a hole in the last row.
+  const items = limit ? galleryItems.slice(0, limit) : galleryItems;
+
   return (
     <>
       {!compact && (
@@ -41,7 +56,7 @@ export function WorkGallery({ compact = false }: { compact?: boolean }) {
       )}
 
       <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 auto-rows-[9rem] sm:auto-rows-[11rem] lg:auto-rows-[12.5rem] gap-2.5 sm:gap-3">
-        {galleryItems.map((item, i) => {
+        {items.map((item, i) => {
           // One lead tile. Two cells wide and tall on anything but a phone,
           // where a 2x2 tile would swallow the whole first screen.
           const isLead = i === 0;
@@ -87,12 +102,21 @@ export function WorkGallery({ compact = false }: { compact?: boolean }) {
 
         {/* Fills the grid's last cell (see the note above). Spans the full
             width on a phone, where the lead tile isn't 2x2 and the maths
-            works out differently. */}
+            works out differently.
+
+            It also spans two at the 3-column size when `limit` is set. The
+            limited grid is one lead (four cells) plus three singles, which
+            leaves col 3 of the last row empty in three columns and flush in
+            four — so the tile widens where the hole would be and narrows where
+            it wouldn't. The full grid keeps its old single-cell span at that
+            size, because its own cell count works out differently. */}
         <a
           href={companyInfo.socials.instagram}
           target="_blank"
           rel="noopener noreferrer"
-          className="col-span-2 sm:col-span-1 group flex flex-col items-center justify-center gap-2 rounded-[1.25rem] border border-dashed border-border bg-muted/30 px-4 text-center transition-colors hover:border-primary/50 hover:bg-primary/5"
+          className={`${
+            limit ? "col-span-2 lg:col-span-1" : "col-span-2 sm:col-span-1"
+          } group flex flex-col items-center justify-center gap-2 rounded-[1.25rem] border border-dashed border-border bg-muted/30 px-4 text-center transition-colors hover:border-primary/50 hover:bg-primary/5`}
           data-testid="work-gallery-follow"
         >
           <Instagram className="w-5 h-5 text-primary" aria-hidden="true" />
