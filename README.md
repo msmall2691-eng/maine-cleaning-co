@@ -914,6 +914,9 @@ ADMIN_PASSWORD=...               # Admin user password (auto-seeded on startup)
 # AI (optional)
 OPENAI_API_KEY=...               # GPT-4o-mini for chat widget + cleaning tips
 
+# Street View in the estimator (optional) — see "Property photos" below
+GOOGLE_MAPS_API_KEY=...          # unset = the estimator simply shows no photo
+
 # BrightBase Ops — the only lead destination (see server/lib/brightbase.ts)
 BRIGHTBASE_API_URL=https://brightbase-production.up.railway.app  # unset = forwards recorded as "skipped"
 
@@ -922,6 +925,36 @@ RETRY_SWEEP_INTERVAL_MINUTES=10  # Cadence. Floored at 1 min; bad values fall ba
 RETRY_SWEEP_DISABLED=1           # Set to switch the background sweep off entirely
 CRON_SECRET=...                  # Only needed for an EXTERNAL cron; see below
 ```
+
+### Property photos in the estimator
+
+When `GOOGLE_MAPS_API_KEY` is set, the estimator shows a Street View photo of
+the address a customer types. Unset, the frame never appears and nothing else
+changes — the same way the coastal-conditions widget hides itself when the
+weather API is unreachable.
+
+To set it up: in a Google Cloud project with billing enabled, turn on the
+**Street View Static API**, create an API key, and set it in Railway. Restrict
+the key to that one API — the key is used only from our own server, so an
+HTTP-referrer restriction would not apply and an IP restriction would need
+Railway's egress addresses, which move. The API restriction is the part that
+matters: it is what stops a leaked key being spent on anything else.
+
+The key never reaches the browser. `GET /api/property-photo?address=…` proxies
+it, because the Street View Static API takes its key as a `key=` query
+parameter and ignores `X-Goog-Api-Key` — so a key used from the page would sit
+in the page source. `server/lib/streetView.ts` has the rest of the reasoning,
+including why it branches on the response's `status` field rather than on the
+HTTP status (the API answers 200 while refusing).
+
+Cost control, in three places: the free metadata endpoint is asked first and
+the billed image endpoint only once there is confirmed imagery; results are
+cached in-process for a day and in the browser for a day; and the client does
+not ask at all until the address has a house number, a state and a ZIP after
+the state. The route is rate limited to 20 requests a minute per IP.
+
+The customer's address is sent to Google — that is the mechanism — and is
+never written to our logs, including on the error paths.
 
 ### The failed-forward retry sweep
 

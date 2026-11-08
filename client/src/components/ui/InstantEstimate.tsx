@@ -7,6 +7,7 @@ import { useMutation } from "@tanstack/react-query";
 import { useToast } from "@/hooks/use-toast";
 
 import { Link, useLocation } from "wouter";
+import { propertyPhotoSrc } from "@/lib/property-address";
 import {
   CheckCircle2,
   ChevronRight,
@@ -228,6 +229,71 @@ function AddressInput({ value, onChange, onZipDetected }: { value: string; onCha
         </div>
       )}
     </div>
+  );
+}
+
+/**
+ * A Street View photo of the address the customer just entered.
+ *
+ * It is here because an estimate for a house reads differently when you can
+ * see the house. It is also a quiet correctness check: a wrong street shows
+ * up as a picture of somewhere you have never been, which people notice far
+ * faster than they notice a typo in a line of text.
+ *
+ * It never claims to be a survey. The caption says whose imagery it is and
+ * that it may be old, because Google's Maine coverage often is, and because
+ * "we looked at your house" is not a thing we want the form to imply.
+ *
+ * The key stays on the server — see server/lib/streetView.ts for why the
+ * Street View Static API gives us no choice. The browser only ever sees
+ * /api/property-photo, which 404s for every kind of nothing. On a 404 this
+ * renders nothing at all, which is the same thing CoastalConditions does
+ * when the weather API is down: a quote must never depend on a third party
+ * having a good afternoon.
+ */
+function PropertyPreview({ address }: { address: string }) {
+  const [failed, setFailed] = useState(false);
+  const [loaded, setLoaded] = useState(false);
+
+  // Null until the address has reached the shape picking a suggestion
+  // produces. lib/property-address.ts has the why: the image leg of this is
+  // billed per request, and this field is a live text input.
+  const src = useMemo(() => propertyPhotoSrc(address), [address]);
+
+  // A new address is a new question: an earlier failure says nothing about it.
+  useEffect(() => {
+    setFailed(false);
+    setLoaded(false);
+  }, [src]);
+
+  if (!src || failed) return null;
+
+  return (
+    /* No reserved space and no skeleton. Plenty of Maine camp roads have no
+       Street View coverage at all, so the common failure is "there is no
+       photo of this place" — and a placeholder that appears and then
+       disappears is worse than one that never appeared. The frame has no
+       height until the image has actually decoded. */
+    <figure
+      className={`overflow-hidden transition-all duration-500 ${
+        loaded ? "mt-2.5 rounded-xl border border-border opacity-100" : "h-0 opacity-0"
+      }`}
+      data-testid="property-preview"
+    >
+      <img
+        src={src}
+        alt={`Street View of ${address.trim()}`}
+        className="w-full aspect-[8/5] object-cover"
+        loading="lazy"
+        decoding="async"
+        onLoad={() => setLoaded(true)}
+        onError={() => setFailed(true)}
+      />
+      <figcaption className="px-3 py-2 text-[11px] leading-snug text-muted-foreground bg-muted/40">
+        Street View of the address you entered. Google's imagery, and sometimes a few
+        years old — it just helps us picture the place.
+      </figcaption>
+    </figure>
   );
 }
 
@@ -1112,6 +1178,7 @@ export function InstantEstimate({ defaultCategory, bookingIntent = false }: Inst
                 <div>
                   <label className="text-xs font-medium text-muted-foreground mb-1 block">Property address</label>
                   <AddressInput value={contactAddress} onChange={setContactAddress} onZipDetected={setZip} />
+                  <PropertyPreview address={contactAddress} />
                 </div>
                 <div>
                   <label className="text-xs font-medium text-muted-foreground mb-1 block" htmlFor="custom-notes">Details</label>
@@ -1234,6 +1301,7 @@ export function InstantEstimate({ defaultCategory, bookingIntent = false }: Inst
                     onChange={setContactAddress}
                     onZipDetected={(z) => setZip(z)}
                   />
+                  <PropertyPreview address={contactAddress} />
                 </div>
                 <div>
                   <label className="text-xs font-medium text-muted-foreground mb-1 block">Notes</label>
