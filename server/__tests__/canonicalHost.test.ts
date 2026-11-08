@@ -5,7 +5,6 @@ import {
   canonicalHostFromEnv,
   canonicalHostRedirect,
 } from "../lib/canonicalHost";
-import { CANONICAL_ORIGIN, DEFAULT_ORIGIN } from "../lib/sitemap";
 
 /**
  * www.maineclean.co and maineclean.co both answered 200 with no redirect, so
@@ -50,17 +49,8 @@ describe("aliasesOf", () => {
 });
 
 describe("canonicalHostFromEnv", () => {
-  /**
-   * Compared against the sitemap's own constant, NOT a literal.
-   *
-   * This test already had this name and still re-typed "www.maineclean.co",
-   * so when the sitemap's origin moved to the new business's domain and this
-   * module's copy did not, the two disagreed — the app advertised one host
-   * and redirected toward another — and this test passed the whole time,
-   * because it was only checking the literal against itself.
-   */
   it("defaults to the host the sitemap and canonical tags name", () => {
-    expect(canonicalHostFromEnv({} as NodeJS.ProcessEnv)).toBe(new URL(CANONICAL_ORIGIN).hostname);
+    expect(canonicalHostFromEnv({} as NodeJS.ProcessEnv)).toBe("www.maineclean.co");
   });
 
   it("follows PUBLIC_SITE_URL, which the sitemap reads too", () => {
@@ -70,7 +60,7 @@ describe("canonicalHostFromEnv", () => {
 
   it("falls back rather than throwing on an unparseable value", () => {
     expect(canonicalHostFromEnv({ PUBLIC_SITE_URL: "not a url" } as NodeJS.ProcessEnv))
-      .toBe(new URL(DEFAULT_ORIGIN).hostname);
+      .toBe("www.maineclean.co");
   });
 });
 

@@ -1,10 +1,8 @@
 import { describe, it, expect } from "vitest";
 import {
-  BASE_TITLE,
   CANONICAL_ORIGIN,
   DEFAULT_OG_IMAGE,
   STATIC_PAGE_SEO,
-  DEMO_PAGE_SEO,
   NOINDEX_PAGE_SEO,
   blogPostSeo,
   canonicalUrl,
@@ -39,7 +37,7 @@ describe("CANONICAL_ORIGIN", () => {
 
 describe("formatTitle", () => {
   it("appends the brand", () => {
-    expect(formatTitle("About Us")).toBe(`About Us | ${BASE_TITLE}`);
+    expect(formatTitle("About Us")).toBe("About Us | The Maine Cleaning Co.");
   });
 
   /**
@@ -48,26 +46,26 @@ describe("formatTitle", () => {
    * so the duplicate ate the words a searcher actually reads.
    */
   it("does not double up a brand the caller already added", () => {
-    expect(formatTitle(`Book a Cleaning · ${BASE_TITLE}`)).toBe(
-      `Book a Cleaning | ${BASE_TITLE}`,
+    expect(formatTitle("Book a Cleaning · The Maine Cleaning Co.")).toBe(
+      "Book a Cleaning | The Maine Cleaning Co.",
     );
-    expect(formatTitle(`Manage Your Booking | ${BASE_TITLE}`)).toBe(
-      `Manage Your Booking | ${BASE_TITLE}`,
+    expect(formatTitle("Manage Your Booking | The Maine Cleaning Co.")).toBe(
+      "Manage Your Booking | The Maine Cleaning Co.",
     );
   });
 
   it("falls back to the bare brand", () => {
-    expect(formatTitle("")).toBe(BASE_TITLE);
+    expect(formatTitle("")).toBe("The Maine Cleaning Co.");
   });
 });
 
 describe("canonicalUrl", () => {
   it("is absolute and rooted at the canonical origin", () => {
-    expect(canonicalUrl("/services")).toBe(`${CANONICAL_ORIGIN}/services`);
+    expect(canonicalUrl("/services")).toBe("https://www.maineclean.co/services");
   });
 
   it("keeps the root path's slash", () => {
-    expect(canonicalUrl("/")).toBe(`${CANONICAL_ORIGIN}/`);
+    expect(canonicalUrl("/")).toBe("https://www.maineclean.co/");
   });
 
   /**
@@ -76,12 +74,12 @@ describe("canonicalUrl", () => {
    * all link in with that parameter.
    */
   it("drops query strings and hashes", () => {
-    expect(canonicalUrl("/book?service=deep-clean")).toBe(`${CANONICAL_ORIGIN}/book`);
-    expect(canonicalUrl("/about#team")).toBe(`${CANONICAL_ORIGIN}/about`);
+    expect(canonicalUrl("/book?service=deep-clean")).toBe("https://www.maineclean.co/book");
+    expect(canonicalUrl("/about#team")).toBe("https://www.maineclean.co/about");
   });
 
   it("normalises a trailing slash away", () => {
-    expect(canonicalUrl("/about/")).toBe(`${CANONICAL_ORIGIN}/about`);
+    expect(canonicalUrl("/about/")).toBe("https://www.maineclean.co/about");
   });
 });
 
@@ -99,37 +97,12 @@ describe("PRERENDER_ROUTES", () => {
     expect(PRERENDER_PATHS).toEqual(sitemapPaths);
   });
 
-  /**
-   * The inverse of the assertion this replaced.
-   *
-   * These pages used to be pre-rendered and advertised, because they were the
-   * business. They are now the DEMO — the cleaning company has wound down —
-   * and pre-rendering them would be actively harmful: an indexed page ranking
-   * for "house cleaning Portland Maine" sends real people to book a service
-   * nobody is going to deliver. So the test that once demanded they be there
-   * now demands they are not.
-   */
-  it("pre-renders none of the demo's pages", () => {
+  it("covers every service and every blog post", () => {
     for (const slug of Object.keys(servicesData)) {
-      expect(PRERENDER_ROUTES[`/services/${slug}`]).toBeUndefined();
-      expect(PRERENDER_ROUTES[`/demo/services/${slug}`]).toBeUndefined();
+      expect(PRERENDER_ROUTES[`/services/${slug}`]).toBeDefined();
     }
     for (const post of blogPosts) {
-      expect(PRERENDER_ROUTES[`/blog/${post.id}`]).toBeUndefined();
-    }
-    expect(PRERENDER_PATHS.some((p) => p.startsWith("/demo"))).toBe(false);
-  });
-
-  it("marks every demo page noindex, so none of them can be crawled back in", () => {
-    for (const meta of Object.values(DEMO_PAGE_SEO)) {
-      expect(meta.noindex).toBe(true);
-      expect(meta.canonicalPath).toBeUndefined();
-    }
-    for (const slug of Object.keys(servicesData)) {
-      expect(serviceSeo(servicesData[slug as keyof typeof servicesData]).noindex).toBe(true);
-    }
-    for (const post of blogPosts) {
-      expect(blogPostSeo(post).noindex).toBe(true);
+      expect(PRERENDER_ROUTES[`/blog/${post.id}`]).toBeDefined();
     }
   });
 
@@ -196,9 +169,9 @@ describe("serviceSeo", () => {
     const schema = serviceSeo(service).jsonLd as Array<Record<string, any>>;
     const crumbs = schema.find((n) => n["@type"] === "BreadcrumbList")!;
     expect(crumbs.itemListElement.map((i: any) => i.item)).toEqual([
-      `${CANONICAL_ORIGIN}/`,
-      `${CANONICAL_ORIGIN}/services`,
-      `${CANONICAL_ORIGIN}/services/residential`,
+      "https://www.maineclean.co/",
+      "https://www.maineclean.co/services",
+      "https://www.maineclean.co/services/residential",
     ]);
   });
 

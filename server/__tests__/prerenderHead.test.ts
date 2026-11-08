@@ -1,6 +1,4 @@
 import { describe, it, expect } from "vitest";
-import { CANONICAL_ORIGIN } from "../lib/sitemap";
-import { BASE_TITLE } from "@/lib/seo";
 import { readFileSync } from "fs";
 import path from "path";
 import { applyHead, outputFileFor } from "../../script/html-head";
@@ -22,28 +20,27 @@ function headOf(html: string): string {
 
 describe("applyHead", () => {
   const meta = {
-    title: "What Gets Built",
-    description: "Instant quoting, lead intake, booking, a client portal and an operator dashboard.",
-    canonicalPath: "/systems",
+    title: "Cleaning Services in Southern Maine",
+    description: "Residential, deep, commercial and vacation-rental cleaning across Southern Maine.",
+    canonicalPath: "/services",
   };
-  const TITLE = `${meta.title} | ${BASE_TITLE}`;
 
   it("writes the page's own title, description and canonical", () => {
-    const { html } = applyHead(SHELL, "/systems", meta, "<p>body</p>");
+    const { html } = applyHead(SHELL, "/services", meta, "<p>body</p>");
     const head = headOf(html);
-    expect(head).toContain(`<title>${TITLE}</title>`);
-    expect(head).toContain(`<link rel="canonical" href="${CANONICAL_ORIGIN}/systems" />`);
+    expect(head).toContain("<title>Cleaning Services in Southern Maine | The Maine Cleaning Co.</title>");
+    expect(head).toContain('<link rel="canonical" href="https://www.maineclean.co/services" />');
     expect(head).toContain(`<meta name="description" content="${meta.description}" />`);
   });
 
   it("leaves no second canonical behind", () => {
-    const { html } = applyHead(SHELL, "/systems", meta, "");
+    const { html } = applyHead(SHELL, "/services", meta, "");
     expect(headOf(html).match(/rel="canonical"/g)).toHaveLength(1);
   });
 
   it("does not keep the homepage's canonical anywhere in the document", () => {
-    const { html } = applyHead(SHELL, "/systems", meta, "");
-    expect(html).not.toContain(`<link rel="canonical" href="${CANONICAL_ORIGIN}/" />`);
+    const { html } = applyHead(SHELL, "/services", meta, "");
+    expect(html).not.toContain('<link rel="canonical" href="https://www.maineclean.co/" />');
   });
 
   /**
@@ -52,16 +49,16 @@ describe("applyHead", () => {
    * every page.
    */
   it("writes the page's own social tags", () => {
-    const { html } = applyHead(SHELL, "/systems", meta, "");
+    const { html } = applyHead(SHELL, "/services", meta, "");
     const head = headOf(html);
-    expect(head).toContain(`<meta property="og:url" content="${CANONICAL_ORIGIN}/systems" />`);
-    expect(head).toContain(`<meta property="og:title" content="${TITLE}" />`);
-    expect(head).toContain(`<meta name="twitter:title" content="${TITLE}" />`);
+    expect(head).toContain('<meta property="og:url" content="https://www.maineclean.co/services" />');
+    expect(head).toContain('<meta property="og:title" content="Cleaning Services in Southern Maine | The Maine Cleaning Co." />');
+    expect(head).toContain('<meta name="twitter:title" content="Cleaning Services in Southern Maine | The Maine Cleaning Co." />');
   });
 
   it("uses an absolute og:image, which is the only kind a crawler resolves", () => {
-    const { html } = applyHead(SHELL, "/systems", meta, "");
-    expect(headOf(html)).toContain(`content="${CANONICAL_ORIGIN}/opengraph.jpg"`);
+    const { html } = applyHead(SHELL, "/services", meta, "");
+    expect(headOf(html)).toContain('content="https://www.maineclean.co/opengraph.jpg"');
   });
 
   it("marks an article as one and dates it", () => {
@@ -77,19 +74,19 @@ describe("applyHead", () => {
   });
 
   it("omits article:published_time on a page that is not an article", () => {
-    const { html } = applyHead(SHELL, "/systems", meta, "");
+    const { html } = applyHead(SHELL, "/services", meta, "");
     expect(headOf(html)).not.toContain("article:published_time");
   });
 
   it("puts the rendered body where the client will mount", () => {
-    const { html } = applyHead(SHELL, "/systems", meta, "<h1>Services</h1>");
+    const { html } = applyHead(SHELL, "/services", meta, "<h1>Services</h1>");
     expect(html).toContain('<div id="root"><h1>Services</h1></div>');
   });
 
   it("emits page schema tagged so the client can replace it", () => {
     const { html } = applyHead(
       SHELL,
-      "/systems",
+      "/services",
       { ...meta, jsonLd: { "@type": "Service" } },
       "",
     );
@@ -103,7 +100,7 @@ describe("applyHead", () => {
   it("escapes < so page data cannot break out of the schema block", () => {
     const { html } = applyHead(
       SHELL,
-      "/systems",
+      "/services",
       { ...meta, jsonLd: { note: "</script><img src=x>" } },
       "",
     );
@@ -114,7 +111,7 @@ describe("applyHead", () => {
   it("escapes quotes in a description rather than breaking the attribute", () => {
     const { html } = applyHead(
       SHELL,
-      "/systems",
+      "/services",
       { ...meta, description: 'He said "clean" & left' },
       "",
     );
@@ -132,14 +129,14 @@ describe("applyHead", () => {
     ['<div id="root">', /<div id="root"><\/div>/],
   ])("throws when the shell has lost its %s", (_label, pattern) => {
     const broken = SHELL.replace(pattern, "");
-    expect(() => applyHead(broken, "/systems", meta, "")).toThrow(/prerender/);
+    expect(() => applyHead(broken, "/services", meta, "")).toThrow(/prerender/);
   });
 
   it("renders every real route's head without throwing", () => {
     for (const routePath of PRERENDER_PATHS) {
       const { html, canonical } = applyHead(SHELL, routePath, PRERENDER_ROUTES[routePath], "");
       expect(canonical, routePath).toBe(
-        `${CANONICAL_ORIGIN}${routePath === "/" ? "/" : routePath}`,
+        `https://www.maineclean.co${routePath === "/" ? "/" : routePath}`,
       );
       expect(headOf(html)).toContain(`href="${canonical}"`);
     }
@@ -171,11 +168,11 @@ describe("prerendered file naming", () => {
   });
 
   it("nests a two-segment path", () => {
-    expect(outputFileFor("/systems")).toBe("systems.html");
+    expect(outputFileFor("/services/residential")).toBe("services/residential.html");
   });
 
   it("resolves a trailing slash to the same file", () => {
-    expect(prerenderedFileFor("/systems/")).toBe("systems.html");
+    expect(prerenderedFileFor("/about/")).toBe("about.html");
   });
 
   /** A path that is not a page of ours has no file, pre-rendered or otherwise. */

@@ -1,8 +1,6 @@
 import express, { type Request, Response, NextFunction } from "express";
 import { registerRoutes } from "./routes";
 import { serveStatic } from "./static";
-import { registerLegacyRedirects } from "./legacyRedirects";
-import { registerDemoGuard } from "./demoGuard";
 import { createServer } from "http";
 import { startRetrySweepScheduler } from "./lib/retryScheduler";
 import { canonicalHostRedirect, canonicalHostFromEnv } from "./lib/canonicalHost";
@@ -116,14 +114,6 @@ app.use((req, res, next) => {
   // `relation "..." does not exist`, run `npx drizzle-kit push` against
   // DATABASE_URL and retry — do not paper over drift with a second
   // schema definition.
-
-  // Before registerRoutes, so a legacy page URL is answered with its 301
-  // rather than falling through to the SPA catch-all. /api is never matched
-  // by the legacy table, so the API is unaffected.
-  registerLegacyRedirects(app);
-
-  // Before registerRoutes, so a guarded write is refused rather than handled.
-  registerDemoGuard(app);
 
   await registerRoutes(httpServer, app);
 

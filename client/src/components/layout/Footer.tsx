@@ -4,14 +4,9 @@ import { companyInfo } from "@/lib/company-info";
 import { Button } from "@/components/ui/button";
 import { LogoLockup, LogoWatermark, LogoBadge } from "@/components/brand/Logo";
 import { photos, srcSetFor, SIZES } from "@/lib/photos";
-import { useBasePath, withBase } from "@/demo/demo-mode";
 
 export default function Footer() {
   const [location] = useLocation();
-  // "" on the business site, "/demo" inside the demo. wouter rewrites <Link>
-  // against the base automatically, but a raw <a href="/#x"> escapes it and
-  // would throw a demo visitor out onto the business homepage.
-  const base = useBasePath();
 
   const scrollToEstimate = (e: React.MouseEvent) => {
     if (location === "/") {
@@ -63,7 +58,7 @@ export default function Footer() {
             <p className="type-h3 text-foreground">The Maine choice for a clean space.</p>
             <p className="text-sm text-muted-foreground mt-1.5">Free estimate in under 60 seconds — no commitment required.</p>
           </div>
-          <a href={withBase(base, "/#get-estimate")} onClick={scrollToEstimate} className="relative flex-shrink-0" data-testid="link-footer-cta-estimate">
+          <a href="/#get-estimate" onClick={scrollToEstimate} className="relative flex-shrink-0" data-testid="link-footer-cta-estimate">
             <Button size="sm" className="rounded-full h-11 px-6 text-sm font-semibold gap-1.5 flex-shrink-0">
               Get Estimate <ArrowRight className="w-3.5 h-3.5" />
             </Button>
@@ -113,7 +108,7 @@ export default function Footer() {
               <li><Link href="/how-it-works" className="text-muted-foreground hover:text-foreground transition-colors">How It Works</Link></li>
               <li><Link href="/service-areas" className="text-muted-foreground hover:text-foreground transition-colors">Service Areas</Link></li>
               <li><Link href="/blog" className="text-muted-foreground hover:text-foreground transition-colors">Blog</Link></li>
-              <li><a href={withBase(base, "/#contact")} onClick={(e) => { if (location === "/") { e.preventDefault(); document.getElementById("contact")?.scrollIntoView({ behavior: "smooth" }); }}} className="text-muted-foreground hover:text-foreground transition-colors">Contact</a></li>
+              <li><a href="/#contact" onClick={(e) => { if (location === "/") { e.preventDefault(); document.getElementById("contact")?.scrollIntoView({ behavior: "smooth" }); }}} className="text-muted-foreground hover:text-foreground transition-colors">Contact</a></li>
             </ul>
           </div>
 

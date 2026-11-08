@@ -1,11 +1,11 @@
 import { companyInfo } from "@/lib/company-info";
 import { useSEO } from "@/hooks/use-seo";
-import { DEMO_PAGE_SEO } from "@/lib/seo";
+import { STATIC_PAGE_SEO } from "@/lib/seo";
 import { Section } from "@/components/layout/Section";
 import { LogoWatermark } from "@/components/brand/Logo";
 
 export default function Terms() {
-  useSEO(DEMO_PAGE_SEO["/terms"]);
+  useSEO(STATIC_PAGE_SEO["/terms"]);
   return (
     <>
       {/* Compact page header — same top rhythm as every other page, so

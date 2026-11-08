@@ -1,7 +1,7 @@
 import { useEffect } from "react";
 import { CheckCircle2, ArrowRight, Leaf, Calendar, Phone } from "lucide-react";
 import { useSEO } from "@/hooks/use-seo";
-import { DEMO_PAGE_SEO } from "@/lib/seo";
+import { STATIC_PAGE_SEO } from "@/lib/seo";
 import { Link } from "wouter";
 import { getServicesList } from "@/lib/services-data";
 import { motion } from "framer-motion";
@@ -15,7 +15,7 @@ import { LogoWatermark } from "@/components/brand/Logo";
 import { photos, srcSetFor, SIZES } from "@/lib/photos";
 
 export default function Services() {
-  useSEO(DEMO_PAGE_SEO["/services"]);
+  useSEO(STATIC_PAGE_SEO["/services"]);
   const services = getServicesList();
 
   useEffect(() => {
