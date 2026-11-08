@@ -10,6 +10,7 @@ import { forwardLeadToBrightBase, forwardBookingUpdateToBrightBase } from "./lib
 import { calculateQuote, estimatesDiverge } from "./lib/quoteEngine";
 import { RATE, MIN_JOB, RANGE_BAND } from "@shared/pricing";
 import { getConditions } from "./lib/weather";
+import { getPropertyShot } from "./lib/streetView";
 import { CLEANS_SINCE_2018 } from "@/lib/company-stats";
 import { retryFailedForwards, recordSkipped } from "./lib/leadForward";
 import { sweepFailedForwards } from "./lib/retrySweep";
@@ -835,6 +836,57 @@ export async function registerRoutes(
     // Let a CDN/proxy hold it too; the upstream only moves a few times an hour.
     res.set("Cache-Control", "public, max-age=900");
     res.json({ conditions });
+  });
+
+  /**
+   * A Street View photo of the address someone typed into the estimator.
+   *
+   * The key lives here and only here — see lib/streetView.ts for why the
+   * Street View Static API leaves no choice about that.
+   *
+   * 404, with no body, for every kind of nothing: no key configured, no
+   * imagery at that address, a refused key, a timeout. The estimator hides
+   * the frame on error, so one response shape covers them all and none of
+   * them puts a red line in anyone's console.
+   *
+   * Rate limited per IP because the image leg of this is billed per request.
+   * 20/minute is more than a person filling in a form will ever need and
+   * caps what a script pointed at it can spend.
+   *
+   * `private` caching, not `public`: the URL carries a customer's home
+   * address, so it must not land in a shared CDN keyed by that address.
+   */
+  app.get("/api/property-photo", async (req, res) => {
+    const ip = req.ip || req.socket.remoteAddress || "unknown";
+    if (!checkRateLimit(`streetview:${ip}`, 20, 60_000)) {
+      return res.status(429).end();
+    }
+
+    const address = typeof req.query.address === "string" ? req.query.address.trim() : "";
+    if (!address || address.length < 8 || address.length > 300) {
+      return res.status(400).end();
+    }
+
+    const { shot, maxAgeSeconds } = await getPropertyShot(address, (level, message, data) =>
+      log(level, "streetview", message, data),
+    );
+
+    // The lifetime comes from lib/streetView.ts rather than being a constant
+    // here, so the browser cache and the server cache always expire together.
+    // A fixed day on every 404 was wrong in one direction that matters: a
+    // visitor who loaded the page while the key was misconfigured would go on
+    // being shown nothing for a day after the server had recovered a minute
+    // later. Confirmed missing imagery still gets the full day, and so does
+    // the miss generally — without browser caching the <img> that just failed
+    // is re-requested on every re-render of the estimator, which is every
+    // keystroke in the form beneath it.
+    res.set("Cache-Control", `private, max-age=${maxAgeSeconds}`);
+
+    if (!shot) return res.status(404).end();
+
+    res.set("Content-Type", shot.contentType);
+    res.set("X-Robots-Tag", "noindex");
+    res.send(shot.body);
   });
 
   let aiTipCache: { tip: string; timestamp: number } | null = null;

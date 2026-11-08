@@ -57,6 +57,12 @@ export default function Privacy() {
           <section>
             <h2 className="type-h3 text-foreground mb-3">Information Sharing</h2>
             <p>We do not sell, rent, or trade your personal information to third parties. We may share information with trusted service providers who assist us in operating our website and business, subject to confidentiality agreements.</p>
+            {/* Two lookups send an address off our server, so they are named
+                here rather than left under "trusted service providers". The
+                estimator's Street View frame is the visible one; the service
+                area check has been sending addresses to OpenStreetMap since
+                long before it, and was never written down. */}
+            <p className="mt-2">Two parts of the site look an address up elsewhere. When you type a property address into our estimate form, we ask Google's Street View service for a photo of it, and we check whether it falls inside our service area using OpenStreetMap. Both receive the address you typed and nothing else — no name, phone number or email. Neither lookup is recorded in our own logs.</p>
           </section>
 
           <section>
