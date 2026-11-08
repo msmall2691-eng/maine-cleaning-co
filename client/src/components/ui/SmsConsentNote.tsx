@@ -1,5 +1,4 @@
 import { companyInfo } from "@/lib/company-info";
-import { useBasePath, withBase } from "@/demo/demo-mode";
 
 /**
  * SmsConsentNote — the fine-print SMS consent disclosure shown under every form
@@ -21,7 +20,7 @@ export function SmsConsentNote({ className = "" }: { className?: string }) {
       request — booking confirmation, scheduling, and reminders. Msg &amp; data
       rates may apply; reply STOP to opt out, HELP for help. See our{" "}
       <a
-        href={withBase(useBasePath(), "/privacy")}
+        href="/privacy"
         target="_blank"
         rel="noopener noreferrer"
         className="underline hover:text-foreground"

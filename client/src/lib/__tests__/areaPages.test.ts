@@ -127,18 +127,9 @@ describe("Sebago Lake", () => {
     expect(sebago.relatedServices.map((s) => s.href)).toContain("/services/camp-opening-closing");
   });
 
-  it("is noindex, because the cleaning company has wound down", () => {
-    // This page is part of the DEMO now. It used to carry its own canonical
-    // and ask to be indexed, which is exactly what it must not do any more:
-    // ranking for "cleaning near Sebago Lake" would send real people to book
-    // a service nobody is going to deliver.
+  it("gets its own canonical and area schema", () => {
     const meta = areaPageSeo(sebago);
-    expect(meta.noindex).toBe(true);
-    expect(meta.canonicalPath).toBeUndefined();
-  });
-
-  it("keeps its area schema, so the demo still demonstrates the schema", () => {
-    const meta = areaPageSeo(sebago);
+    expect(meta.canonicalPath).toBe("/service-areas/sebago-lake");
 
     const schema = meta.jsonLd as Array<Record<string, any>>;
     expect(schema.map((n) => n["@type"])).toEqual(["Service", "BreadcrumbList", "FAQPage"]);
@@ -151,9 +142,9 @@ describe("Sebago Lake", () => {
 
     const crumbs = schema[1];
     expect(crumbs.itemListElement.map((i: any) => i.item)).toEqual([
-      `${CANONICAL_ORIGIN}/`,
-      `${CANONICAL_ORIGIN}/service-areas`,
-      `${CANONICAL_ORIGIN}/service-areas/sebago-lake`,
+      "https://www.maineclean.co/",
+      "https://www.maineclean.co/service-areas",
+      "https://www.maineclean.co/service-areas/sebago-lake",
     ]);
 
     expect(schema[2].mainEntity).toHaveLength(sebago.faqs.length);

@@ -4,7 +4,6 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { motion, AnimatePresence } from "framer-motion";
 import { useMutation } from "@tanstack/react-query";
-import { DEMO_BLOCKED_MESSAGE, useIsDemo } from "@/demo/demo-mode";
 import { useToast } from "@/hooks/use-toast";
 
 import { Link, useLocation } from "wouter";
@@ -462,15 +461,8 @@ export function InstantEstimate({ defaultCategory, bookingIntent = false }: Inst
   const freqLabel: Record<Frequency, string> = { weekly: "Weekly", biweekly: "Biweekly", monthly: "Monthly", "one-time": "One-Time" };
   const typeLabel = cleanType === "standard" ? "Standard" : "Deep Clean";
 
-  // Inside /demo these two refuse before they reach the network, so the
-  // visitor gets an honest sentence instead of a generic failure. The server
-  // refuses them as well (server/demoGuard.ts) — this layer is the wording,
-  // that one is the guarantee.
-  const isDemo = useIsDemo();
-
   const submit = useMutation({
     mutationFn: async () => {
-      if (isDemo) throw new Error(DEMO_BLOCKED_MESSAGE);
       const serviceTypeMap: Record<ServiceCategory, string> = {
         residential: "standard",
         "deep-clean": "deep",
@@ -539,24 +531,11 @@ export function InstantEstimate({ defaultCategory, bookingIntent = false }: Inst
       // done: after a successful booking, or when resetForm() starts a new one.
       toast({ title: "Request sent!", description: "We'll be in touch soon." });
     },
-    onError: () => {
-      // Demo first: this handler used to discard the error entirely and
-      // always render "Please try again or call us directly", so a visitor
-      // completing the estimator in /demo was told to telephone a company
-      // that no longer trades, and to retry. The generic wording is still
-      // right for a real network failure, which is why this branches rather
-      // than piping err.message through unconditionally.
-      if (isDemo) {
-        toast({ title: "Demo mode", description: DEMO_BLOCKED_MESSAGE });
-        return;
-      }
-      toast({ title: "Something went wrong", description: "Please try again or call us directly.", variant: "destructive" });
-    },
+    onError: () => { toast({ title: "Something went wrong", description: "Please try again or call us directly.", variant: "destructive" }); },
   });
 
   const bookingMutation = useMutation({
     mutationFn: async () => {
-      if (isDemo) throw new Error(DEMO_BLOCKED_MESSAGE);
       const serviceTypeMap: Record<ServiceCategory, string> = {
         residential: "standard",
         "deep-clean": "deep",
@@ -626,14 +605,6 @@ export function InstantEstimate({ defaultCategory, bookingIntent = false }: Inst
       toast({ title: "Booking request sent!", description: RESPONSE_CONFIRM });
     },
     onError: (err: Error) => {
-      // Same branch as the quote path above. This one already surfaced
-      // err.message, so the demo text did reach the user — but under a red
-      // "Booking failed" heading, which reads as a fault rather than as the
-      // deliberate block it is.
-      if (isDemo) {
-        toast({ title: "Demo mode", description: DEMO_BLOCKED_MESSAGE });
-        return;
-      }
       toast({ title: "Booking failed", description: err.message || "Please try again or call us.", variant: "destructive" });
     },
   });

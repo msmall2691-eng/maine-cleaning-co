@@ -3,7 +3,6 @@ import { AnimatePresence, motion } from "framer-motion";
 import { CheckCircle2, MapPin, Search, Sparkles, X, AlertCircle, ArrowRight, Phone } from "lucide-react";
 import { companyInfo } from "@/lib/company-info";
 import { COVERAGE_INDEX as COMMUNITIES } from "@/lib/coverage-index";
-import { useBasePath, withBase } from "@/demo/demo-mode";
 
 // Rough geographic center of our Southern Maine service area — used only
 // for distance display, not "am I served" gating. Placed near the Saco /
@@ -76,9 +75,6 @@ function findMatch(raw: string): MatchResult | null {
 const SUGGEST_LIMIT = 5;
 
 export function CoverageCheck() {
-  // `routerBase`, not `base` — this file already has a `const base = new
-  // Date()` further down, and shadowing it here would be a quiet bug.
-  const routerBase = useBasePath();
   const [query, setQuery] = useState("");
   const [checking, setChecking] = useState(false);
   const [result, setResult] = useState<MatchResult | null>(null);
@@ -136,7 +132,7 @@ export function CoverageCheck() {
   const scrollToEstimate = () => {
     const el = document.getElementById("get-estimate");
     if (el) el.scrollIntoView({ behavior: "smooth" });
-    else window.location.href = withBase(routerBase, "/#get-estimate");
+    else window.location.href = "/#get-estimate";
   };
 
   // Close suggestion dropdown on outside click

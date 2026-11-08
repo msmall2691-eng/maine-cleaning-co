@@ -43,29 +43,12 @@ describe("prerender render", () => {
    * prints the links, not the whole document.
    */
   it("includes the footer's internal links, so a crawler can reach other pages", () => {
-    const html = render("/proof");
+    const html = render("/blog/spring-cleaning-checklist");
     const hrefs = [...html.matchAll(/href="(\/[^"]*)"/g)].map((m) => m[1]);
-    // StudioFooter is the one pre-rendered navigation surface — StudioNav is
-    // not rendered here (it mounts ThemeToggle, which needs the theme
-    // context), so without these a crawler landing on one page finds no route
-    // to any other.
-    for (const expected of ["/systems", "/proof", "/process", "/contact", "/privacy"]) {
+    // The footer links the service detail pages directly; /services itself is
+    // reachable from the Navbar, which is not pre-rendered.
+    for (const expected of ["/about", "/how-it-works", "/service-areas", "/blog", "/services/residential", "/privacy"]) {
       expect(hrefs, `footer should link ${expected}`).toContain(expected);
-    }
-  });
-
-  /**
-   * The demo must never appear in pre-rendered HTML as a crawlable
-   * destination. It is noindex and disallowed, but a pre-rendered <a> into it
-   * is still a discovery path, and the whole point is that the cleaning
-   * company's pages stop being found.
-   */
-  it("links the demo with rel=nofollow, so it is reachable but not crawlable", () => {
-    const html = render("/");
-    const demoLinks = [...html.matchAll(/<a\b[^>]*href="\/demo[^"]*"[^>]*>/g)].map((m) => m[0]);
-    expect(demoLinks.length).toBeGreaterThan(0);
-    for (const tag of demoLinks) {
-      expect(tag, `demo link should be nofollow: ${tag}`).toMatch(/rel="[^"]*nofollow/);
     }
   });
 

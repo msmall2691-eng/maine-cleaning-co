@@ -1,98 +1,26 @@
-# Smallworks — operations software for local service businesses
+# The Maine Cleaning Co. — Website & Quoting Platform
 
-> **The name is a working title.** Change `name` / `shortName` / `domain` in
-> `client/src/lib/brand.ts` and the whole site follows. See
-> [Brand & Configuration](#brand--configuration).
-
-This repository is two things in one deployment:
-
-| | What it is | Indexed? |
-|---|---|---|
-| **`/`** | The **business site** — done-for-you operations systems for local service companies. | Yes: pre-rendered, in the sitemap. |
-| **`/demo/*`** | The **live demo** — the complete system built for The Maine Cleaning Co., kept whole as proof. | **No.** `noindex`, out of the sitemap, disallowed in robots.txt, and its writes are blocked. |
-
-## What happened here
-
-This repo started life *as* The Maine Cleaning Co.: a full-stack cleaning
-company site with an instant quoting engine, lead intake, booking, a client
-portal, an operator dashboard and a pre-rendered SEO layer. It ran that
-business for seven years.
-
-The cleaning company has wound down. Rather than delete the system, the
-business pivoted to building it for other local service operators — and the
-old site became the best possible sales asset: a real, complete, production
-system a prospect can click through.
-
-So the cleaning site did not get stripped out. It moved, intact, to `/demo`.
-
-### What that move had to get right
-
-Keeping it online is only safe if nobody can mistake it for a going concern:
-
-- **Nothing can be booked.** `server/demoGuard.ts` refuses the write endpoints
-  for any request whose `Referer` is under `/demo`, and
-  `client/src/demo/demo-mode.tsx` stops the forms before they fetch so the
-  visitor gets an honest sentence instead of a generic failure.
-- **Nothing can be found.** Every demo page is `noindex` (`DEMO_PAGE_SEO` in
-  `client/src/lib/seo.ts`), absent from the sitemap, disallowed in
-  robots.txt, and linked only with `rel="nofollow"`. A page still ranking for
-  "house cleaning Portland Maine" would send real people to book a service
-  nobody is going to deliver.
-- **Nothing 404s that used to work.** `server/legacyRedirects.ts` 301s every
-  old root-level URL (`/services/deep-cleaning`, `/service-areas/sebago-lake`,
-  …) to its `/demo` equivalent, slug intact. A redirect to a `noindex` page
-  also de-indexes the source, which is the outcome wanted.
-- **Nobody can miss the notice.** The demo banner is not dismissible, on
-  purpose. The page under it still says "Taking new clients" and still offers
-  "Book a Cleaning", because it is the real system — so the disclosure has to
-  be visible at every scroll position.
+A full-stack, production-grade cleaning company website with an integrated instant pricing calculator, lead intake pipeline, client portal, and AI features. Built to be remixed for any local service business.
 
 ---
 
-## Brand & Configuration
-
-`client/src/lib/brand.ts` is the single source for the business's identity and
-its offer:
-
-```ts
-brand.name / shortName / domain   // the wordmark, titles, footer
-SITE_ORIGIN                       // canonical origin
-brand.promise                     // the positioning sentence, used as meta description
-brand.contact                     // email (phone optional — blank hides every phone affordance)
-brand.operator                    // the operator story and the prior business
-capabilities[]                    // what gets built — renders /systems, the homepage grid, the footer
-processSteps[] / processFaqs[]    // renders /process AND its FAQPage structured data
-idealClients[]                    // who it is for
-```
-
-Two places outside that file also carry the name, because they are read before
-JavaScript runs and cannot import a module — change them together:
-
-- `client/index.html` — `<title>`, `og:*`, `twitter:*`, the JSON-LD block
-- `server/lib/sitemap.ts` — `CANONICAL_ORIGIN` (and `PUBLIC_SITE_URL` in prod)
-
-This is the same pattern the product is sold on: `company-info.ts`,
-`services-data.ts` and the pricing engine are what make a build re-skinnable
-for the next client in an afternoon. The business site is built the same way,
-which makes it its own smallest case study.
-
----
-
-## Routing
-
-Two routers, deliberately:
-
-- `client/src/App.tsx` — the business site, and the `/demo` mount.
-- `client/src/demo/DemoShell.tsx` — the demo's own routes, declared *relative*
-  because they live inside `<Router base="/demo">`.
-
-The mount is `<Route path="/demo/*">`, with a bare `*` wildcard. A named
-parameter (`:rest*`) matches a **single** segment, so `/demo/about` rendered
-and `/demo/services/deep-cleaning` fell through to the business site's 404.
-`routeTableDrift.test.ts` pins the wildcard and reads **both** files, so
-neither router can drift from `SPA_ROUTES` in `server/static.ts`.
-
----
+## Table of Contents
+1. [Tech Stack](#tech-stack)
+2. [Design System & UI Tokens](#design-system--ui-tokens)
+3. [Page Structure & Layout](#page-structure--layout)
+4. [Component Library (Custom)](#component-library-custom)
+5. [Pricing Engine](#pricing-engine)
+6. [Lead Intake Pipeline](#lead-intake-pipeline)
+7. [API Reference](#api-reference)
+8. [Client Portal](#client-portal)
+9. [Admin Dashboard](#admin-dashboard)
+10. [AI Features](#ai-features)
+11. [Data Models](#data-models)
+12. [Key Files](#key-files)
+13. [Business Info & Config](#business-info--config)
+14. [Environment Variables](#environment-variables)
+15. [Scripts](#scripts)
+16. [Remix Guide](#remix-guide)
 
 ---
 
@@ -1035,14 +963,7 @@ npm run db:push    # Push Drizzle schema changes to PostgreSQL
 
 ## Remix Guide
 
-**This is the product.** The whole offer is that a complete operations system
-can be fitted to a new service business quickly, because everything that
-varies between businesses is data rather than markup. The steps below are the
-build, in order.
-
-Everything here configures what is now the **demo** (`/demo`) — which is to
-say, the system a client receives. The business site at `/` is configured
-separately through `client/src/lib/brand.ts`.
+This app is designed to be cloned for any local service business. Here's what to change:
 
 ### 1. Business Identity (5 minutes)
 Edit `client/src/lib/company-info.ts` — update name, phone, email, SMS, socials, address.

@@ -27,20 +27,8 @@ import { blogPosts } from "@/lib/blog-data";
  *
  * Keep this in step with the canonical/og:url in client/index.html.
  */
-/**
- * The origin to fall back to when PUBLIC_SITE_URL is unset.
- *
- * Exported because server/lib/canonicalHost.ts needs the same value and used
- * to carry its own copy of the literal. When this one moved to the new
- * business's domain and that one did not, the app advertised one host in the
- * sitemap and every canonical tag while 301-redirecting toward another — and
- * the test that exists to catch exactly that re-typed the literal too, so it
- * passed throughout. One constant, imported, is the fix.
- */
-export const DEFAULT_ORIGIN = "https://www.smallworks.systems";
-
 export const CANONICAL_ORIGIN = (
-  process.env.PUBLIC_SITE_URL || DEFAULT_ORIGIN
+  process.env.PUBLIC_SITE_URL || "https://www.maineclean.co"
 ).replace(/\/+$/, "");
 
 /**
@@ -72,7 +60,7 @@ export const SERVICE_SLUGS = [
  *  - /portal* is behind a sign-in and has nothing to index.
  *  - /api/* is not pages.
  */
-export const DISALLOWED = ["/api/", "/portal", "/booking/manage/", "/demo"] as const;
+export const DISALLOWED = ["/api/", "/portal", "/booking/manage/"] as const;
 
 /**
  * Area landing-page slugs, mirroring the keys of `areaPages`.
@@ -93,23 +81,21 @@ export const BLOG_SLUGS: readonly string[] = blogPosts.map((post) => post.id);
 
 type SitemapEntry = { path: string; lastmod?: string; changefreq?: string; priority?: string };
 
-/**
- * The business site's pages, in rough order of how much they matter.
- *
- * The cleaning site's pages are NOT here any more. They still exist and
- * still work, under /demo — but that business has wound down, and a sitemap
- * entry is an active request to index. Advertising "house cleaning Portland
- * Maine" would send real people to book a service nobody will deliver.
- * DISALLOWED above keeps crawlers off /demo entirely, and DEMO_PAGE_SEO in
- * the client marks every one of those pages noindex.
- */
+/** The pages that aren't data-driven, in rough order of how much they matter. */
 const STATIC_PAGES: SitemapEntry[] = [
   { path: "/", changefreq: "weekly", priority: "1.0" },
-  { path: "/systems", changefreq: "monthly", priority: "0.9" },
-  { path: "/proof", changefreq: "monthly", priority: "0.9" },
-  { path: "/process", changefreq: "monthly", priority: "0.8" },
-  { path: "/contact", changefreq: "monthly", priority: "0.8" },
+  { path: "/book", changefreq: "monthly", priority: "0.9" },
+  { path: "/services", changefreq: "monthly", priority: "0.8" },
+  { path: "/short-term-rentals", changefreq: "monthly", priority: "0.8" },
+  { path: "/service-areas", changefreq: "monthly", priority: "0.7" },
+  { path: "/how-it-works", changefreq: "monthly", priority: "0.6" },
+  { path: "/about", changefreq: "monthly", priority: "0.6" },
+  { path: "/blog", changefreq: "weekly", priority: "0.6" },
   { path: "/privacy", changefreq: "yearly", priority: "0.2" },
+  { path: "/terms", changefreq: "yearly", priority: "0.2" },
+  // The SMS disclosure a carrier's A2P 10DLC reviewer is pointed at. Low
+  // priority to a searcher, but it has to be discoverable and indexable.
+  { path: "/sms", changefreq: "yearly", priority: "0.2" },
 ];
 
 /**
@@ -138,10 +124,25 @@ function xmlEscape(s: string): string {
 
 /** Every URL the sitemap advertises, in the order it advertises them. */
 export function sitemapEntries(): SitemapEntry[] {
-  // Business-site pages only. SERVICE_SLUGS, AREA_SLUGS and BLOG_SLUGS are
-  // still exported above because server/static.ts uses them to tell a real
-  // demo URL from a typo — they are just no longer advertised.
-  return [...STATIC_PAGES];
+  return [
+    ...STATIC_PAGES,
+    ...SERVICE_SLUGS.map((slug) => ({
+      path: `/services/${slug}`,
+      changefreq: "monthly",
+      priority: "0.7",
+    })),
+    ...AREA_SLUGS.map((slug) => ({
+      path: `/service-areas/${slug}`,
+      changefreq: "monthly",
+      priority: "0.7",
+    })),
+    ...blogPosts.map((post) => ({
+      path: `/blog/${post.id}`,
+      lastmod: toW3CDate(post.date),
+      changefreq: "yearly",
+      priority: "0.4",
+    })),
+  ];
 }
 
 export function buildSitemap(origin: string = CANONICAL_ORIGIN): string {
