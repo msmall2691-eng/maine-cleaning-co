@@ -867,19 +867,24 @@ export async function registerRoutes(
       return res.status(400).end();
     }
 
-    const shot = await getPropertyShot(address, (level, message, data) =>
+    const { shot, maxAgeSeconds } = await getPropertyShot(address, (level, message, data) =>
       log(level, "streetview", message, data),
     );
-    if (!shot) {
-      // A day of browser caching on the miss too. Without it the <img> that
-      // just failed is re-requested on every re-render of the estimator,
-      // which is every keystroke in the form beneath it.
-      res.set("Cache-Control", "private, max-age=86400");
-      return res.status(404).end();
-    }
+
+    // The lifetime comes from lib/streetView.ts rather than being a constant
+    // here, so the browser cache and the server cache always expire together.
+    // A fixed day on every 404 was wrong in one direction that matters: a
+    // visitor who loaded the page while the key was misconfigured would go on
+    // being shown nothing for a day after the server had recovered a minute
+    // later. Confirmed missing imagery still gets the full day, and so does
+    // the miss generally — without browser caching the <img> that just failed
+    // is re-requested on every re-render of the estimator, which is every
+    // keystroke in the form beneath it.
+    res.set("Cache-Control", `private, max-age=${maxAgeSeconds}`);
+
+    if (!shot) return res.status(404).end();
 
     res.set("Content-Type", shot.contentType);
-    res.set("Cache-Control", "private, max-age=86400");
     res.set("X-Robots-Tag", "noindex");
     res.send(shot.body);
   });

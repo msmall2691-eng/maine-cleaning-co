@@ -97,6 +97,9 @@ describe("GET /api/property-photo", () => {
 
     expect(res.status).toBe(404);
     expect(res.body).toEqual({});
+    // Short, not a day: an unset key is about to be set, and the browser must
+    // not go on hiding the photo after it has been.
+    expect(res.headers["cache-control"]).toBe("private, max-age=60");
   });
 
   it("serves the image with the content type Google gave it", async () => {
@@ -129,7 +132,8 @@ describe("GET /api/property-photo", () => {
     expect(res.headers["x-robots-tag"]).toBe("noindex");
   });
 
-  it("lets the browser cache the miss too, so a failed <img> isn't re-fetched on every keystroke", async () => {
+  it("lets the browser cache a confirmed absence for a day, so a failed <img> isn't re-fetched on every keystroke", async () => {
+    process.env.GOOGLE_MAPS_API_KEY = "test-key";
     stubGoogle("ZERO_RESULTS");
     const res = await request(app)
       .get("/api/property-photo")
@@ -139,6 +143,22 @@ describe("GET /api/property-photo", () => {
     expect(res.status).toBe(404);
     expect(res.headers["cache-control"]).toContain("private");
     expect(res.headers["cache-control"]).toContain("max-age=86400");
+  });
+
+  it("gives a transient failure a short browser lifetime, not a day", async () => {
+    // A day on every 404 outlived the server's own recovery: fix the key in
+    // Railway and the server is right again in a minute, but a browser that
+    // hit the outage keeps hiding the photo for that address until tomorrow.
+    process.env.GOOGLE_MAPS_API_KEY = "test-key";
+    stubGoogle("REQUEST_DENIED");
+
+    const res = await request(app)
+      .get("/api/property-photo")
+      .query({ address: ADDRESS })
+      .set("X-Forwarded-For", ip());
+
+    expect(res.status).toBe(404);
+    expect(res.headers["cache-control"]).toBe("private, max-age=60");
   });
 
   it("rejects a missing or implausibly short address without calling Google", async () => {
