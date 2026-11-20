@@ -71,7 +71,7 @@ export default function Services() {
                   <div className={`w-11 h-11 rounded-xl flex items-center justify-center mb-5 flex-shrink-0 ${service.color}`}>
                     <Icon className="w-5 h-5 service-icon-hover" />
                   </div>
-                  <h3 className="font-bold text-foreground text-base mb-2 group-hover:text-primary transition-colors">{service.title}</h3>
+                  <h3 className="type-h3 text-foreground mb-2 group-hover:text-primary transition-colors">{service.title}</h3>
                   <p className="text-sm text-muted-foreground leading-relaxed flex-grow">{service.shortDesc}</p>
                   <span className="inline-flex items-center text-sm font-semibold text-primary mt-5 group-hover:translate-x-1 transition-transform duration-300">
                     View details <ArrowRight className="ml-1.5 w-3.5 h-3.5" />
@@ -123,7 +123,7 @@ export default function Services() {
               <Leaf className="w-6 h-6" />
             </div>
             <div className="min-w-0">
-              <h2 className="font-bold text-brand-pine text-base mb-2">Our Cleaning Approach</h2>
+              <h2 className="type-h3 text-brand-pine mb-2">Our Cleaning Approach</h2>
               <p className="text-sm text-brand-pine/90 leading-relaxed mb-3">
                 We exclusively use Melaleuca EcoSense & Sal Suds — eco-friendly products that deliver a thorough clean without harsh chemicals.
               </p>

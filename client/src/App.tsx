@@ -30,6 +30,7 @@ import { AIChatWidget } from "@/components/ui/AIChatWidget";
 import { ThemeProvider } from "@/lib/theme";
 import { AuthProvider } from "@/lib/auth";
 import { WeatherProvider } from "@/lib/weather";
+import { MotionProvider } from "@/lib/motion";
 
 function ScrollToTop() {
   const [location] = useLocation();
@@ -101,6 +102,10 @@ function Router() {
 function App() {
   return (
     <ThemeProvider>
+      {/* Outside QueryClientProvider because nothing it does is data: it
+          resolves one preference and writes one attribute on <html>, and the
+          parallax hook reads it on every page, not just the homepage. */}
+      <MotionProvider>
       <QueryClientProvider client={queryClient}>
         <WeatherProvider>
           <AuthProvider>
@@ -119,6 +124,7 @@ function App() {
           </AuthProvider>
         </WeatherProvider>
       </QueryClientProvider>
+      </MotionProvider>
     </ThemeProvider>
   );
 }

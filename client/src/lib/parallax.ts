@@ -1,4 +1,5 @@
 import { useEffect, useRef } from "react";
+import { useMotion } from "./motion";
 
 /**
  * Scroll-linked parallax, on one listener for the whole page.
@@ -16,8 +17,15 @@ import { useEffect, useRef } from "react";
  *     index.css). Moving `top` or `background-position` repaints; a
  *     translate3d stays on the compositor.
  *
- * Honours prefers-reduced-motion by simply not subscribing: the custom
+ * Honours the motion preference by simply not subscribing: the custom
  * property stays unset, the CSS falls back to 0, and the image sits still.
+ *
+ * It reads <html data-motion>, which `MotionProvider` resolves from the
+ * visitor's own choice AND the OS preference — not `matchMedia` directly.
+ * Before, this hook asked the OS and the CSS asked the OS separately, so the
+ * in-page toggle could not reach either of them. One source, one answer.
+ * With no attribute present (pre-render, provider-less test) it falls back to
+ * asking the OS, so the old behaviour is still the floor.
  */
 
 type Subscriber = () => void;
@@ -56,6 +64,20 @@ function subscribe(fn: Subscriber): () => void {
 }
 
 /**
+ * The resolved motion answer, from the attribute MotionProvider writes.
+ * Falls back to the OS query when the attribute is absent.
+ */
+function prefersNoMotion(): boolean {
+  const declared = document.documentElement.getAttribute("data-motion");
+  if (declared === "reduced") return true;
+  if (declared === "full") return false;
+  return (
+    typeof window.matchMedia === "function" &&
+    window.matchMedia("(prefers-reduced-motion: reduce)").matches
+  );
+}
+
+/**
  * Attach to the element that CONTAINS the moving layer (usually the band or
  * frame), not to the image itself — the image is what gets transformed, and
  * it's oversized so the travel never exposes an edge.
@@ -67,12 +89,15 @@ function subscribe(fn: Subscriber): () => void {
  */
 export function useParallax<T extends HTMLElement>(strength = 0.12) {
   const ref = useRef<T>(null);
+  // Re-run the effect when the motion preference changes, so switching the
+  // toggle takes hold immediately instead of at the next remount.
+  const motion = useMotion().motion;
 
   useEffect(() => {
     const el = ref.current;
     if (!el) return;
     if (typeof window === "undefined") return;
-    if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) return;
+    if (prefersNoMotion()) return;
     // Phones don't get parallax. Each subscriber writes a custom property per
     // frame, which invalidates style on that subtree and repaints an
     // oversized photo — affordable on a desktop, and on a phone it is spent
@@ -113,7 +138,7 @@ export function useParallax<T extends HTMLElement>(strength = 0.12) {
       ro.disconnect();
       el.style.removeProperty("--parallax");
     };
-  }, [strength]);
+  }, [strength, motion]);
 
   return ref;
 }
