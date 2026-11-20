@@ -284,7 +284,7 @@ export function CleaningChecklist({ variant = "residential" }: { variant?: Check
     <div className="bg-card rounded-2xl border border-border/50 shadow-[0_2px_16px_rgba(0,0,0,0.15)] overflow-hidden" data-testid="card-cleaning-checklist">
       <div className="px-5 sm:px-6 pt-5 pb-4 border-b border-border/50 flex items-center justify-between">
         <div>
-          <h3 className="text-base font-bold text-foreground" data-testid="text-checklist-title">
+          <h3 className="type-h3 text-foreground" data-testid="text-checklist-title">
             {variantLabels[variant]} Scope
           </h3>
           <p className="text-xs text-muted-foreground mt-0.5">What's included in every visit</p>

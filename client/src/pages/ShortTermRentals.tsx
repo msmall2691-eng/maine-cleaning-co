@@ -212,7 +212,7 @@ export default function ShortTermRentals() {
                 <div className="w-10 h-10 rounded-xl bg-brand-pine/10 flex items-center justify-center mb-4 flex-shrink-0 group-hover:bg-brand-pine/15 transition-colors">
                   <Icon className="w-5 h-5 text-brand-pine service-icon-hover" />
                 </div>
-                <h3 className="font-bold text-foreground text-base mb-2">{feature.title}</h3>
+                <h3 className="type-h3 text-foreground mb-2">{feature.title}</h3>
                 <p className="text-sm text-muted-foreground leading-relaxed">{feature.desc}</p>
               </motion.div>
             );
@@ -245,7 +245,7 @@ export default function ShortTermRentals() {
                 <div className="w-10 h-10 rounded-xl bg-brand-pine/10 flex items-center justify-center mb-4 group-hover:bg-brand-pine/15 transition-colors flex-shrink-0">
                   <Icon className="w-5 h-5 text-brand-pine service-icon-hover" />
                 </div>
-                <h3 className="font-bold text-foreground text-base mb-2">{svc.title}</h3>
+                <h3 className="type-h3 text-foreground mb-2">{svc.title}</h3>
                 <p className="text-sm text-muted-foreground leading-relaxed flex-grow">{svc.desc}</p>
               </motion.div>
             );
@@ -254,7 +254,7 @@ export default function ShortTermRentals() {
 
         <div className="max-w-[38rem] mx-auto bg-primary/8 border border-primary/20 rounded-2xl p-6 sm:p-8 text-center">
           <Home className="w-8 h-8 text-primary mx-auto mb-3" />
-          <h3 className="font-bold text-foreground text-base mb-2">Custom Management Packages</h3>
+          <h3 className="type-h3 text-foreground mb-2">Custom Management Packages</h3>
           <p className="text-sm text-muted-foreground leading-relaxed mb-5">
             Every property is different. We build custom management plans that match your hosting style — whether you want full hands-off management or just the cleaning and maintenance pieces.
           </p>
@@ -282,7 +282,7 @@ export default function ShortTermRentals() {
               <div className="w-10 h-10 rounded-full bg-primary/15 flex items-center justify-center mx-auto mb-3 text-sm font-bold text-primary">
                 {s.step}
               </div>
-              <h3 className="font-bold text-foreground text-base mb-2">{s.title}</h3>
+              <h3 className="type-h3 text-foreground mb-2">{s.title}</h3>
               <p className="text-xs text-muted-foreground leading-relaxed">{s.desc}</p>
             </div>
           ))}

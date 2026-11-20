@@ -159,7 +159,7 @@ export default function ServiceAreas() {
             >
               <div className="flex items-center gap-2 mb-2">
                 <MapPin className="w-4 h-4 text-primary flex-shrink-0" />
-                <h3 className="font-bold text-foreground text-base">{region.name}</h3>
+                <h3 className="type-h3 text-foreground">{region.name}</h3>
               </div>
               <ul className="space-y-1.5">
                 {region.communities.map((town) => (
@@ -217,7 +217,7 @@ export default function ServiceAreas() {
                 <div className="card-glass p-6 h-full flex flex-col">
                   <div className="flex items-center gap-2 mb-2">
                     <MapPin className="w-4 h-4 text-primary flex-shrink-0" aria-hidden="true" />
-                    <h3 className="font-bold text-foreground text-base group-hover:text-primary transition-colors">
+                    <h3 className="type-h3 text-foreground group-hover:text-primary transition-colors">
                       {area.name}
                     </h3>
                   </div>

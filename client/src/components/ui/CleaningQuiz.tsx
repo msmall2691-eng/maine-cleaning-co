@@ -263,7 +263,7 @@ export function CleaningQuiz() {
       <div className="px-5 sm:px-7 pt-5 sm:pt-6 pb-4 border-b border-border/50">
         <div className="flex items-center justify-between">
           <div>
-            <h3 className="text-lg sm:text-xl font-bold text-foreground" data-testid="text-quiz-title">Find Your Perfect Clean</h3>
+            <h3 className="type-h3 text-foreground" data-testid="text-quiz-title">Find Your Perfect Clean</h3>
             <p className="text-sm text-muted-foreground mt-0.5">Answer 3 quick questions to find your ideal service.</p>
           </div>
           <div className="flex items-center gap-1.5">

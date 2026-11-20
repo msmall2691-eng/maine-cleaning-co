@@ -322,13 +322,13 @@ export function LogoLockup({ size = "md", showTagline = true, className = "", ma
       />
       <span className="flex flex-col leading-none min-w-0">
         <span
-          className={`font-serif font-bold ${s.name} tracking-[-0.01em] text-foreground transition-colors duration-200 group-hover:text-primary whitespace-nowrap`}
+          className={`logo-wordmark font-serif font-bold ${s.name} tracking-[-0.01em] text-foreground transition-colors duration-200 group-hover:text-primary whitespace-nowrap`}
         >
           The Maine Cleaning Co.
         </span>
         {showTagline && (
           <span
-            className={`${s.tag} tracking-[0.14em] text-muted-foreground/70 uppercase font-medium mt-1 transition-colors group-hover:text-muted-foreground whitespace-nowrap`}
+            className={`logo-tagline ${s.tag} tracking-[0.14em] text-muted-foreground/70 uppercase font-medium mt-1 transition-colors group-hover:text-muted-foreground whitespace-nowrap`}
           >
             Est. 2018 · Southern Maine
           </span>
