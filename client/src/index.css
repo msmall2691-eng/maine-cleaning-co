@@ -1678,3 +1678,53 @@
      not fade in behind the visitor's next keystroke. */
   transition: none;
 }
+
+/* ── The work, uncovered ────────────────────────────────────────────────
+   The tide-pool motion in reverse: a navy veil lies over the photographs
+   and slides off as the band scrolls in.
+
+   It is an ::after on a wrapper, not an opacity on the images, for two
+   reasons. Fading the photos in would mean animating opacity on four large
+   images at once, which is four composited layers and a lot of paint on a
+   mid-range phone. And a photo at opacity 0 is still in the accessibility
+   tree but invisible — a veil over the top leaves the images themselves
+   untouched at every moment.
+
+   pointer-events: none throughout, so the tiles beneath stay clickable even
+   mid-animation. */
+.tide-reveal {
+  position: relative;
+  isolation: isolate;
+}
+.tide-reveal::after {
+  content: "";
+  position: absolute;
+  inset: -1px;
+  z-index: 1;
+  pointer-events: none;
+  transform: translateY(0);
+  transition: transform 1200ms cubic-bezier(0.33, 1, 0.68, 1);
+  background: linear-gradient(
+    to bottom,
+    hsl(var(--background)) 0%,
+    hsl(var(--background)) 62%,
+    hsl(var(--seafoam) / 0.22) 88%,
+    transparent 100%
+  );
+}
+.tide-reveal[data-revealed="true"]::after {
+  /* 101% rather than 100%: at some zoom levels a subpixel sliver of the
+     veil stayed parked over the bottom row of photos. */
+  transform: translateY(101%);
+}
+/* Still means SHOWN. The veil is never painted when motion is off, so the
+   photographs are simply there — the alternative is a reveal animation that
+   permanently hides the thing it was meant to reveal. */
+:root[data-motion="reduced"] .tide-reveal::after {
+  content: none;
+}
+@media (prefers-reduced-motion: reduce) {
+  :root:not([data-motion="full"]) .tide-reveal::after {
+    content: none;
+  }
+}

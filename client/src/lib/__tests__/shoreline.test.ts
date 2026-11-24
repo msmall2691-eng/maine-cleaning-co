@@ -135,13 +135,21 @@ describe("the page survives a static render", () => {
    * cannot exercise — what the components do when the browser API they want
    * is simply missing.
    */
-  it("fills the tide pools when there is no IntersectionObserver", () => {
-    const pools = read("TidePools.tsx");
-    // Without this the pools stay empty forever on any browser (or renderer)
-    // that lacks the observer — the cards would look unfinished rather than
-    // simply unanimated.
-    expect(pools).toMatch(/typeof IntersectionObserver === "undefined"/);
-    expect(pools).toMatch(/setFilled\(true\)/);
+  it("reveals scroll-triggered content when there is no IntersectionObserver", () => {
+    // The behaviour lives in the shared hook now (the tide pools and the work
+    // gallery both use it). Without this fallback, anything gated on the
+    // observer stays at its START state forever on a browser that lacks one —
+    // empty pools, and a gallery still under its veil.
+    const hook = readFileSync(join(SHORE_DIR, "useTideFill.ts"), "utf8");
+    expect(hook).toMatch(/typeof IntersectionObserver === "undefined"/);
+    expect(hook).toMatch(/setFilled\(true\)/);
+  });
+
+  it("has exactly one implementation of the scroll trigger", () => {
+    // Two copies of an IntersectionObserver are two chances to fix a bug in
+    // only one of them.
+    const owners = files.filter((f) => read(f).includes("new IntersectionObserver("));
+    expect(owners, `expected only useTideFill to construct one, got ${owners}`).toEqual([]);
   });
 
   it("falls back to the OS query when no motion attribute has been written", () => {
