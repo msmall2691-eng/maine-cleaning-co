@@ -52,16 +52,37 @@ The site ships **light and dark themes**; every token below is declared twice,
 under `:root` and under `.dark`. The values here are the light theme — read
 `index.css` for the dark pair. Light is the default.
 
+The palette is **the Maine shoreline**: deep navy, seafoam green, sand beige,
+driftwood grey. Light is sand with navy ink; dark is navy with sand ink.
+
 ```css
---background:   60 6% 98%     /* warm off-white — page background */
---foreground:   30 6% 20%     /* near-black warm grey — text */
---card:         0 0% 100%     /* pure white card surface */
---primary:      214 55% 36%   /* Atlantic navy — CTAs, links, accents */
---primary-foreground: 0 0% 100%
---muted-foreground: 30 5% 38%
---border:       30 6% 88%
+/* light */
+--background:   40 30% 96%    /* sand beige — page background */
+--foreground:   212 44% 15%   /* deep navy — text */
+--card:         40 33% 99%    /* palest sand — card surface */
+--primary:      209 54% 26%   /* deep navy — CTAs, links, accents */
+--primary-foreground: 40 33% 99%
+--muted-foreground: 209 14% 36%   /* driftwood grey */
+--seafoam:      174 46% 25%
+--sand:         38 34% 88%
+--driftwood:    209 12% 40%
+--border:       38 20% 86%
 --radius:       0.875rem      /* default card / button border radius */
 ```
+
+`--seafoam`, `--sand`, `--driftwood` and `--navy` are registered as Tailwind
+colours, so `text-seafoam` and `border-driftwood` work. They are the same four
+colours the `--brand-*` family carries — the brand names are for CATEGORICAL
+use (telling one service tile from its neighbour), the shoreline names are for
+when you mean *that colour*.
+
+**Every pair is contrast-checked by script, not by eye.** `node
+scripts/check-contrast.mjs` prints all 30 and exits non-zero on a failure
+(lowest in the current palette: 5.44:1, against the 4.5:1 AA needs for body
+text). It carries its own copy of the values so it can be run in one command,
+and `client/src/lib/__tests__/shorelinePalette.test.ts` re-derives the same
+ratios from the tokens **as declared in `index.css`**, so that copy cannot
+quietly drift from the stylesheet and keep reporting green.
 
 > **`--primary-foreground` is NOT white on the dark theme.** Dark `--primary`
 > is a *light* blue (`212 58% 62%`) so that it works as link and accent ink on
@@ -135,10 +156,26 @@ for #61 if you retune any of them.
 
 ### Typography
 
-- **Display**: `--font-display` — **Space Grotesk** (Google Fonts). `--font-serif`
-  is the old name for the same stack, kept only so existing `font-serif`
-  utilities keep rendering. It is not a serif and never was.
+- **Display**: `--font-display` — **Playfair Display** (Google Fonts), a
+  high-contrast didone. `--font-serif` is the old name for the same stack,
+  kept so existing `font-serif` utilities keep rendering; it genuinely is a
+  serif now.
 - **Body / UI**: `--font-sans` — Inter.
+
+The display weights are **600, and the tracking about -0.01em**, not the 700 /
+-0.035em the scale used to carry. Those numbers were tuned for Space Grotesk,
+an even-stroke grotesk that takes tight tracking happily. Playfair's hairlines
+are genuinely hair-thin at 4.75rem, and 700 at -0.035em closed the counters
+and collided the thin strokes of neighbouring letters.
+
+**Where the display face does NOT belong:** controls and small labels. The FAQ
+accordion triggers, the footer column headings and the certification chips are
+`<h3>`/`<h4>` elements at 12–15px that read as UI rather than as headings on a
+page — they stay Inter. The rule is *display face for display-sized headings,
+UI face for controls and small-caps labels*, not *serif for every h3*. When
+the display face was a grotesk this distinction was nearly invisible; against
+a serif it is loud, which is why fourteen hand-rolled `font-bold text-base`
+headings were moved onto `.type-h3` in the same change.
 
 **Every display-sized piece of text comes from one of four classes in
 `index.css`. Do not write out a font family or a font size for a heading
@@ -242,65 +279,89 @@ Wrap the emphasised word of a `title` in `<span className="heading-accent">`.
 
 ---
 
-### Home Page (`/`)
+### Home Page (`/`) — the shoreline
 
-**1. Scroll progress bar** — 2px primary-color bar fixed at top-0, tracks `window.scrollY / scrollHeight`.
+The homepage is a single scroll-driven piece: coast footage, tide-driven
+animation and optional ambient surf. It is composed from
+`client/src/components/shore/`, one file per movement, rather than from one
+long component — each movement has its own motion behaviour, its own
+accessibility obligations, and in one case its own network call.
 
-**2. Hero section**
-- Background: `hero-aurora` (animated gradient) + `hero-dot-grid`
-- Marquee strip behind hero: "Residential · Deep Cleaning · Vacation Rentals · Commercial · Eco-Friendly · Southern Maine ·"
-- Heading: "The Way Cleaning **Should Be.**" (gradient accent on "Should Be.")
-- Subtitle: 1-line value prop
-- CTAs: "Get My Estimate" (primary pill, scrolls to `#get-estimate`) + "View Services" (outline pill → `/services`)
-- Trust bar: Since 2018 · Fully Insured · Local Team · Eco-Conscious (icon + label pills)
-- Live indicator: animated ping dot + "Currently serving York & Cumberland County"
-- 5-day weather widget: fetches `/api/weather` → shows current temp + 5-day forecast. Skeleton shown during load.
+| # | Section | File | What it does |
+|---|---------|------|--------------|
+| 1 | Hero | `ShoreHero.tsx` | Full-viewport coast plate. Poster paints first; the video fades in over it. Three parallax layers. Carries the motion + sound switches. |
+| 2 | Services as tide pools | `TidePools.tsx` | Four pools that fill with water as they scroll in, staggered. Each links to its `/services/<id>` page. |
+| 3 | About with a lighthouse beam | `Beacon.tsx` | A blurred gradient wedge sweeps the copy on hover **and on focus-within**. |
+| 4 | Testimonials as buoys | `Buoys.tsx` | Six real Google reviews, each bobbing on its own period. Native scroll-snap carousel, arrow keys included. |
+| 5 | Contact as a message in a bottle | `Bottle.tsx` | The form. Posts to `/api/intake/submit`. |
+| 6 | Tide line | `TideLine.tsx` | The closing CTA. Deliberately not full-viewport — five of those is a rhythm, six is a trudge. |
 
-**3. Quick Action Strip**
-- Full-width card bar below hero: Call Now (phone) · Text Us (SMS) · Get Estimate (scroll) · Service Areas (link)
-- Each action has a colored icon badge, title, and subtitle
+#### Where the form goes
 
-**4. Services Grid** (id: `#services`)
-- 4 `card-glass` cards: Residential · Deep Cleaning · Vacation Rental Turnovers · Commercial & Janitorial
-- Each links to `/services/{slug}`, icon with colored badge, title, desc, "Learn more →" animated link
+**`POST /api/intake/submit`** — the same endpoint the estimator uses. So a
+note sent from the bottle is written to `intake_submissions`, emails the
+office, forwards to BrightBase Ops through the retry ledger, and appears in
+the admin dashboard, exactly like every other lead.
 
-**5. Stats Counter**
-- 6 animated number cards: 7+ Years · 5,000+ Cleans · 30+ Yrs Experience · 4.9★ Rating · 1,500+ FB · 1,900+ IG
-- `AnimatedNumber` component: counts up on scroll-into-view using `useInView` + `requestAnimationFrame`
+This is worth stating because the brief for this redesign asked for
+submissions to go to a new Supabase project instead. They do not. The site
+already has a Postgres database holding every submission; a second store would
+have meant leads that never reached the office, and a paused Supabase project
+(the free tier pauses after about a week of inactivity) refuses connections
+outright, so the form would have dropped real enquiries silently.
 
-**6. Why Choose Us / Value Props**
-- 4 `card-soft` cards: Consistent Teams · Eco Products · Bonded & Insured · Flexible Scheduling
+#### Motion and sound
 
-**7. How It Works (5-step timeline)**
-- Numbered list: Request Quote → Review & Confirm → Schedule → Day of Clean → Follow-Up
+`client/src/lib/motion.tsx` resolves **three** states — `auto` (follow the OS,
+the default), `full`, `reduced` — and writes the answer to
+`<html data-motion>`. CSS and `useParallax` both read that attribute, so one
+switch governs both. Before this they each asked `prefers-reduced-motion`
+separately and agreed only by coincidence; neither could be overridden.
 
-**8. Wave Dividers** — `WaveDivider` and `WaveDividerCream` SVG components with dual-path layered wave shapes
+Two details that are easy to get wrong when touching this:
 
-**9. Instant Estimate** (id: `#get-estimate`)
-- Full `InstantEstimate` component — see [Pricing Engine](#pricing-engine) section below
+- **Reduced motion shows FULL tide pools, not empty ones.** Stopping an
+  animation must not leave the design looking unfinished.
+- **An explicit `full` must beat an OS `reduce`.** Every other reduced-motion
+  block in `index.css` is a bare media query that no control can override, so
+  the shoreline rules are guarded with `:root:not([data-motion="full"])`.
+  Without that, a visitor whose OS asks for less motion could never opt in.
 
-**10. Reviews Carousel**
-- 6 real Google reviews in horizontally scrollable snap-carousel
-- Prev/Next arrow buttons, dot indicator synced to scroll position
-- "See all reviews on Google" link
+Sound **never autoplays** — WCAG 2.1 SC 1.4.2, and every browser blocks it
+anyway. The button is the feature. What is remembered is the choice, not the
+playback: a returning visitor still arrives to silence. It pauses when the tab
+is hidden, and the 460 KB file is `preload="none"`, so it downloads on the
+first click and not before.
 
-**11. Service Area Map** 
-- `ServiceAreaMap` component — 49+ communities across York & Cumberland County
-- KPI strip: 93% Recurring · 7% One-Time · 49+ Communities · 7+ Years
+#### The navbar over a dark hero
 
-**12. Certifications**
-- `Certifications` component — 5 badges: ISSA CIMS · OSHA · Green Seal · AHCA COVID-19 · AHCA House Cleaner
+The bar is transparent until you scroll, and its light-theme ink is deep navy
+— which over this footage measured about **1.6:1**. A page declares its own
+hero tone (`<html data-hero-tone="dark">`, set by `ShoreHero` and cleared on
+unmount) and `index.css` recolours `.navbar-top` for that case. Keyed off the
+page rather than the route, so a second dark-hero page needs no change.
 
-**13. Instagram Gallery**
-- 6-item photo grid, each links to Instagram, hover-reveal caption with `ExternalLink` icon
+Measured against the composited plate (brightest pixel behind each run of
+text): wordmark 11.49:1, nav links 6.91:1, h1 6.57:1, standfirst 5.15:1.
 
-**14. FAQ Accordion**
-- Radix Accordion, 8 Q&A pairs, smooth cubic-bezier expand/collapse
+The standfirst was **3.46:1 before** a fix — it cleared the 3:1 floor for
+large text but not the 4.5:1 body text needs. Darkening the whole scrim would
+have cost the water, so `.shore-scrim` carries a **copy wash**: a left-to-right
+gradient that is heavy behind the text column and gone by two-thirds across,
+where the open water is. If you swap the footage for something brighter on the
+left, re-measure — no test can check composited video pixels.
 
-**15. Final CTA Band**
-- Primary-colored full-width section, "Ready for a cleaner home?" heading + Estimate + Call buttons
+#### Media
 
----
+`client/public/media/` — 3.4 MB total, all U.S. National Park Service footage
+of Acadia National Park, public domain under 17 U.S.C. §105. Provenance, the
+exact ffmpeg invocations and the rules for replacing any of it are in
+`client/public/media/CREDITS.md`.
+
+The hero video never loads on a phone (`min-width: 768px`), never loads under
+reduced motion, and never loads when the browser reports `saveData` or a 2G
+connection. Those visitors keep the poster, which is a photograph of the same
+water.
 
 ### About Page (`/about`)
 
@@ -990,6 +1051,10 @@ npm run dev        # Start dev server (Express + Vite hot reload, port 5000)
 npm run build      # Production build (Vite bundles client → dist/public)
 npm run start      # Production server (serves built client + API)
 npm run db:push    # Push Drizzle schema changes to PostgreSQL
+npm test           # Vitest, the whole suite
+
+node scripts/check-contrast.mjs   # Print every palette contrast pair; exits
+                                  # non-zero if one is below the WCAG AA floor
 ```
 
 ---

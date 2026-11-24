@@ -182,7 +182,7 @@ export default function ServiceAreaDetail() {
               viewport={{ once: true, amount: 0.3 }}
               className="card-glass p-6 sm:p-7"
             >
-              <h3 className="font-bold text-foreground text-base sm:text-lg mb-2.5">{detail.title}</h3>
+              <h3 className="type-h3 text-foreground mb-2.5">{detail.title}</h3>
               <p className="text-sm sm:text-[15px] text-muted-foreground leading-relaxed">{detail.body}</p>
             </motion.div>
           ))}
@@ -198,7 +198,7 @@ export default function ServiceAreaDetail() {
           <div className="relative">
             <div className="flex items-center gap-2 mb-4">
               <Info className="w-4 h-4 text-brand-pine" aria-hidden="true" />
-              <h2 className="font-bold text-foreground text-lg sm:text-xl">What to tell us when you book</h2>
+              <h2 className="type-h3 text-foreground">What to tell us when you book</h2>
             </div>
             <p className="text-sm sm:text-base text-muted-foreground leading-relaxed mb-6 max-w-2xl">
               Access is the part that goes wrong up here, and it's cheap to get right in advance. These five
@@ -224,7 +224,7 @@ export default function ServiceAreaDetail() {
             <motion.div key={svc.href} custom={i} variants={fadeUp} initial="hidden" whileInView="visible" viewport={{ once: true, amount: 0.3 }}>
               <Link href={svc.href} className="block h-full group">
                 <div className="card-glass p-6 h-full flex flex-col">
-                  <h3 className="font-bold text-foreground text-base mb-2 group-hover:text-primary transition-colors">
+                  <h3 className="type-h3 text-foreground mb-2 group-hover:text-primary transition-colors">
                     {svc.label}
                   </h3>
                   <p className="text-sm text-muted-foreground leading-relaxed flex-grow">{svc.blurb}</p>

@@ -8,9 +8,14 @@
   /* The display face. `--font-serif` is the old name for the same stack and is
      kept only so existing `font-serif` utilities keep rendering; new code uses
      the type classes (.type-display / .type-h2 / .type-h3) rather than naming
-     a family at all. Space Grotesk is not a serif and never was. */
-  --font-display: "Space Grotesk", "Inter", sans-serif;
-  --font-serif: "Space Grotesk", sans-serif;
+     a family at all. It IS a serif now — Playfair Display, a high-contrast
+     didone whose thin strokes read like the light on water, against Inter's
+     plain UI voice. It replaced Space Grotesk site-wide rather than on the
+     homepage alone: the whole point of the four type classes is that the site
+     has ONE display face, and scoping a second one to a single page is how
+     that stopped being true last time. */
+  --font-display: "Playfair Display", Georgia, "Times New Roman", serif;
+  --font-serif: "Playfair Display", Georgia, serif;
   --font-mono: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
 
   --color-background: hsl(var(--background));
@@ -39,6 +44,12 @@
   --color-brand-pine: hsl(var(--brand-pine));
   --color-brand-stone: hsl(var(--brand-stone));
 
+  /* The shoreline four, addressable as text-seafoam / bg-sand / border-driftwood. */
+  --color-seafoam: hsl(var(--seafoam));
+  --color-sand: hsl(var(--sand));
+  --color-driftwood: hsl(var(--driftwood));
+  --color-navy: hsl(var(--navy));
+
   /* Inverted band. See .band-deep. */
   --color-deep: hsl(var(--deep));
   --color-deep-foreground: hsl(var(--deep-foreground));
@@ -53,14 +64,14 @@
 @layer base {
   /* ── Light theme — Notion-inspired warm off-white ── */
   :root {
-    --background: 60 6% 98%;             /* #FBFBFA */
-    --foreground: 30 6% 20%;             /* #37352F */
+    --background: 40 30% 96%;            /* sand beige, lifted almost to paper */
+    --foreground: 212 44% 15%;           /* deep navy ink */
 
-    --card: 0 0% 100%;                    /* pure white cards */
-    --card-foreground: 30 6% 20%;
+    --card: 40 33% 99%;                   /* the palest sand — card surface */
+    --card-foreground: 212 44% 15%;
 
-    --popover: 0 0% 100%;
-    --popover-foreground: 30 6% 20%;
+    --popover: 40 33% 99%;
+    --popover-foreground: 212 44% 15%;
 
     /* Pulled to the hue of the navy ink in the logo (sampled: hsl(232 39% 15%)
        for the lettering and lighthouse, hsl(163 49% 17%) for the spruce).
@@ -68,8 +79,8 @@
        keeps its hues and lifts them to usable lightness. Every value is
        contrast-checked against --background and --card: the lowest is 5.65,
        against the 4.5 AA needs for body text. */
-    --primary: 214 55% 36%;
-    --primary-foreground: 0 0% 100%;
+    --primary: 209 54% 26%;
+    --primary-foreground: 40 33% 99%;
 
     /* Brand family. Four steps across one coastal range — navy, harbour, pine,
        stone — for anything CATEGORICAL: service icons, feature tiles, quick
@@ -79,44 +90,52 @@
        is what stopped the site reading as one thing.
        These are NOT for semantic colour — an error stays red, a rating star
        stays gold, the availability dot stays green. Meaning outranks palette. */
-    --brand-navy: 214 55% 36%;
-    --brand-harbor: 196 52% 34%;
-    --brand-pine: 166 48% 27%;
-    --brand-stone: 212 14% 38%;
+    --brand-navy: 209 54% 26%;
+    --brand-harbor: 196 48% 30%;
+    --brand-pine: 174 46% 25%;            /* = --seafoam */
+    --brand-stone: 209 12% 40%;           /* = --driftwood */
 
-    --secondary: 30 8% 95%;               /* subtle warm grey */
-    --secondary-foreground: 30 6% 20%;
+    /* The shoreline four, by their own names. --brand-* above stays the
+       categorical family the rest of the site already uses; these are the
+       same colours addressed as what they are, for the shoreline page. */
+    --seafoam: 174 46% 25%;
+    --sand: 38 34% 88%;
+    --driftwood: 209 12% 40%;
+    --navy: 212 44% 15%;
 
-    --muted: 30 8% 95%;
+    --secondary: 38 22% 92%;              /* damp sand */
+    --secondary-foreground: 212 44% 15%;
+
+    --muted: 38 22% 92%;
     /* 38%, not 42%. The bands below got deeper so sections actually read as
        separate, and at 42% secondary text only cleared AA against the page
        background (5.06) — it failed on the deepest band. 38% clears 4.5 on
        every surface the site paints: background 5.89, card 6.14, band-tint
        5.38, band-sink 4.92. */
-    --muted-foreground: 30 5% 38%;
+    --muted-foreground: 209 14% 36%;
 
-    --accent: 30 8% 94%;
-    --accent-foreground: 214 55% 36%;
+    --accent: 38 24% 91%;
+    --accent-foreground: 209 54% 26%;
 
     --destructive: 0 72% 51%;
     --destructive-foreground: 0 0% 100%;
 
-    --border: 30 6% 88%;                  /* soft warm border */
-    --input: 30 6% 88%;
-    --ring: 214 55% 40%;
+    --border: 38 20% 86%;                 /* wet-sand line */
+    --input: 38 20% 86%;
+    --ring: 174 46% 30%;
     --radius: 0.875rem;
 
     /* Section stripes for the alternating rhythm */
-    --section-cream: 30 8% 96%;           /* Notion light grey stripe */
-    --section-warm: 30 10% 94%;           /* slightly warmer stripe */
+    --section-cream: 40 28% 95%;          /* dry sand stripe */
+    --section-warm: 38 26% 93%;           /* damp sand stripe */
 
     /* Soft section bands. These replace the hard white/cream stripes: they
        are applied as a vertical gradient that fades to nothing at the top
        and bottom edge, so a band reads as a change in weight rather than a
        ruled line across the page. Keep the steps small — the point is that
        you feel the section change without seeing a seam. */
-    --band-tint: 30 9% 94%;
-    --band-sink: 32 11% 90%;
+    --band-tint: 40 26% 93%;
+    --band-sink: 38 24% 89%;
 
     /* Component-specific theme tokens */
     /* Decorative weather tint. applyWeatherAccent() writes
@@ -133,15 +152,15 @@
        reversed panel, so it reads the same whichever theme you are in.
        .band-deep redefines the theme tokens inside itself, so ordinary
        components (cards, muted text, buttons) invert without being told. */
-    --deep: 215 45% 17%;
-    --deep-foreground: 210 22% 86%;      /* 10.64 on --deep */
-    --deep-muted: 210 18% 72%;           /*  7.32 on --deep */
-    --deep-accent: 202 75% 70%;          /*  7.58 on --deep */
+    --deep: 212 46% 13%;                 /* the shoreline band — deep navy */
+    --deep-foreground: 40 30% 93%;       /* sand on navy  — 14.37 on --deep */
+    --deep-muted: 205 18% 76%;           /* driftwood     —  9.25 on --deep */
+    --deep-accent: 172 48% 66%;          /* seafoam       —  9.37 on --deep */
 
-    --navbar-glass-bg: 0 0% 100% / 0.88;  /* was 0.72 — page headings read
+    --navbar-glass-bg: 40 33% 99% / 0.88;  /* was 0.72 — page headings read
                                              straight through the bar once light
                                              became the default. Matches dark. */
-    --navbar-glass-border: 30 6% 88% / 0.6;
+    --navbar-glass-border: 38 20% 86% / 0.6;
     --card-glass-inset: 255 255 255;      /* rgb for inset highlight */
     --card-shadow-strength: 0.06;
     --dot-grid-alpha: 0.09;
@@ -149,16 +168,16 @@
 
   /* ── Dark theme — existing deep navy ── */
   .dark {
-    --background: 222 22% 10%;
-    --foreground: 210 22% 93%;
+    --background: 212 38% 11%;           /* deep navy page */
+    --foreground: 40 28% 92%;            /* sand ink */
 
-    --card: 222 20% 13%;
-    --card-foreground: 210 22% 93%;
+    --card: 212 32% 15%;
+    --card-foreground: 40 28% 92%;
 
-    --popover: 222 20% 13%;
-    --popover-foreground: 210 22% 93%;
+    --popover: 212 32% 15%;
+    --popover-foreground: 40 28% 92%;
 
-    --primary: 212 58% 62%;
+    --primary: 172 44% 62%;
     /* NOT white. --primary is a light blue on this theme (62% lightness) so
        that it works as link/accent INK on the dark background, where it reads
        6.12:1. White on top of it is 2.92:1 — which is every filled button on
@@ -166,48 +185,53 @@
        and failing even the 3:1 large-text floor. Dark ink on that same blue
        is 6.24:1, so the button keeps the brand colour and becomes legible,
        and the CTA band reads as a deliberate inverse panel. */
-    --primary-foreground: 222 45% 10%;
+    --primary-foreground: 212 45% 10%;
 
     /* Same family, re-lit for the dark surface — a tint tuned for off-white is
        mud on navy, so these are not the light values with opacity. */
-    --brand-navy: 212 58% 62%;
-    --brand-harbor: 194 55% 58%;
-    --brand-pine: 164 45% 52%;
-    --brand-stone: 210 12% 62%;
+    --brand-navy: 205 52% 66%;
+    --brand-harbor: 191 46% 60%;
+    --brand-pine: 172 44% 62%;            /* = --seafoam */
+    --brand-stone: 205 14% 62%;           /* = --driftwood */
 
-    --secondary: 222 18% 17%;
-    --secondary-foreground: 210 20% 85%;
+    --seafoam: 172 44% 62%;
+    --sand: 40 28% 92%;
+    --driftwood: 205 14% 62%;
+    --navy: 212 38% 11%;
 
-    --muted: 222 16% 18%;
+    --secondary: 212 26% 19%;
+    --secondary-foreground: 40 24% 86%;
+
+    --muted: 212 26% 19%;
     /* Lifted with the deeper bands below — see the light-theme note. */
-    --muted-foreground: 215 15% 60%;
+    --muted-foreground: 205 16% 68%;
 
-    --accent: 222 18% 16%;
-    --accent-foreground: 212 58% 62%;
+    --accent: 212 28% 18%;
+    --accent-foreground: 172 44% 62%;
 
     --destructive: 0 72% 55%;
     --destructive-foreground: 0 0% 100%;
 
-    --border: 222 16% 21%;
-    --input: 222 16% 21%;
-    --ring: 212 58% 62%;
+    --border: 212 24% 24%;
+    --input: 212 24% 24%;
+    --ring: 172 44% 62%;
 
-    --section-cream: 222 20% 12%;
-    --section-warm: 222 18% 14%;
+    --section-cream: 212 34% 12%;
+    --section-warm: 212 32% 14%;
 
-    --band-tint: 222 21% 13%;
-    --band-sink: 222 20% 16%;
+    --band-tint: 212 34% 13%;
+    --band-sink: 212 30% 17%;
 
     /* The inverted band does not flip with the theme — see :root. */
-    --deep: 215 45% 17%;
-    --deep-foreground: 210 22% 86%;
-    --deep-muted: 210 18% 72%;
-    --deep-accent: 202 75% 70%;
+    --deep: 212 46% 13%;
+    --deep-foreground: 40 30% 93%;
+    --deep-muted: 205 18% 76%;
+    --deep-accent: 172 48% 66%;
 
     --weather-accent: var(--weather-accent-dark, var(--primary));
 
-    --navbar-glass-bg: 222 22% 15% / 0.88;
-    --navbar-glass-border: 222 16% 21% / 0.5;
+    --navbar-glass-bg: 212 38% 14% / 0.88;
+    --navbar-glass-border: 212 24% 24% / 0.5;
     --card-glass-inset: 255 255 255;
     --card-shadow-strength: 0.18;
     --dot-grid-alpha: 0.055;
@@ -263,9 +287,15 @@
    every h2 in Space Grotesk. So on most pages the largest text on screen was
    in a different typeface from the heading directly beneath it.
 
-   One family for display (Space Grotesk, the more characterful of the two and
-   already the majority), Inter for body and UI. Sizes are fluid, so there are
-   no breakpoint jumps to keep in sync either.
+   One family for display (Playfair Display), Inter for body and UI. Sizes are
+   fluid, so there are no breakpoint jumps to keep in sync either.
+
+   The weights are 600, not 700, and the tracking is around -0.01em rather
+   than -0.035em. Those numbers were tuned for Space Grotesk, a grotesk with
+   even stroke weight that can take tight tracking and a heavy weight. Playfair
+   is a didone: its hairlines are genuinely hair-thin at display sizes, and
+   700 with -0.035em closed the counters and collided the thin strokes of
+   adjacent letters. Same scale, re-tuned for the face actually rendering it.
 
    `text-wrap: balance` is the other half of the job: it evens out the lines of
    a heading instead of leaving one word stranded on the last line, which is
@@ -273,10 +303,10 @@
    Browsers that do not support it simply wrap as before. */
 .type-display {
   font-family: var(--font-display);
-  font-weight: 700;
+  font-weight: 600;
   font-size: clamp(2.6rem, 6vw, 4.75rem);
-  line-height: 1.02;
-  letter-spacing: -0.035em;
+  line-height: 1.06;
+  letter-spacing: -0.015em;
   text-wrap: balance;
 }
 /* Second-level pages — a service, a town, a blog post, the legal pages.
@@ -285,26 +315,26 @@
    family, same treatment, one step down. */
 .type-display-sm {
   font-family: var(--font-display);
-  font-weight: 700;
+  font-weight: 600;
   font-size: clamp(2rem, 4vw, 3.25rem);
-  line-height: 1.05;
-  letter-spacing: -0.03em;
+  line-height: 1.1;
+  letter-spacing: -0.012em;
   text-wrap: balance;
 }
 .type-h2 {
   font-family: var(--font-display);
-  font-weight: 700;
+  font-weight: 600;
   font-size: clamp(1.9rem, 3.4vw, 2.9rem);
-  line-height: 1.08;
-  letter-spacing: -0.025em;
+  line-height: 1.14;
+  letter-spacing: -0.01em;
   text-wrap: balance;
 }
 .type-h3 {
   font-family: var(--font-display);
   font-weight: 600;
   font-size: clamp(1.1rem, 1.5vw, 1.3rem);
-  line-height: 1.25;
-  letter-spacing: -0.015em;
+  line-height: 1.3;
+  letter-spacing: -0.005em;
   text-wrap: balance;
 }
 /* Standfirst under a heading. `pretty` only protects the last line, which is
@@ -1275,4 +1305,388 @@
     backdrop-filter: none;
     -webkit-backdrop-filter: none;
   }
+}
+
+/* ═══════════════════════════════════════════════════════════════════════
+   THE SHORELINE
+   The homepage's own layer: the hero plate, the tide pools, the buoys, the
+   beacon and the bottle. Everything here is decoration over content that is
+   already legible without it — if every rule below failed to load, the page
+   would still read top to bottom in the right order.
+   ═══════════════════════════════════════════════════════════════════════ */
+
+/* ── Motion gating ──────────────────────────────────────────────────────
+   Every animated thing in this layer is switched off by ONE of two
+   conditions, and switched back on by an explicit opt-in:
+
+     html[data-motion="reduced"]              the visitor asked for stillness
+     OS reduce AND no explicit "full"         the OS asked, nobody overrode it
+
+   The second half matters. The rest of this file suppresses motion with a
+   bare `@media (prefers-reduced-motion: reduce)`, which no in-page control
+   can override — so a visitor whose OS asks for less motion could never turn
+   the shoreline on, however much they wanted to. `:root:not([data-motion="full"])`
+   is what gives them that choice back.
+
+   `.still` is the shared hook: put it on anything that animates here. */
+:root[data-motion="reduced"] .still,
+:root[data-motion="reduced"] .still::before,
+:root[data-motion="reduced"] .still::after {
+  animation: none !important;
+  transition: none !important;
+}
+@media (prefers-reduced-motion: reduce) {
+  :root:not([data-motion="full"]) .still,
+  :root:not([data-motion="full"]) .still::before,
+  :root:not([data-motion="full"]) .still::after {
+    animation: none !important;
+    transition: none !important;
+  }
+}
+/* The parallax travel is a custom property the hook writes; when the hook
+   declines to subscribe it is never set, and this is the value it falls back
+   to. Declared so the fallback is explicit rather than implicit. */
+.shore-layer {
+  transform: translate3d(0, calc(var(--parallax, 0) * 1%), 0);
+  will-change: transform;
+}
+:root[data-motion="reduced"] .shore-layer {
+  transform: none;
+}
+
+/* ── Full-viewport sections ─────────────────────────────────────────────
+   `svh` not `vh`: on iOS, `100vh` is the viewport with the browser chrome
+   *hidden*, so a 100vh section is taller than what you can actually see and
+   every section's last line sits under the address bar until you scroll.
+   `svh` is the smallest (chrome-visible) viewport, which is the one that is
+   always visible. `dvh` would resize mid-scroll and reflow the text. */
+.shore-section {
+  min-height: 100svh;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  position: relative;
+  isolation: isolate;
+}
+/* Content that needs breathing room on a short laptop screen gets to grow
+   past the viewport rather than being squeezed — a 100svh section with a
+   `min-height` can still be taller, and should be. */
+@media (max-height: 44rem) {
+  .shore-section {
+    min-height: auto;
+    padding-block: 5rem;
+  }
+}
+
+/* ── The hero plate ─────────────────────────────────────────────────────
+   Video, scrim, grain, text — four layers, in that z-order. */
+.shore-hero-media {
+  position: absolute;
+  inset: 0;
+  overflow: hidden;
+  z-index: -2;
+  background-color: hsl(var(--deep));
+}
+.shore-hero-media video,
+.shore-hero-media img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  /* The surf is in the lower two-thirds of the frame and the granite ledge is
+     at the left; this keeps both in shot as the aspect ratio narrows. */
+  object-position: 50% 62%;
+}
+/* The video fades in over the poster rather than popping, so the swap is
+   invisible even on a fast connection. */
+.shore-hero-video {
+  position: absolute;
+  inset: 0;
+  opacity: 0;
+  transition: opacity 900ms ease;
+}
+.shore-hero-video[data-ready="true"] {
+  opacity: 1;
+}
+
+/* The scrim. Three stops, not one flat wash: dark at the top so the fixed
+   navbar has something to sit on, dark again at the bottom so the scroll cue
+   and the section below join cleanly, and clearer through the middle so the
+   water is actually visible. Measured against the poster's own luminance —
+   the headline sits in the upper third, where this holds the plate at or
+   below 18% lightness and sand-coloured text clears 11:1. */
+.shore-scrim {
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  background:
+    linear-gradient(
+      to bottom,
+      hsl(var(--deep) / 0.88) 0%,
+      hsl(var(--deep) / 0.62) 28%,
+      hsl(var(--deep) / 0.52) 55%,
+      hsl(var(--deep) / 0.86) 88%,
+      hsl(var(--deep) / 0.96) 100%
+    ),
+    /* The copy wash. Every word in the hero sits in the left column, and the
+       surf in this footage is brightest exactly there — measured against the
+       composited plate, the standfirst came out at 3.46:1, which clears the
+       3:1 floor for large text but NOT the 4.5:1 that body-sized text needs.
+       Darkening the whole scrim to fix it would have cost the water, which is
+       the entire reason there is a video. So the extra darkness is local: it
+       is heavy behind the text column and gone by two-thirds across, where
+       the open water is. */
+    linear-gradient(
+      to right,
+      hsl(var(--deep) / 0.72) 0%,
+      hsl(var(--deep) / 0.55) 34%,
+      hsl(var(--deep) / 0.22) 58%,
+      transparent 76%
+    ),
+    /* a cool cast over the whole plate, so footage shot on a bright day still
+       belongs to a deep-navy palette */
+    linear-gradient(to bottom right, hsl(209 60% 20% / 0.42), hsl(174 40% 18% / 0.3));
+}
+
+/* Film grain. An inline SVG turbulence rather than a PNG: ~400 bytes, scales
+   to any viewport, and costs no extra request. Kept very low in opacity —
+   it is there to stop the gradients banding on wide gamut displays more than
+   to be seen. */
+.shore-grain::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  pointer-events: none;
+  opacity: 0.16;
+  mix-blend-mode: overlay;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='160' height='160' filter='url(%23n)' opacity='0.5'/%3E%3C/svg%3E");
+}
+
+/* The scroll cue under the hero. */
+.shore-cue {
+  animation: shore-cue-drift 2.8s ease-in-out infinite;
+}
+@keyframes shore-cue-drift {
+  0%, 100% { transform: translateY(0); opacity: 0.75; }
+  50%      { transform: translateY(0.45rem); opacity: 1; }
+}
+
+/* ── Tide pools ─────────────────────────────────────────────────────────
+   A service is a pool in the rock. `--tide` runs 0 → 1 as the card enters
+   the viewport and the water rises to fill it.
+
+   The fill is a pseudo-element with a transform, NOT an animated `height`:
+   height animates layout, transform animates on the compositor. The wave
+   crest on top of it is a repeating SVG that slides sideways forever, which
+   is what stops the waterline reading as a ruled line. */
+.tide-pool {
+  position: relative;
+  overflow: hidden;
+  isolation: isolate;
+  border: 1px solid hsl(var(--border));
+  border-radius: calc(var(--radius) + 0.5rem);
+  background: hsl(var(--card));
+  transition: border-color 300ms ease, transform 400ms cubic-bezier(0.22, 1, 0.36, 1);
+}
+.tide-pool::before {
+  content: "";
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  height: 100%;
+  z-index: -1;
+  transform: translateY(calc((1 - var(--tide, 0)) * 100%));
+  transition: transform 1100ms cubic-bezier(0.33, 1, 0.68, 1);
+  background: linear-gradient(
+    to bottom,
+    hsl(var(--seafoam) / 0.16) 0%,
+    hsl(var(--seafoam) / 0.1) 42%,
+    hsl(209 54% 26% / 0.12) 100%
+  );
+}
+/* The crest. 2x width so the slide can loop seamlessly at -50%. */
+.tide-pool::after {
+  content: "";
+  position: absolute;
+  left: 0;
+  width: 200%;
+  height: 1.5rem;
+  z-index: -1;
+  bottom: calc(var(--tide, 0) * 100% - 0.75rem);
+  transition: bottom 1100ms cubic-bezier(0.33, 1, 0.68, 1);
+  background-repeat: repeat-x;
+  background-size: 50% 100%;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 240 24' preserveAspectRatio='none'%3E%3Cpath d='M0 12c20-8 40-8 60 0s40 8 60 0 40-8 60 0 40 8 60 0v12H0z' fill='%23ffffff' fill-opacity='0.14'/%3E%3C/svg%3E");
+  animation: tide-crest 9s linear infinite;
+}
+@keyframes tide-crest {
+  from { transform: translateX(0); }
+  to   { transform: translateX(-50%); }
+}
+.tide-pool:hover,
+.tide-pool:focus-within {
+  border-color: hsl(var(--seafoam) / 0.55);
+  transform: translateY(-3px);
+}
+/* Reduced motion gets the pool FULL, not empty: the fill is how the card
+   shows it belongs to the set, so stopping the animation must not leave it
+   looking unfinished. Stillness, not absence. */
+:root[data-motion="reduced"] .tide-pool {
+  --tide: 1 !important;
+}
+@media (prefers-reduced-motion: reduce) {
+  :root:not([data-motion="full"]) .tide-pool {
+    --tide: 1 !important;
+  }
+}
+
+/* ── Buoys ──────────────────────────────────────────────────────────────
+   Each testimonial rides its own sine. The period and the delay are set
+   per-card inline so no two bob together — a row of buoys moving in lockstep
+   reads as a carousel animation, which is exactly what it should not be. */
+.buoy {
+  animation: buoy-bob var(--bob-period, 6s) ease-in-out var(--bob-delay, 0s) infinite;
+}
+@keyframes buoy-bob {
+  0%, 100% { transform: translateY(0) rotate(var(--bob-tilt, -1deg)); }
+  50%      { transform: translateY(-0.6rem) rotate(calc(var(--bob-tilt, -1deg) * -1)); }
+}
+/* The mooring line from the buoy down into the dark. */
+.buoy-line {
+  background: linear-gradient(to bottom, hsl(var(--deep-muted) / 0.5), transparent);
+}
+
+/* ── The beacon ─────────────────────────────────────────────────────────
+   A lighthouse beam that sweeps the About copy. It answers hover AND
+   focus-within, because a beam you can only reach with a mouse is a
+   decoration half the audience never sees. `.beacon-stage:focus-within`
+   fires when the keyboard reaches the link inside it. */
+.beacon-stage {
+  position: relative;
+  isolation: isolate;
+}
+.beacon-beam {
+  position: absolute;
+  z-index: -1;
+  width: 150%;
+  height: 46%;
+  left: 6%;
+  top: 22%;
+  transform-origin: 0% 50%;
+  transform: rotate(-16deg);
+  opacity: 0;
+  pointer-events: none;
+  border-radius: 50%;
+  filter: blur(14px);
+  background: linear-gradient(
+    90deg,
+    hsl(45 94% 78% / 0.5) 0%,
+    hsl(45 90% 76% / 0.22) 38%,
+    transparent 72%
+  );
+  transition: opacity 700ms ease, transform 2600ms cubic-bezier(0.4, 0, 0.2, 1);
+}
+.beacon-stage:hover .beacon-beam,
+.beacon-stage:focus-within .beacon-beam {
+  opacity: 1;
+  transform: rotate(14deg);
+}
+/* Still, but not dark: reduced motion holds the beam lit at rest so the
+   hover state still says something, it just does not travel. */
+:root[data-motion="reduced"] .beacon-stage:hover .beacon-beam,
+:root[data-motion="reduced"] .beacon-stage:focus-within .beacon-beam {
+  transform: rotate(0deg);
+  transition: none;
+}
+
+/* ── The bottle ─────────────────────────────────────────────────────────
+   The contact form. On a successful send the bottle is corked and drifts
+   off; the success MESSAGE is live-regioned text, so the animation is
+   celebration and never the only confirmation. */
+.bottle-drift {
+  animation: bottle-away 1600ms cubic-bezier(0.4, 0, 0.6, 1) forwards;
+}
+@keyframes bottle-away {
+  0%   { transform: translate3d(0, 0, 0) rotate(0deg); opacity: 1; }
+  100% { transform: translate3d(28vw, -14vh, 0) rotate(18deg); opacity: 0; }
+}
+
+/* ── Focus ──────────────────────────────────────────────────────────────
+   One visible ring, on both surfaces. Seafoam clears 3:1 against the sand
+   page AND against the navy band, which is why the ring is one colour rather
+   than a pair that need switching per section. The white outer edge is what
+   guarantees it on the busiest part of the hero footage. */
+.shore-focus:focus-visible,
+.tide-pool a:focus-visible,
+.buoy a:focus-visible {
+  outline: 3px solid hsl(var(--seafoam));
+  outline-offset: 3px;
+  border-radius: 0.5rem;
+  box-shadow: 0 0 0 6px hsl(var(--deep) / 0.55);
+}
+/* On the dark plate the seafoam token is the light one in both themes, so
+   the ring is legible over the video without a second rule. */
+.band-deep .shore-focus:focus-visible {
+  outline-color: hsl(var(--deep-accent));
+}
+
+/* ── The navbar over a dark hero ────────────────────────────────────────
+   The bar is transparent until you scroll (`.navbar-top`). On a page whose
+   hero is a dark plate, the light theme's ink — deep navy on navy footage —
+   measured about 1.6:1 against the poster, which is not a styling preference
+   but a failure of SC 1.4.3.
+
+   A page declares its own hero tone by setting data-hero-tone on <html>
+   (see ShoreHero), so this rule keys off the PAGE rather than the route, and
+   a second dark-hero page inherits it for free. Once scrolled, the bar is
+   frosted glass over the page background and the normal tokens are correct
+   again — which is why every selector here is scoped to .navbar-top.
+
+   Specificity: these are (0,3,0) or higher and beat Tailwind's single-class
+   utilities (0,1,0), so no !important is needed. The filled "Book Now"
+   button is deliberately untouched — it carries its own background and
+   already clears contrast on any surface. */
+:root[data-hero-tone="dark"] .navbar-top a:not([data-testid="button-nav-book"]),
+:root[data-hero-tone="dark"] .navbar-top nav a,
+:root[data-hero-tone="dark"] .navbar-top .logo-wordmark,
+:root[data-hero-tone="dark"] .navbar-top .logo-tagline {
+  color: hsl(var(--deep-foreground));
+}
+/* The secondary items — nav links not on the current page, the phone number,
+   Sign In — sit one step back, as they do on the light bar. 9.25:1 on the
+   plate, so "one step back" never means "hard to read". */
+:root[data-hero-tone="dark"] .navbar-top nav a:not(.font-semibold),
+:root[data-hero-tone="dark"] .navbar-top a[data-testid="link-nav-phone"],
+:root[data-hero-tone="dark"] .navbar-top a[data-testid="link-nav-portal"] {
+  color: hsl(var(--deep-muted));
+}
+:root[data-hero-tone="dark"] .navbar-top nav a:hover,
+:root[data-hero-tone="dark"] .navbar-top a[data-testid="link-nav-phone"]:hover,
+:root[data-hero-tone="dark"] .navbar-top a[data-testid="link-nav-portal"]:hover {
+  color: hsl(var(--deep-foreground));
+}
+/* The small icons inside those links, and the mobile menu/theme buttons. */
+:root[data-hero-tone="dark"] .navbar-top svg {
+  color: hsl(var(--deep-accent));
+}
+:root[data-hero-tone="dark"] .navbar-top button {
+  color: hsl(var(--deep-foreground));
+}
+
+/* The navbar's own focus ring over a dark hero.
+   The browser's default `outline: auto` computed to 1px of near-black
+   (rgb(16,16,16)) here — on navy footage that is invisible, which fails
+   SC 2.4.7 for every keyboard visitor who lands on the homepage and presses
+   Tab once. The shoreline's own controls already carry `.shore-focus`; these
+   links belong to the shared navbar, so the ring is applied from the same
+   data-hero-tone scope that recolours their ink. */
+:root[data-hero-tone="dark"] .navbar-top a:focus-visible,
+:root[data-hero-tone="dark"] .navbar-top button:focus-visible {
+  outline: 3px solid hsl(var(--deep-accent));
+  outline-offset: 3px;
+  border-radius: 0.5rem;
+  /* No transition on a focus ring: it must be there the instant focus lands,
+     not fade in behind the visitor's next keystroke. */
+  transition: none;
 }

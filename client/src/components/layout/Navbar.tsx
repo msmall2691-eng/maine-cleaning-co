@@ -80,9 +80,16 @@ export default function Navbar() {
   const scrollToEstimate = () => scrollToSection("get-estimate");
 
   return (
+    /* `navbar-top` is the UNSCROLLED state, and it is not just a style hook:
+       over a dark hero this bar is transparent, and its ink is the light
+       theme's navy, which on the homepage's coast footage measured about
+       1.6:1. `:root[data-hero-tone="dark"] .navbar-top` in index.css swaps
+       the ink to the deep band's foreground for exactly that case. The page
+       declares its own hero tone (see ShoreHero); the navbar does not guess
+       from the route, so a second dark-hero page needs no change here. */
     <header
       className={`fixed top-0 left-0 right-0 z-50 transition-all duration-400 ${
-        scrolled ? "navbar-glass py-4" : "bg-transparent py-6"
+        scrolled ? "navbar-glass py-4" : "navbar-top bg-transparent py-6"
       }`}
     >
       <div className="container mx-auto px-5 sm:px-8 flex items-center justify-between gap-4">
