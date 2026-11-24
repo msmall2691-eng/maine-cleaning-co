@@ -1600,18 +1600,6 @@
   transition: none;
 }
 
-/* ── The bottle ─────────────────────────────────────────────────────────
-   The contact form. On a successful send the bottle is corked and drifts
-   off; the success MESSAGE is live-regioned text, so the animation is
-   celebration and never the only confirmation. */
-.bottle-drift {
-  animation: bottle-away 1600ms cubic-bezier(0.4, 0, 0.6, 1) forwards;
-}
-@keyframes bottle-away {
-  0%   { transform: translate3d(0, 0, 0) rotate(0deg); opacity: 1; }
-  100% { transform: translate3d(28vw, -14vh, 0) rotate(18deg); opacity: 0; }
-}
-
 /* ── Focus ──────────────────────────────────────────────────────────────
    One visible ring, on both surfaces. Seafoam clears 3:1 against the sand
    page AND against the navy band, which is why the ring is one colour rather

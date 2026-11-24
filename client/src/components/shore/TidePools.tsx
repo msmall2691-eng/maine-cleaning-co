@@ -112,9 +112,9 @@ export function TidePools() {
       aria-labelledby="shore-services-heading"
     >
       <div className="mx-auto w-full max-w-6xl px-5 sm:px-8">
-        <p className="type-eyebrow">What we do</p>
+        <p className="type-eyebrow">Services</p>
         <h2 id="shore-services-heading" className="type-h2 mt-4 max-w-2xl text-foreground">
-          Four pools, filled on every visit.
+          What we clean
         </h2>
         <p className="type-lead mt-5 max-w-xl">
           Every clean follows the same checklist, whoever is on the crew. Pick the

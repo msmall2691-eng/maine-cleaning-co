@@ -4,7 +4,13 @@ import { companyInfo } from "@/lib/company-info";
 import { RESPONSE_REPLY } from "@/lib/response-time";
 
 /**
- * The contact form, as a message in a bottle.
+ * The contact form.
+ *
+ * It was called "Put it in a bottle" until the owner read it back: a message
+ * in a bottle is the slowest, least reliable way to send anything, which is
+ * the opposite of what the one conversion element on the page should promise.
+ * The heading is plain now. The file keeps its name, and the test ids keep
+ * theirs, because renaming them would churn the tests for nothing.
  *
  * Where it goes: `POST /api/intake/submit` — the same endpoint the estimator
  * and the old homepage form post to. That means a note sent from here is
@@ -17,9 +23,9 @@ import { RESPONSE_REPLY } from "@/lib/response-time";
  * refine). This form mirrors that rule inline, before submit, rather than
  * letting someone write a paragraph and then be told by a 422.
  *
- * The animation is the reward, never the receipt: on success the bottle
- * drifts away AND a live region announces what happened in words. If the
- * animation is switched off, or never runs, the confirmation is unaffected.
+ * On success the form is replaced by a confirmation panel AND a live region
+ * announces what happened in words, so the confirmation never depends on
+ * anything visual.
  */
 
 type Status = "idle" | "sending" | "sent" | "error";
@@ -93,9 +99,9 @@ export function Bottle() {
     >
       <div className="mx-auto grid w-full max-w-6xl items-start gap-14 px-5 sm:px-8 lg:grid-cols-[1fr_1.1fr] lg:gap-20">
         <div>
-          <p className="type-eyebrow !text-deep-accent">Send word</p>
+          <p className="type-eyebrow !text-deep-accent">Contact</p>
           <h2 id="shore-contact-heading" className="type-h2 mt-4 text-deep-foreground">
-            Put it in a bottle.
+            Get in touch
           </h2>
           <p className="type-lead mt-6 !text-deep-muted">
             Tell us what needs cleaning and roughly how big it is. {RESPONSE_REPLY}
@@ -139,7 +145,7 @@ export function Bottle() {
             data-testid="text-bottle-status"
           >
             {status === "sent"
-              ? `Thank you — your message is on its way. ${RESPONSE_REPLY}`
+              ? `Thank you — we have your message. ${RESPONSE_REPLY}`
               : ""}
           </p>
 
@@ -149,7 +155,7 @@ export function Bottle() {
               data-testid="panel-bottle-sent"
             >
               <Check className="mx-auto h-9 w-9 text-deep-accent" aria-hidden="true" strokeWidth={1.5} />
-              <h3 className="type-h3 mt-5 text-deep-foreground">It&apos;s away.</h3>
+              <h3 className="type-h3 mt-5 text-deep-foreground">Message sent.</h3>
               <p className="mx-auto mt-3 max-w-xs text-sm text-deep-muted">
                 {RESPONSE_REPLY} If it&apos;s urgent, calling is quicker —{" "}
                 <a
@@ -243,7 +249,7 @@ export function Bottle() {
                 className="shore-focus mt-7 inline-flex min-h-12 w-full items-center justify-center gap-2 rounded-full bg-deep-accent px-8 text-sm font-semibold text-deep transition-transform hover:scale-[1.01] disabled:opacity-60 sm:w-auto"
                 data-testid="button-bottle-submit"
               >
-                {sending ? "Sending…" : "Send it out"}
+                {sending ? "Sending…" : "Send"}
                 <Send className="h-4 w-4" aria-hidden="true" />
               </button>
             </form>

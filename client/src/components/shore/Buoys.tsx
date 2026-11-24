@@ -109,9 +109,9 @@ export function Buoys() {
       <div className="mx-auto w-full max-w-6xl px-5 sm:px-8">
         <div className="flex flex-wrap items-end justify-between gap-6">
           <div>
-            <p className="type-eyebrow">In their words</p>
+            <p className="type-eyebrow">Reviews</p>
             <h2 id="shore-reviews-heading" className="type-h2 mt-4 text-foreground">
-              Moored up and still here.
+              What our customers say
             </h2>
             <p className="type-lead mt-5 max-w-lg">
               Six of the reviews left on Google, as written.
