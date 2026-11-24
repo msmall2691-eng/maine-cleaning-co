@@ -2,22 +2,24 @@ import { useSEO } from "@/hooks/use-seo";
 import { STATIC_PAGE_SEO } from "@/lib/seo";
 import { ShoreHero } from "@/components/shore/ShoreHero";
 import { TidePools } from "@/components/shore/TidePools";
+import { ShoreWork } from "@/components/shore/ShoreWork";
 import { Beacon } from "@/components/shore/Beacon";
 import { Buoys } from "@/components/shore/Buoys";
 import { Bottle } from "@/components/shore/Bottle";
 import { TideLine } from "@/components/shore/TideLine";
 
 /**
- * The homepage: the Maine shoreline, in six movements.
+ * The homepage: the Maine shoreline, in seven movements.
  *
  *   1. ShoreHero   the plate — coast footage, the name, the promise
  *   2. TidePools   the services, filling as the tide comes in
- *   3. Beacon      who we are, lit by a lighthouse
- *   4. Buoys       what customers said, bobbing at their moorings
- *   5. Bottle      the contact form
- *   6. TideLine    the close
+ *   3. ShoreWork   photographs of real jobs, uncovered as the tide goes out
+ *   4. Beacon      who we are, lit by a lighthouse
+ *   5. Buoys       what customers said, bobbing at their moorings
+ *   6. Bottle      the contact form
+ *   7. TideLine    the close
  *
- * Why this page is a composition of six files rather than one 675-line
+ * Why this page is a composition of seven files rather than one 675-line
  * component, which is what it replaced: each movement has its own motion
  * behaviour, its own accessibility obligations, and in two cases its own
  * network call. Keeping them apart is what lets each one be read — and
@@ -50,6 +52,7 @@ export default function Home() {
     <div className="w-full clip-x">
       <ShoreHero />
       <TidePools />
+      <ShoreWork />
       <Beacon />
       <Buoys />
       <Bottle />

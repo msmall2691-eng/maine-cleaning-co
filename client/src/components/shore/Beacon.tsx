@@ -34,7 +34,7 @@ export function Beacon() {
       <div className="mx-auto grid w-full max-w-6xl items-center gap-14 px-5 sm:px-8 lg:grid-cols-2 lg:gap-20">
         <div className="beacon-stage">
           <div className="beacon-beam still" aria-hidden="true" />
-          <p className="type-eyebrow !text-deep-accent">Who you are letting in</p>
+          <p className="type-eyebrow !text-deep-accent">About us</p>
           <h2 id="shore-about-heading" className="type-h2 mt-4 text-deep-foreground">
             A local crew who know the coast.
           </h2>

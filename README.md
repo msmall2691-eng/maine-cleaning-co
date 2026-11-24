@@ -293,8 +293,23 @@ accessibility obligations, and in one case its own network call.
 | 2 | Services as tide pools | `TidePools.tsx` | Four pools that fill with water as they scroll in, staggered. Each links to its `/services/<id>` page. |
 | 3 | About with a lighthouse beam | `Beacon.tsx` | A blurred gradient wedge sweeps the copy on hover **and on focus-within**. |
 | 4 | Testimonials as buoys | `Buoys.tsx` | Six real Google reviews, each bobbing on its own period. Native scroll-snap carousel, arrow keys included. |
-| 5 | Contact as a message in a bottle | `Bottle.tsx` | The form. Posts to `/api/intake/submit`. |
+| 5 | Contact | `Bottle.tsx` | The form. Posts to `/api/intake/submit`. |
 | 6 | Tide line | `TideLine.tsx` | The closing CTA. Deliberately not full-viewport — five of those is a rhythm, six is a trudge. |
+
+#### A note on the copy
+
+The first version of this page named every section after the metaphor —
+"Four pools, filled on every visit", "Moored up and still here", "Put it in a
+bottle". The headings are plain now, and the `h1` is the company's existing
+"The Way Cleaning Should Be."
+
+Two of those were not just twee, they worked against the business: a
+testimonials section headed "Moored up and still here" reads as *we have
+survived*, and naming the contact form after a message in a bottle promises
+the slowest, least reliable delivery there is on the one element meant to
+convert. **The design, the motion and the file names are unchanged** — the
+sections are still built as tide pools and buoys, because that is what they
+look like. Only the words a visitor reads changed.
 
 #### Where the form goes
 

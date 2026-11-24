@@ -1,7 +1,7 @@
-import { useEffect, useRef, useState } from "react";
 import { Link } from "wouter";
 import { ArrowRight } from "lucide-react";
 import { servicesData } from "@/lib/services-data";
+import { useTideFill } from "./useTideFill";
 
 /**
  * Services, as tide pools.
@@ -24,47 +24,6 @@ import { servicesData } from "@/lib/services-data";
  */
 
 const POOL_IDS = ["residential", "deep-cleaning", "vacation-rentals", "commercial"] as const;
-
-/** Rise as it enters, and stay risen. A pool that drains on scroll-up reads
- *  as a bug rather than as a tide. */
-function useTideFill<T extends HTMLElement>(delayMs: number) {
-  const ref = useRef<T>(null);
-  const [filled, setFilled] = useState(false);
-
-  useEffect(() => {
-    const el = ref.current;
-    if (!el || filled) return;
-
-    // No observer (old browser, jsdom) — fill immediately rather than never.
-    if (typeof IntersectionObserver === "undefined") {
-      setFilled(true);
-      return;
-    }
-
-    let timer = 0;
-    const observer = new IntersectionObserver(
-      (entries) => {
-        for (const entry of entries) {
-          if (!entry.isIntersecting) continue;
-          // Stagger, so four pools fill as a tide coming in rather than as
-          // four cards animating at once.
-          timer = window.setTimeout(() => setFilled(true), delayMs);
-          observer.disconnect();
-        }
-      },
-      // Fire a little before the card is centred, so the fill is already
-      // under way by the time it is the thing you are looking at.
-      { threshold: 0.25, rootMargin: "0px 0px -8% 0px" },
-    );
-    observer.observe(el);
-    return () => {
-      observer.disconnect();
-      if (timer) window.clearTimeout(timer);
-    };
-  }, [delayMs, filled]);
-
-  return { ref, filled };
-}
 
 function TidePool({ id, index }: { id: (typeof POOL_IDS)[number]; index: number }) {
   const service = servicesData[id];
@@ -112,9 +71,9 @@ export function TidePools() {
       aria-labelledby="shore-services-heading"
     >
       <div className="mx-auto w-full max-w-6xl px-5 sm:px-8">
-        <p className="type-eyebrow">What we do</p>
+        <p className="type-eyebrow">Services</p>
         <h2 id="shore-services-heading" className="type-h2 mt-4 max-w-2xl text-foreground">
-          Four pools, filled on every visit.
+          What we clean
         </h2>
         <p className="type-lead mt-5 max-w-xl">
           Every clean follows the same checklist, whoever is on the crew. Pick the

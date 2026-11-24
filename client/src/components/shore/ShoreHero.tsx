@@ -134,8 +134,14 @@ export function ShoreHero() {
             id="shore-hero-heading"
             className="type-display mt-5 text-deep-foreground"
           >
-            Clean comes in
-            <span className="block italic text-deep-accent">with the tide.</span>
+            {/* The space matters. The <span> is `block`, so the two lines
+                look right either way — but without it the heading's TEXT is
+                "The Way CleaningShould Be.", which is what a screen reader
+                announces and what a crawler extracts as the h1. JSX drops
+                the newline between an element and text, so it has to be
+                explicit. */}
+            The Way Cleaning{" "}
+            <span className="block italic text-deep-accent">Should Be.</span>
           </h1>
           <p className="type-lead mt-6 max-w-xl !text-deep-muted">
             Residential, commercial and vacation-rental cleaning across York and
