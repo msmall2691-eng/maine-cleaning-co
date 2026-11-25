@@ -55,7 +55,7 @@ export function ShoreWork() {
           className="tide-reveal still mt-12"
           data-revealed={filled ? "true" : "false"}
         >
-          <WorkGallery compact limit={4} />
+          <WorkGallery compact limit={4} linkTo="book" />
         </div>
 
         <div className="mt-10">

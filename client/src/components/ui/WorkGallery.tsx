@@ -1,4 +1,5 @@
-import { ArrowUpRight, Instagram } from "lucide-react";
+import { ArrowRight, ArrowUpRight, Instagram } from "lucide-react";
+import { Link } from "wouter";
 import { galleryItems } from "@/lib/gallery-data";
 import { companyInfo } from "@/lib/company-info";
 import { srcSetForSrc, SIZES } from "@/lib/photos";
@@ -14,6 +15,14 @@ import { SectionHeading } from "@/components/layout/Section";
  * These are OUR photos, not an Instagram feed, and the copy says so. Each
  * tile deep-links to the real post when GalleryItem.postUrl is set and
  * otherwise opens the profile.
+ *
+ * `linkTo` decides where a photo tile goes. "social" (the default, and what
+ * /about uses) opens the matching post, or the profile when there isn't one.
+ * "book" sends the tile to /book instead, and the homepage passes it: the
+ * work band sits between the services and the reviews, which is the point
+ * where someone is most persuaded, and sending them to Instagram there is
+ * sending them away from the estimate. The follow tile at the end stays
+ * social either way — it is the one element that is *supposed* to leave.
  *
  * `compact` drops the heading block for callers that supply their own, and
  * `limit` shows only the first N photos. The home page passes both: four
@@ -35,11 +44,15 @@ import { SectionHeading } from "@/components/layout/Section";
 export function WorkGallery({
   compact = false,
   limit,
+  linkTo = "social",
 }: {
   compact?: boolean;
   /** Show only the first N photos. Omit for all of them. */
   limit?: number;
+  /** Where a photo tile goes. See the note above. */
+  linkTo?: "social" | "book";
 }) {
+  const toBook = linkTo === "book";
   // The follow tile takes one cell, and the lead tile takes four on anything
   // wider than a phone, so a 4-column grid comes out flush at limit 4 (two
   // rows) or limit 12 (four rows). Other values leave a hole in the last row.
@@ -60,16 +73,15 @@ export function WorkGallery({
           // One lead tile. Two cells wide and tall on anything but a phone,
           // where a 2x2 tile would swallow the whole first screen.
           const isLead = i === 0;
-          return (
-            <a
-              key={item.id}
-              href={item.postUrl ?? companyInfo.socials.instagram}
-              target="_blank"
-              rel="noopener noreferrer"
-              className={`photo-frame group ${isLead ? "sm:col-span-2 sm:row-span-2" : ""}`}
-              data-testid={`work-gallery-${item.id}`}
-              title={item.caption}
-            >
+          const tileClass = `photo-frame group ${isLead ? "sm:col-span-2 sm:row-span-2" : ""}`;
+          // An internal destination gets a real client-side Link and no
+          // target="_blank" — opening your own site in a new tab strands
+          // people with a back button that doesn't go back. The accessible
+          // name has to say where the tile GOES, not what it shows: "Bright
+          // white shaker kitchen…" is a fine description of a photograph and
+          // a useless description of a link to the estimator.
+          const inner = (
+            <>
               {/* Eleven tiles paint at once here. At full resolution that is
                   most of the library decoded in one go, which is what made
                   this grid the slowest thing on a phone. */}
@@ -91,11 +103,46 @@ export function WorkGallery({
                 }`}
               >
                 <span className="min-w-0">{item.caption}</span>
-                <ArrowUpRight
-                  className="w-3.5 h-3.5 flex-shrink-0 opacity-0 group-hover:opacity-100 group-focus-visible:opacity-100 transition-opacity"
-                  aria-hidden="true"
-                />
+                {/* An outward arrow means "this leaves the site". A tile that
+                    goes to /book does not, so it gets the same arrow every
+                    other internal link on the page uses. */}
+                {toBook ? (
+                  <ArrowRight
+                    className="w-3.5 h-3.5 flex-shrink-0 opacity-0 group-hover:opacity-100 group-focus-visible:opacity-100 transition-opacity"
+                    aria-hidden="true"
+                  />
+                ) : (
+                  <ArrowUpRight
+                    className="w-3.5 h-3.5 flex-shrink-0 opacity-0 group-hover:opacity-100 group-focus-visible:opacity-100 transition-opacity"
+                    aria-hidden="true"
+                  />
+                )}
               </span>
+            </>
+          );
+
+          return toBook ? (
+            <Link
+              key={item.id}
+              href="/book"
+              className={tileClass}
+              data-testid={`work-gallery-${item.id}`}
+              title={item.caption}
+              aria-label={`${item.caption} — get an estimate`}
+            >
+              {inner}
+            </Link>
+          ) : (
+            <a
+              key={item.id}
+              href={item.postUrl ?? companyInfo.socials.instagram}
+              target="_blank"
+              rel="noopener noreferrer"
+              className={tileClass}
+              data-testid={`work-gallery-${item.id}`}
+              title={item.caption}
+            >
+              {inner}
             </a>
           );
         })}
