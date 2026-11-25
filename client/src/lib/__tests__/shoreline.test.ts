@@ -56,6 +56,40 @@ describe("the lead pipeline", () => {
   });
 });
 
+describe("the work photos point at the estimator", () => {
+  /**
+   * The gallery band sits between the services and the reviews — the point
+   * on the page where someone is most persuaded. It shipped with every tile
+   * linking to Instagram, which is a link away from the booking at exactly
+   * the wrong moment. /about keeps the social links; the homepage does not.
+   */
+  it("asks WorkGallery for the booking destination", () => {
+    expect(read("ShoreWork.tsx")).toMatch(/linkTo="book"/);
+  });
+
+  it("does not open an internal destination in a new tab", () => {
+    // A tile that goes to /book must not be target="_blank": opening your own
+    // site in a new tab strands people with a back button that cannot go back.
+    const gallery = readFileSync(
+      join(__dirname, "..", "..", "components", "ui", "WorkGallery.tsx"),
+      "utf8",
+    );
+    // Both indexes anchored from the start of the branch: there is an
+    // earlier `) : (` in the file (the arrow icon's own ternary), and an
+    // unanchored search found THAT, sliced backwards and returned "" — which
+    // made every assertion below pass vacuously.
+    const start = gallery.indexOf("return toBook ? (");
+    expect(start, "the toBook branch should exist").toBeGreaterThan(-1);
+    const bookBranch = gallery.slice(start, gallery.indexOf("</Link>", start));
+    expect(bookBranch.length).toBeGreaterThan(40);
+    expect(bookBranch).toContain('href="/book"');
+    expect(bookBranch).not.toContain("_blank");
+    // And its accessible name must say where it GOES. The img alt describes
+    // a photograph, which is a useless name for a link to the estimator.
+    expect(bookBranch).toMatch(/aria-label=/);
+  });
+});
+
 describe("sound never starts by itself", () => {
   /**
    * WCAG 2.1 SC 1.4.2: anything audible for more than three seconds needs a
