@@ -67,7 +67,7 @@ export function TidePools() {
   return (
     <section
       id="services"
-      className="shore-section scroll-mt-20 bg-background py-24"
+      className="shore-band scroll-mt-20 bg-background"
       aria-labelledby="shore-services-heading"
     >
       <div className="shore-measure px-5 sm:px-8">

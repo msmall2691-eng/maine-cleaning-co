@@ -94,7 +94,7 @@ export function Bottle() {
   return (
     <section
       id="contact"
-      className="shore-section band-deep scroll-mt-20 clip-x py-24"
+      className="shore-band band-deep scroll-mt-20 clip-x"
       aria-labelledby="shore-contact-heading"
     >
       <div className="shore-measure grid items-start gap-14 px-5 sm:px-8 lg:grid-cols-[1fr_1.1fr] lg:gap-20">

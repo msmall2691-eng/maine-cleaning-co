@@ -13,7 +13,7 @@ import { COMMUNITIES_SERVED } from "@/lib/company-stats";
 export function TideLine() {
   return (
     <section
-      className="relative clip-x bg-background py-24"
+      className="shore-band clip-x bg-background"
       aria-labelledby="shore-close-heading"
     >
       <div className="mx-auto w-full max-w-4xl px-5 text-center sm:px-8">
