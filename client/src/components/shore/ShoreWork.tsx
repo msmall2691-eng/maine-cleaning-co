@@ -37,7 +37,7 @@ export function ShoreWork() {
   return (
     <section
       id="our-work"
-      className="relative clip-x scroll-mt-20 bg-background py-24"
+      className="shore-band clip-x scroll-mt-20 bg-background"
       aria-labelledby="shore-work-heading"
     >
       <div className="shore-measure px-5 sm:px-8">

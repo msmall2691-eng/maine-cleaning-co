@@ -103,7 +103,7 @@ export function Buoys() {
   return (
     <section
       id="reviews"
-      className="shore-section scroll-mt-20 bg-background py-24"
+      className="shore-band scroll-mt-20 bg-background"
       aria-labelledby="shore-reviews-heading"
     >
       <div className="shore-measure px-5 sm:px-8">

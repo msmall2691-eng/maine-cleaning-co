@@ -304,8 +304,8 @@
 .type-display {
   font-family: var(--font-display);
   font-weight: 600;
-  font-size: clamp(2.6rem, 6vw, 4.75rem);
-  line-height: 1.06;
+  font-size: clamp(2.75rem, 2.1rem + 2.6vw, 5.5rem);
+  line-height: 1.04;
   letter-spacing: -0.015em;
   text-wrap: balance;
 }
@@ -324,15 +324,15 @@
 .type-h2 {
   font-family: var(--font-display);
   font-weight: 600;
-  font-size: clamp(1.9rem, 3.4vw, 2.9rem);
-  line-height: 1.14;
+  font-size: clamp(2rem, 1.55rem + 1.8vw, 3.5rem);
+  line-height: 1.12;
   letter-spacing: -0.01em;
   text-wrap: balance;
 }
 .type-h3 {
   font-family: var(--font-display);
   font-weight: 600;
-  font-size: clamp(1.1rem, 1rem + 0.45vw, 1.45rem);
+  font-size: clamp(1.2rem, 1.05rem + 0.6vw, 1.625rem);
   line-height: 1.3;
   letter-spacing: -0.005em;
   text-wrap: balance;
@@ -343,7 +343,7 @@
   /* Was clamp(1rem, 1.15vw, 1.1875rem) — 19px, reached at a 1652px viewport
      and flat for ever after. A standfirst on a 27" monitor was the same size
      as on a 13" laptop. */
-  font-size: clamp(1rem, 0.95rem + 0.35vw, 1.3125rem);
+  font-size: clamp(1.0625rem, 0.98rem + 0.5vw, 1.5rem);
   line-height: 1.6;
   color: hsl(var(--muted-foreground));
   text-wrap: pretty;
@@ -361,7 +361,7 @@
 /* 12px of letterspaced capitals is the smallest thing on the page and there
    are more of them than of anything else. One step up on a desktop screen. */
 @media (min-width: 1280px) {
-  .type-eyebrow { font-size: 0.8125rem; }
+  .type-eyebrow { font-size: 0.875rem; }
 }
 
 .label-sm {
@@ -1368,6 +1368,14 @@
    every section's last line sits under the address bar until you scroll.
    `svh` is the smallest (chrome-visible) viewport, which is the one that is
    always visible. `dvh` would resize mid-scroll and reflow the text. */
+/* The HERO still fills the screen — that is what a hero is for, and it is
+   the one band whose job is to be the whole view.
+
+   The interior bands do not, any more. Measured on the live site at 1920,
+   each of them was 1080px tall around 566-645px of content: services
+   carried 512px of forced empty space, reviews 514, contact 494. Five
+   screen-high bands in a row is not a rhythm, it is a trudge — the page ran
+   7,502px, nearly seven screenfuls, most of it air. See .shore-band. */
 .shore-section {
   min-height: 100svh;
   display: flex;
@@ -1748,7 +1756,7 @@
    screen. Not a clamp on vw alone: `rem + vw` keeps it responsive to the
    reader's own font-size setting, which a pure vw clamp quietly ignores. */
 .type-body {
-  font-size: clamp(0.9375rem, 0.875rem + 0.22vw, 1.0625rem);
+  font-size: clamp(1rem, 0.93rem + 0.32vw, 1.1875rem);
   line-height: 1.65;
   text-wrap: pretty;
 }
@@ -1771,5 +1779,20 @@
   .shore-measure { max-width: 80rem; }
 }
 @media (min-width: 1920px) {
-  .shore-measure { max-width: 86rem; }
+  .shore-measure { max-width: 92rem; }
+}
+
+
+/* ── An interior band ───────────────────────────────────────────────────
+   Sized by its content, with air in proportion to the screen rather than a
+   whole screen of it. `vh` in the middle term so a tall monitor gets more
+   breathing room and a laptop gets less, clamped at both ends so it never
+   collapses to nothing or runs away.
+
+   No min-height and no vertical centring: the content starts where the
+   padding ends, which is also why the headings in consecutive bands line up
+   with each other as you scroll instead of drifting. */
+.shore-band {
+  position: relative;
+  padding-block: clamp(4.5rem, 7.5vh, 7.5rem);
 }

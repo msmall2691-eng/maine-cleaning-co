@@ -28,7 +28,7 @@ export function Beacon() {
   return (
     <section
       id="about"
-      className="shore-section band-deep scroll-mt-20 clip-x py-24"
+      className="shore-band band-deep scroll-mt-20 clip-x"
       aria-labelledby="shore-about-heading"
     >
       <div className="shore-measure grid items-center gap-14 px-5 sm:px-8 lg:grid-cols-2 lg:gap-20">
