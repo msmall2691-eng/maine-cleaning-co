@@ -36,7 +36,7 @@ export default function Services() {
             can only break before it — otherwise it splits the emphasised
             phrase as "kind / of space." across two lines. */
         title={<>Cleaning for every <span className="heading-accent">kind&nbsp;of&nbsp;space.</span></>}
-        lead="Tailored cleaning solutions for homes, rentals, and businesses across Southern Maine."
+        lead="What we clean, what each visit covers, and what it costs — for homes, rentals and businesses across Southern Maine."
         photo={photos.vacuumFleet}
         actions={
           <>
@@ -86,8 +86,8 @@ export default function Services() {
       {/* ── Quiz ── */}
       <Section measure="default" tone="tint">
         <SectionHeading
-          title="Not Sure Where to Start?"
-          lead="Take our 30-second quiz and we'll recommend the perfect cleaning service for your needs."
+          title="Not sure which one you need?"
+          lead="Three questions about your place, and we will point you at the service that fits."
         />
         <CleaningQuiz />
       </Section>
@@ -123,7 +123,7 @@ export default function Services() {
               <Leaf className="w-6 h-6" />
             </div>
             <div className="min-w-0">
-              <h2 className="type-h3 text-brand-pine mb-2">Our Cleaning Approach</h2>
+              <h2 className="type-h3 text-brand-pine mb-2">How we work</h2>
               <p className="text-sm text-brand-pine/90 leading-relaxed mb-3">
                 We exclusively use Melaleuca EcoSense & Sal Suds — eco-friendly products that deliver a thorough clean without harsh chemicals.
               </p>

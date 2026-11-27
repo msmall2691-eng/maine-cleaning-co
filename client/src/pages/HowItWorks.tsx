@@ -59,9 +59,9 @@ export default function HowItWorks() {
           photo below that. The text-only version of this hero was an almost
           entirely empty screenful on a laptop. */}
       <PageHero
-        eyebrow="Simple & Transparent"
+        eyebrow="How it works"
         title={<>What Happens <span className="heading-accent">Next</span></>}
-        lead="From your first message to a spotless space — five simple steps that take the guesswork out of professional cleaning."
+        lead="What happens between your first message and the first clean, in five steps."
         photo={photos.toolkit}
         actions={
           <Link href="/#get-estimate">
@@ -149,7 +149,7 @@ export default function HowItWorks() {
 
       {/* ── FAQ ── */}
       <Section measure="prose" tone="sink">
-        <SectionHeading title="Frequently Asked Questions" />
+        <SectionHeading title="Common questions" />
         <Accordion type="single" collapsible className="space-y-3">
           {faqs.map((faq, i) => (
             <AccordionItem key={i} value={`faq-${i}`} className="card-soft overflow-hidden border-0" data-testid={`faq-${i}`}>
@@ -166,8 +166,8 @@ export default function HowItWorks() {
 
       {/* ── Final CTA ── */}
       <ClosingCTA
-        title="Simple as that."
-        lead="It takes less than 2 minutes to get your instant estimate — try it now."
+        title="Ready when you are"
+        lead="The instant estimate takes about a minute and gives you a real range."
         ctaTestId="button-hiw-cta-estimate"
         photo={photos.restroomTrailer}
       />

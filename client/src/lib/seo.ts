@@ -188,7 +188,7 @@ export const STATIC_PAGE_SEO: Record<string, SeoMeta> = {
   "/how-it-works": {
     title: "How Our Cleaning Service Works",
     description:
-      "Get an estimate in under two minutes. See the five steps from first message to spotless space, how we handle keys and pets, and what the crew brings along.",
+      "Get an estimate in about a minute. See the five steps from first message to first clean, how we handle keys and pets, and what the crew brings along.",
     canonicalPath: "/how-it-works",
   },
   "/about": {

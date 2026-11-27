@@ -89,7 +89,7 @@ export const photos = {
   },
   toolkit: {
     src: "/images/cleaning-toolkit-supplies.jpeg",
-    alt: "Cleaning toolkit with a spin mop, microfibre pads and brushes",
+    alt: "Cleaning toolkit with a spin mop, microfiber pads and brushes",
     orientation: "portrait",
   },
   /** Before/after on toilet seat bolts. Honest detail shot, not a hero. */

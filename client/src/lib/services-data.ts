@@ -15,7 +15,7 @@ export const servicesData = {
     seoDescription: "Recurring home cleaning across York and Cumberland County — weekly, bi-weekly or monthly, with eco-friendly products and the same insured crew each visit.",
     title: "Residential Cleaning",
     shortDesc: "Professional home cleaning for regular upkeep and maintenance.",
-    tagline: "Your home, refreshed — every single time.",
+    tagline: "The same crew, the same checklist, on a schedule you set.",
     icon: Home,
     color: "bg-brand-navy/15 text-brand-navy",
     accentGradient: "from-brand-navy/10 via-brand-navy/5 to-transparent",
@@ -23,7 +23,7 @@ export const servicesData = {
     accentBg: "bg-brand-navy/10",
     iconAccent: "text-brand-navy",
     patternClass: "service-pattern-residential",
-    description: "Our standard residential cleaning service is perfect for maintaining a beautiful, stress-free home. We focus on the essential areas of your house, ensuring a consistent level of cleanliness that you can rely on.",
+    description: "Recurring upkeep for a home that is lived in. Kitchens, bathrooms, floors and the flat surfaces, to the same checklist every visit, so the place never gets far enough behind to need rescuing. Weekly, every other week, or monthly.",
     idealFor: "Busy professionals, families, and anyone looking for weekly, bi-weekly, or monthly home maintenance.",
     includes: [
       "Dusting all accessible surfaces",
@@ -43,7 +43,7 @@ export const servicesData = {
     seoDescription: "A top-to-bottom deep clean for Southern Maine homes: baseboards, interior windows, grout, high dusting and behind the furniture. Ideal before or after a move.",
     title: "Deep Cleaning",
     shortDesc: "A top-to-bottom refresh covering areas often missed in standard cleans.",
-    tagline: "Beyond the surface — a complete reset for your space.",
+    tagline: "The baseboards, the grout, the tops of the door frames.",
     icon: Sparkles,
     color: "bg-brand-harbor/15 text-brand-harbor",
     accentGradient: "from-brand-harbor/10 via-brand-harbor/5 to-transparent",
@@ -51,7 +51,7 @@ export const servicesData = {
     accentBg: "bg-brand-harbor/10",
     iconAccent: "text-brand-harbor",
     patternClass: "service-pattern-deep",
-    description: "Our deep cleaning service provides a comprehensive, top-to-bottom refresh of your living space. We utilize hospital-grade, eco-friendly products to ensure a pristine and healthy environment. This service tackles the hard-to-reach areas and built-up grime.",
+    description: "Our deep cleaning service provides a comprehensive, top-to-bottom refresh of your living space. We use the same eco-friendly products as every other visit, and we get into the places a maintenance clean never reaches: baseboards, grout, window sills, the tops of door frames, behind and under what moves.",
     idealFor: "Spring cleaning, preparing for holidays or events, or homes that haven't been professionally cleaned in the past 3 months.",
     includes: [
       "Baseboards & trim detailing",
@@ -71,7 +71,7 @@ export const servicesData = {
     seoDescription: "Office, retail and janitorial cleaning across Southern Maine, scheduled around your hours by insured, background-checked crews to a consistent standard.",
     title: "Commercial & Janitorial",
     shortDesc: "Reliable, discreet maintenance for professional environments.",
-    tagline: "Spotless workspaces that mean business.",
+    tagline: "After hours or before you open, so nobody works around us.",
     icon: Building,
     color: "bg-brand-stone/15 text-brand-stone",
     accentGradient: "from-brand-stone/10 via-brand-stone/5 to-transparent",
@@ -79,7 +79,7 @@ export const servicesData = {
     accentBg: "bg-brand-stone/10",
     iconAccent: "text-brand-stone",
     patternClass: "service-pattern-commercial",
-    description: "We provide reliable, discreet maintenance for professional environments. We keep your workspace spotless so your team can focus on what they do best. A clean office improves employee morale and leaves a great impression on clients.",
+    description: "Offices, retail floors and professional buildings, cleaned on a schedule that fits around your hours rather than through them. Evenings and weekends are normal for us. Fully bonded and insured, and the same crew each visit, so nobody is re-explaining the building.",
     idealFor: "Offices, retail spaces, medical facilities, and professional buildings requiring consistent, high-quality upkeep.",
     includes: [
       "Nightly, weekly, or custom cleaning schedules",
@@ -98,8 +98,8 @@ export const servicesData = {
     id: "vacation-rentals",
     seoDescription: "Same-day Airbnb and VRBO turnovers on the Southern Maine coast, with iCal sync, linen handling, restocking and photo-documented damage reports.",
     title: "Vacation Rental Turnovers",
-    shortDesc: "Fast, flawless resets for Airbnb, VRBO, and short-term rentals.",
-    tagline: "Five-star turnovers, every guest, every time.",
+    shortDesc: "Guest-to-guest resets for Airbnb, VRBO and short-term rentals.",
+    tagline: "Checkout to check-in, inside the window you give us.",
     icon: CalendarCheck,
     color: "bg-brand-pine/15 text-brand-pine",
     accentGradient: "from-brand-pine/10 via-brand-pine/5 to-transparent",
@@ -107,7 +107,7 @@ export const servicesData = {
     accentBg: "bg-brand-pine/10",
     iconAccent: "text-brand-pine",
     patternClass: "service-pattern-vacation",
-    description: "Fast, flawless resets for Airbnb, VRBO, and short-term rentals. We understand that five-star reviews depend on perfect cleanliness, and we deliver consistency every time. We treat your property like a hospitality business.",
+    description: "A full reset between guests: linens stripped and remade, kitchen and bathrooms reset, consumables restocked, and the place photographed so you can see how it went out. Same-day changeovers across Southern Maine when they are on the schedule in advance.",
     idealFor: "Airbnb hosts, VRBO owners, and short-term property managers seeking reliable, hotel-quality turnovers.",
     includes: [
       "Same-day rapid turnover scheduling",
@@ -118,7 +118,7 @@ export const servicesData = {
       "Checking and securing all doors and windows"
     ],
     faqs: [
-      { q: "Do you provide laundry services off-site?", a: "We typically utilize on-site laundry facilities if available to maximize efficiency, but off-site options can be arranged depending on location." },
+      { q: "Do you provide laundry services off-site?", a: "We use the machines at the property when there are any — it is faster and the linens are back on the beds the same visit. If there is no washer, or there is one load too many for the turnaround, we can take it off-site; tell us which you want and we will price it in." },
       { q: "What happens if a guest leaves a huge mess or damages property?", a: "We immediately document the situation with photos and notify you before proceeding, so you can handle security deposits appropriately." }
     ]
   },
@@ -127,7 +127,7 @@ export const servicesData = {
     seoDescription: "Move-in and move-out cleaning for Southern Maine homes and rentals — cabinets, appliances and floors cleaned to deposit-return standard, on the day you need it.",
     title: "Move-In / Move-Out",
     shortDesc: "Complete property reset for new tenants or owners.",
-    tagline: "A blank canvas for every new beginning.",
+    tagline: "Empty, and clean enough to hand over the keys.",
     icon: ArrowRightLeft,
     color: "bg-brand-navy/15 text-brand-navy",
     accentGradient: "from-brand-navy/10 via-brand-navy/5 to-transparent",

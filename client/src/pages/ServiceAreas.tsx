@@ -125,7 +125,7 @@ export default function ServiceAreas() {
           what made the two read as unrelated blocks. */}
       <Section measure="default" tone="tint">
         <SectionHeading
-          title={<span data-testid="text-map-title">Our Impact Across Southern Maine</span>}
+          title={<span data-testid="text-map-title">Where we work</span>}
           lead={<span data-testid="text-map-subtitle">Every dot is a community we serve across York and Cumberland County.</span>}
         />
         <ServiceAreaMap />
@@ -141,7 +141,7 @@ export default function ServiceAreas() {
         <LogoWatermark position="right" />
 
         <SectionHeading
-          title="Communities We Serve"
+          title="Towns we serve"
           lead="Serving York and Cumberland County — from the beaches of Ogunquit to the islands of Casco Bay."
         />
 
@@ -234,7 +234,7 @@ export default function ServiceAreas() {
 
       {/* ── CTA ── */}
       <ClosingCTA
-        title="Serving your neighborhood?"
+        title="In one of these towns?"
         lead="Get an instant estimate for your home, rental, or business."
         ctaTestId="button-sa-cta-estimate"
         photo={photos.commercialFloor}

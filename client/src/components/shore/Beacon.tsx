@@ -36,7 +36,7 @@ export function Beacon() {
           <div className="beacon-beam still" aria-hidden="true" />
           <p className="type-eyebrow !text-deep-accent">About us</p>
           <h2 id="shore-about-heading" className="type-h2 mt-4 text-deep-foreground">
-            A local crew who know the coast.
+            A local crew that knows the coast.
           </h2>
           <p className="type-lead mt-6 !text-deep-muted">
             The Maine Cleaning Co. has been cleaning homes and businesses across

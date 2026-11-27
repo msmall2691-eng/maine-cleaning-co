@@ -56,7 +56,7 @@ export default function Footer() {
           <LogoBadge className="relative hidden sm:inline-flex w-28 flex-shrink-0" />
           <div className="relative sm:flex-1 min-w-0">
             <p className="type-h3 text-foreground">The Maine choice for a clean space.</p>
-            <p className="text-sm text-muted-foreground mt-1.5">Free estimate in under 60 seconds — no commitment required.</p>
+            <p className="text-sm text-muted-foreground mt-1.5">Free estimate in about a minute — no commitment required.</p>
           </div>
           <a href="/#get-estimate" onClick={scrollToEstimate} className="relative flex-shrink-0" data-testid="link-footer-cta-estimate">
             <Button size="sm" className="rounded-full h-11 px-6 text-sm font-semibold gap-1.5 flex-shrink-0">

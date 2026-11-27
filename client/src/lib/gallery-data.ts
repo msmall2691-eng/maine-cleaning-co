@@ -73,7 +73,7 @@ export const galleryItems: GalleryItem[] = [
     id: 4,
     image: "/images/restroom-trailer-commercial-clean.jpeg",
     alt: "Stainless steel restroom trailer interior, cleaned and restocked",
-    caption: "Event restroom trailer — sanitised, restocked, ready for guests",
+    caption: "Event restroom trailer — sanitized, restocked, ready for guests",
   },
   {
     id: 5,
@@ -96,7 +96,7 @@ export const galleryItems: GalleryItem[] = [
   {
     id: 8,
     image: "/images/cleaning-toolkit-supplies.jpeg",
-    alt: "Cleaning toolkit with spin mop, microfibre pads and brushes",
-    caption: "Our kit — spin mop, microfibre pads and brushes",
+    alt: "Cleaning toolkit with spin mop, microfiber pads and brushes",
+    caption: "Our kit — spin mop, microfiber pads and brushes",
   },
 ];
