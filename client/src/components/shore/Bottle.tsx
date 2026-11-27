@@ -97,7 +97,7 @@ export function Bottle() {
       className="shore-section band-deep scroll-mt-20 clip-x py-24"
       aria-labelledby="shore-contact-heading"
     >
-      <div className="mx-auto grid w-full max-w-6xl items-start gap-14 px-5 sm:px-8 lg:grid-cols-[1fr_1.1fr] lg:gap-20">
+      <div className="shore-measure grid items-start gap-14 px-5 sm:px-8 lg:grid-cols-[1fr_1.1fr] lg:gap-20">
         <div>
           <p className="type-eyebrow !text-deep-accent">Contact</p>
           <h2 id="shore-contact-heading" className="type-h2 mt-4 text-deep-foreground">

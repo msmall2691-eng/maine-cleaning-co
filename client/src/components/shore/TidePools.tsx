@@ -41,7 +41,7 @@ function TidePool({ id, index }: { id: (typeof POOL_IDS)[number]; index: number 
         strokeWidth={1.5}
       />
       <h3 className="type-h3 mt-5 text-foreground">{service.title}</h3>
-      <p className="mt-2.5 flex-1 text-sm leading-relaxed text-muted-foreground">
+      <p className="type-body mt-2.5 flex-1 text-muted-foreground">
         {service.shortDesc}
       </p>
       <Link
@@ -70,7 +70,7 @@ export function TidePools() {
       className="shore-section scroll-mt-20 bg-background py-24"
       aria-labelledby="shore-services-heading"
     >
-      <div className="mx-auto w-full max-w-6xl px-5 sm:px-8">
+      <div className="shore-measure px-5 sm:px-8">
         <p className="type-eyebrow">Services</p>
         <h2 id="shore-services-heading" className="type-h2 mt-4 max-w-2xl text-foreground">
           What we clean

@@ -106,7 +106,7 @@ export function Buoys() {
       className="shore-section scroll-mt-20 bg-background py-24"
       aria-labelledby="shore-reviews-heading"
     >
-      <div className="mx-auto w-full max-w-6xl px-5 sm:px-8">
+      <div className="shore-measure px-5 sm:px-8">
         <div className="flex flex-wrap items-end justify-between gap-6">
           <div>
             <p className="type-eyebrow">Reviews</p>
@@ -172,7 +172,7 @@ export function Buoys() {
                 {/* The rating in words, once, for anyone not reading the
                     stars — the icons above are decorative duplicates. */}
                 <span className="sr-only">Rated 5 out of 5.</span>
-                <blockquote className="mt-4 flex-1 text-sm leading-relaxed text-foreground">
+                <blockquote className="type-body mt-4 flex-1 text-foreground">
                   {review.text}
                 </blockquote>
                 <figcaption className="mt-5 text-xs text-muted-foreground">

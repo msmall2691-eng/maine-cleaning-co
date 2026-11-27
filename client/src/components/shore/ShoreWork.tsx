@@ -40,7 +40,7 @@ export function ShoreWork() {
       className="relative clip-x scroll-mt-20 bg-background py-24"
       aria-labelledby="shore-work-heading"
     >
-      <div className="mx-auto w-full max-w-6xl px-5 sm:px-8">
+      <div className="shore-measure px-5 sm:px-8">
         <p className="type-eyebrow">Our work</p>
         <h2 id="shore-work-heading" className="type-h2 mt-4 max-w-2xl text-foreground">
           Recent jobs

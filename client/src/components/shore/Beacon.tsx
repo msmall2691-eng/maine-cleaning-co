@@ -31,7 +31,7 @@ export function Beacon() {
       className="shore-section band-deep scroll-mt-20 clip-x py-24"
       aria-labelledby="shore-about-heading"
     >
-      <div className="mx-auto grid w-full max-w-6xl items-center gap-14 px-5 sm:px-8 lg:grid-cols-2 lg:gap-20">
+      <div className="shore-measure grid items-center gap-14 px-5 sm:px-8 lg:grid-cols-2 lg:gap-20">
         <div className="beacon-stage">
           <div className="beacon-beam still" aria-hidden="true" />
           <p className="type-eyebrow !text-deep-accent">About us</p>
@@ -51,8 +51,8 @@ export function Beacon() {
               <li key={label} className="flex gap-3.5">
                 <Icon className="mt-0.5 h-5 w-5 shrink-0 text-deep-accent" aria-hidden="true" strokeWidth={1.5} />
                 <div>
-                  <p className="text-sm font-semibold text-deep-foreground">{label}</p>
-                  <p className="mt-0.5 text-sm text-deep-muted">{detail}</p>
+                  <p className="type-body font-semibold text-deep-foreground">{label}</p>
+                  <p className="type-body mt-0.5 text-deep-muted">{detail}</p>
                 </div>
               </li>
             ))}

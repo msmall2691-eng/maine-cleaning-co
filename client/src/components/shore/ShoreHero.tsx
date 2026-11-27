@@ -121,7 +121,7 @@ export function ShoreHero() {
       </div>
       <div className="shore-scrim" aria-hidden="true" />
 
-      <div className="mx-auto w-full max-w-6xl px-5 pb-16 pt-28 sm:px-8 lg:pt-32">
+      <div className="shore-measure px-5 pb-16 pt-28 sm:px-8 lg:pt-32">
         <div className="mb-10 flex justify-start lg:justify-end">
           <ShoreControls />
         </div>
