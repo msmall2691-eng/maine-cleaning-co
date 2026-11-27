@@ -164,7 +164,7 @@ const results: Record<string, QuizResult> = {
     description: "A top-to-bottom intensive clean that tackles every overlooked area. Ideal for seasonal refreshes, pre-event prep, or getting your home back to baseline.",
     icon: <Sparkles className="w-6 h-6" />,
     color: "bg-emerald-500/15 text-emerald-600 dark:text-emerald-400",
-    features: ["Baseboards, trim & behind furniture", "Interior windows & sills", "Deep scrub of appliances & grout", "Hospital-grade, eco-friendly products"],
+    features: ["Baseboards, trim & behind furniture", "Interior windows & sills", "Deep scrub of appliances & grout", "Eco-friendly products throughout"],
   },
   vacation: {
     service: "Vacation Rental Turnovers",
@@ -188,7 +188,7 @@ const results: Record<string, QuizResult> = {
     service: "Move-In / Move-Out",
     slug: "move-in-out",
     headline: "Move-In / Move-Out Cleaning",
-    description: "A complete property reset for new tenants, homeowners, or Realtors. We leave every surface spotless — a true blank canvas.",
+    description: "A complete reset of an empty property for new tenants, buyers or a Realtor showing it. Inside cabinets and appliances, not just the surfaces.",
     icon: <Truck className="w-6 h-6" />,
     color: "bg-rose-50 text-rose-600",
     features: ["Inside all cabinets & drawers", "Appliance deep cleaning", "Full bathroom sanitization", "All baseboards, doors & trim washed"],

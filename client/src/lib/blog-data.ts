@@ -27,7 +27,7 @@ export const blogPosts = [
       ### 5. Rotate Wardrobes
       Pack away the heavy winter coats and bring out the spring wardrobe. Take this opportunity to donate items you no longer wear.
       
-      Need help tackling this list? The Maine Cleaning Co. offers comprehensive Deep Cleaning services that cover all these bases and more!
+      If you would rather not do this list yourself, our deep clean covers all of it. Southern Maine, and you can get a price before you call.
     `
   },
   {
@@ -79,11 +79,11 @@ export const blogPosts = [
       ### 3. Schedule a Pre-Season Deep Clean
       Before the first guest arrives, the property needs a thorough deep clean. This is the time to wash curtains, clean behind appliances, steam carpets, and scrub the outdoor grill. 
       
-      ### 4. Create a Flawless Turnover System
+      ### 4. Build a turnover system you can repeat
       During the summer rush, you might have guests checking out at 11 AM and new ones arriving at 3 PM. You need a reliable, efficient turnover process. 
       
       ### Partner with Professionals
-      The easiest way to ensure your property is always guest-ready is to partner with a professional cleaning service that specializes in vacation rentals. The Maine Cleaning Co. offers rapid, flawless turnover services complete with damage reporting and consumable restocking. Let us handle the cleaning so you can focus on being a great host!
+      The simplest version of this is handing the turnover to someone who does only turnovers. Ours covers the reset, damage reporting and consumable restocking, inside the window between checkout and check-in.
     `
   },
   {
@@ -141,7 +141,7 @@ export const blogPosts = [
       In Maine, landlords can deduct from your security deposit for cleaning costs if the unit isn't returned in the same condition. A professional move-out clean with a receipt is your best insurance. It typically costs far less than what a landlord would charge.
 
       ### For Landlords and Property Managers
-      First impressions matter. A spotless unit shows prospective tenants that you maintain your properties. It also establishes the standard you expect when they move out. Many of our property manager clients schedule a move-in clean between every tenant transition.
+      A clean unit shows prospective tenants how the property is looked after. It also establishes the standard you expect when they move out. Many of our property manager clients schedule a move-in clean between every tenant transition.
 
       ### For Realtors
       Showing a freshly cleaned property makes a measurable difference in how buyers perceive value. We work with several Southern Maine real estate agents who schedule pre-listing cleans as part of their staging process.
@@ -159,7 +159,7 @@ export const blogPosts = [
     readTime: "5 min read",
     image: "https://images.unsplash.com/photo-1522708323590-d24dbb6b0267?w=800&h=600&fit=crop",
     content: `
-      Earning Airbnb Superhost status in a competitive market like Southern Maine means every detail counts. And the #1 factor guests mention in reviews? Cleanliness. Here's what top-performing hosts do differently.
+      Southern Maine is a competitive market, and cleanliness is what guests write about most in reviews. Here is what the hosts who keep their Superhost status actually do.
 
       ### 1. The "White Glove" Entry Test
       Before every check-in, walk through the property as if you're the guest arriving for the first time. Touch every surface. Open every drawer. Sit on the couch. If anything feels off — a sticky counter, a hair on the pillow, a smudge on the mirror — it will end up in a review.
@@ -180,10 +180,10 @@ export const blogPosts = [
       Avoid air fresheners — many guests are sensitive to synthetic fragrances. Instead, use unscented eco-friendly products (like we do with Melaleuca EcoSense). The best scent for a rental is *no scent* — it signals genuinely clean, not cover-up clean.
 
       ### 5. Same-Day Turnover Systems
-      During peak season in Portland, OOB, or Kennebunkport, you might have 4-hour turnover windows between checkout and check-in. Superhosts don't wing it — they have a professional cleaning partner with calendar sync who can execute a flawless reset every time.
+      During peak season in Portland, OOB, or Kennebunkport, you might have 4-hour turnover windows between checkout and check-in. Superhosts don't wing it — they have a cleaner on calendar sync who can turn the place around inside that window.
 
       ### The Bottom Line
-      Guests have endless choices in Southern Maine. A spotless property with hotel-quality presentation is the single biggest driver of 5-star reviews, repeat bookings, and Superhost badges.
+      Guests in Southern Maine have plenty to choose from, and cleanliness is the thing they mention most in reviews — for and against.
 
       At The Maine Cleaning Co., we specialize in rapid Airbnb turnovers with iCal sync, photo-documented cleaning, and consumable restocking. Let us be your competitive advantage.
     `

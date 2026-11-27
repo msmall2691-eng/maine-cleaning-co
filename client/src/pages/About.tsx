@@ -52,7 +52,7 @@ export default function About() {
       <PageHero
         eyebrow="Southern Maine Since 2018"
         title={<>About <span className="heading-accent">Maine Cleaning Co.</span></>}
-        lead="A team that genuinely cares — about your space, your family, and the environment."
+        lead="A small Southern Maine crew, cleaning homes, rentals and businesses since 2018."
         photo={photos.vacuumFleet}
         actions={
           <>
@@ -119,7 +119,7 @@ export default function About() {
 
             <SectionHeading
               align="left"
-              title="Built on Trust. Driven by Care."
+              title="Who we are"
               lead={
                 <>
                   The Maine Cleaning Co. was founded in 2018 with one belief: cleaning should feel effortless for clients and meaningful for the people doing it. We've grown from a small residential team into Southern Maine's most trusted cleaning service — serving homes, vacation rentals, and commercial spaces across York and Cumberland counties.
@@ -229,8 +229,8 @@ export default function About() {
       {/* ── Client Voices ── */}
       <Section measure="wide">
         <SectionHeading
-          title="What Clients Say"
-          lead="Real feedback from Southern Maine homeowners and hosts."
+          title="What our customers say"
+          lead="Reviews left on Google by Southern Maine homeowners and hosts."
         />
         <div className="grid md:grid-cols-3 gap-4 sm:gap-5 mb-10">
           {testimonials.map((t, i) => (
@@ -273,8 +273,8 @@ export default function About() {
           the section measure now. */}
       <Section>
         <SectionHeading
-          title="Certified & Accredited"
-          lead="Industry-recognized certifications that reflect our commitment to quality, safety, and professionalism."
+          title="Certifications"
+          lead="The training and accreditation the crew holds, and what each one covers."
         />
         <Certifications />
       </Section>
@@ -294,8 +294,8 @@ export default function About() {
 
       {/* ── CTA ── */}
       <ClosingCTA
-        title="Experience the difference."
-        lead="See why Southern Maine trusts us with their spaces — get a free estimate today."
+        title="Get your place on the schedule"
+        lead="Tell us the square footage and how often you want us, and you will have a price in about a minute."
         ctaTestId="button-about-estimate"
         photo={photos.rentalBathroom}
       />

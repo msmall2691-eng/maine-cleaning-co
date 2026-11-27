@@ -196,7 +196,7 @@ export default function ServiceDetail() {
 
       {/* ── What's included ── */}
       <Section measure="default" tone="tint">
-        <SectionHeading align="left" title="What's Included" className="mb-8 sm:mb-10" />
+        <SectionHeading align="left" title="What's included" className="mb-8 sm:mb-10" />
         <div className="grid sm:grid-cols-2 gap-2.5 sm:gap-3">
           {service.includes.map((item, i) => (
             <motion.div
@@ -217,7 +217,7 @@ export default function ServiceDetail() {
       {/* ── Cleaning scope ── */}
       {showChecklist && (
         <Section measure="default">
-          <SectionHeading align="left" title="Cleaning Scope" className="mb-8 sm:mb-10" />
+          <SectionHeading align="left" title="What a visit covers" className="mb-8 sm:mb-10" />
           <CleaningChecklist variant={checklistVariant} />
         </Section>
       )}

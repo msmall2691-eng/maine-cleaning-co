@@ -46,7 +46,7 @@ const turnoverFeatures = [
   { icon: RefreshCw, title: "iCal & Platform Sync", desc: "We sync directly with your Airbnb, VRBO, or Booking.com calendar so scheduling is automatic. No texts, no back-and-forth — we know when you need us." },
   { icon: Calendar, title: "Automated Scheduling", desc: "Once we're synced, cleaning appointments book themselves. You focus on hosting; we handle the logistics behind every reset." },
   { icon: Clock, title: "Consistent, On-Time Arrivals", desc: "Strict timing protocols mean your property is always guest-ready well before check-in — every booking, every time." },
-  { icon: Sparkles, title: "Hotel-Quality Cleans", desc: "Fresh linens, restocked essentials, spotless surfaces. We clean to a hospitality standard that earns 5-star reviews from your guests." },
+  { icon: Sparkles, title: "Cleaned to a hospitality standard", desc: "Fresh linens, restocked consumables, surfaces finished. The standard that earns 5-star reviews from your guests." },
   { icon: Leaf, title: "Eco-Friendly Products", desc: "We use Melaleuca EcoSense and Sal Suds — effective, non-toxic, and safe for guests with sensitivities or allergies." },
 ];
 
@@ -102,9 +102,9 @@ export default function ShortTermRentals() {
           space, so it leads here. */}
       <PageHero
         data-testid="hero-str"
-        eyebrow={<span data-testid="text-str-label">Southern Maine's STR Specialists</span>}
-        title={<>Airbnb &amp; Short-Term <span className="heading-accent">Rental Experts.</span></>}
-        lead={<span data-testid="text-str-subtitle">Same-day turnovers, automated scheduling via iCal sync, property management, and full-service hosting support — everything Southern Maine vacation rental hosts need to earn 5-star reviews and maximize revenue.</span>}
+        eyebrow={<span data-testid="text-str-label">Short-term rental turnovers</span>}
+        title={<>Airbnb &amp; short-term <span className="heading-accent">rental turnovers.</span></>}
+        lead={<span data-testid="text-str-subtitle">Same-day turnovers, scheduling that syncs straight off your booking calendar, and as much of the hosting operation as you want to hand over. Across York and Cumberland County.</span>}
         photo={photos.rentalBathroom}
         actions={
           <>
@@ -141,8 +141,8 @@ export default function ShortTermRentals() {
           <div>
             <SectionHeading
               align="left"
-              eyebrow="Southern Maine's Booming Market"
-              title="The #1 STR Market in Maine — and We're Here for It"
+              eyebrow="The Southern Maine market"
+              title="Short-term rentals are most of what we do"
               className="mb-7"
             />
             <p className="text-muted-foreground text-[15px] leading-relaxed mb-5">
@@ -190,9 +190,9 @@ export default function ShortTermRentals() {
       {/* ── Turnover Cleaning Features ── */}
       <Section measure="wide" tone="tint" id="turnover-cleaning">
         <SectionHeading
-          eyebrow="Turnover Cleaning"
-          title="Guest-Ready, Every Single Time"
-          lead="We handle every reset like it's the most important clean of the day — because for your guests, it is."
+          eyebrow="Turnover cleaning"
+          title="Ready before the next check-in"
+          lead="Linens, bathrooms, kitchen, consumables and a photo set at the end, inside the window between checkout and check-in."
         />
 
         <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-5">
@@ -223,9 +223,9 @@ export default function ShortTermRentals() {
       {/* ── Management Services ── */}
       <Section measure="wide" id="property-management">
         <SectionHeading
-          eyebrow="Full-Service Management"
-          title="Beyond Cleaning — Hybrid Hosting Management"
-          lead="We're not just a cleaning company. Our hybrid management services let you hand off the operational side of hosting entirely — from listings to guest communication to revenue strategy."
+          eyebrow="Full-service management"
+          title="Hosting management, if you want it"
+          lead="Some hosts want only the turnover. Others hand over the operational side as well — listings, guest communication to revenue strategy."
         />
 
         <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-5 mb-10 sm:mb-12">
@@ -254,7 +254,7 @@ export default function ShortTermRentals() {
 
         <div className="max-w-[38rem] mx-auto bg-primary/8 border border-primary/20 rounded-2xl p-6 sm:p-8 text-center">
           <Home className="w-8 h-8 text-primary mx-auto mb-3" />
-          <h3 className="type-h3 text-foreground mb-2">Custom Management Packages</h3>
+          <h3 className="type-h3 text-foreground mb-2">Custom management packages</h3>
           <p className="text-sm text-muted-foreground leading-relaxed mb-5">
             Every property is different. We build custom management plans that match your hosting style — whether you want full hands-off management or just the cleaning and maintenance pieces.
           </p>
@@ -268,7 +268,7 @@ export default function ShortTermRentals() {
       <Section measure="default" tone="sink" id="ical-sync">
         <RefreshCw className="w-8 h-8 text-primary mx-auto mb-5" aria-hidden="true" />
         <SectionHeading
-          title="We Sync With Your Calendar"
+          title="We sync with your calendar"
           lead="Connect your Airbnb, VRBO, or any OTA calendar once via iCal. We automatically schedule turnover cleans for every checkout — no manual coordination needed."
         />
         <div className="grid grid-cols-2 sm:grid-cols-4 gap-6 sm:gap-8">
@@ -309,8 +309,8 @@ export default function ShortTermRentals() {
           <div>
             <SectionHeading
               align="left"
-              eyebrow="Why Hosts Choose Us"
-              title="Built for the STR Business"
+              eyebrow="Why hosts choose us"
+              title="Why hosts use us"
               className="mb-8"
             />
 
@@ -357,8 +357,8 @@ export default function ShortTermRentals() {
       {/* ── Reviews from STR Hosts ── */}
       <Section measure="wide" tone="tint">
         <SectionHeading
-          eyebrow="Host Reviews"
-          title="What Hosts Are Saying"
+          eyebrow="Host reviews"
+          title="What hosts say"
         />
 
         <div className="grid sm:grid-cols-3 gap-4 sm:gap-5">
@@ -405,7 +405,7 @@ export default function ShortTermRentals() {
           <div>
             <SectionHeading
               align="left"
-              title="We Serve All of Southern Maine"
+              title="Where we cover"
               lead="From Old Orchard Beach to Kennebunkport, Portland to Naples — our STR cleaning and management services cover every short-term rental market in York & Cumberland County."
               className="mb-8"
             />
@@ -461,7 +461,7 @@ export default function ShortTermRentals() {
 
         <Home className="w-11 h-11 mx-auto mb-6 opacity-80" aria-hidden="true" />
         <h2 className="type-h2 text-foreground mb-6">
-          Ready to take your STR to the next level?
+          Want the turnovers off your plate?
         </h2>
         <p className="type-lead mb-9 max-w-[38rem] mx-auto">
           Whether you host one cabin or ten beachfront properties — we're your Southern Maine short-term rental partner.

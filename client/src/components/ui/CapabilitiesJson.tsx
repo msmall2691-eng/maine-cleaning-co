@@ -8,7 +8,7 @@ const capabilities = {
     "Move-In / Move-Out"
   ],
   "stack": {
-    "chemicals": "Eco-friendly, Hospital-grade",
+    "chemicals": "Eco-friendly (Melaleuca EcoSense, Sal Suds)",
     "tools": "HEPA-filtration vacuums, Microfiber",
     "reliability": "99.9% Uptime"
   },

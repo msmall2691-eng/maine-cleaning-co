@@ -258,7 +258,7 @@ export default function ServiceAreaDetail() {
 
       <ClosingCTA
         title={`Cleaning on ${area.name}?`}
-        lead="Tell us your dates and where the key is. Estimates take about two minutes."
+        lead="Tell us your dates and where the key is. Estimates take about a minute."
         ctaTestId="button-area-cta-estimate"
         photo={photos.kitchenLakeWindow}
       />
